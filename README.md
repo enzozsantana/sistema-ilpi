@@ -5,6 +5,22 @@
 
 ---
 
+## 🚀 Acesso em Produção (Live App)
+
+O sistema está publicado e operando online gratuitamente:
+
+- **Link de Acesso:** [https://sistema-ilpi.vercel.app](https://sistema-ilpi.vercel.app)
+- **Repositório GitHub:** [https://github.com/enzozsantana/sistema-ilpi](https://github.com/enzozsantana/sistema-ilpi)
+- **Banco de Dados & Autenticação:** Supabase Cloud (PostgreSQL 15 + RLS)
+
+### 🔑 Contas de Demonstração Rápidas (1-Clique na tela de Login):
+- **Administrador:** `admin@senecurare.com` | `admin123`
+- **Enfermeira RT:** `clarice@senecurare.com` | `rt123456`
+- **Médico:** `marcos@senecurare.com` | `med123456`
+- **Cuidadora:** `maria@senecurare.com` | `cuid123456`
+
+---
+
 ## 🌟 Principais Recursos
 
 - **Prontuário Multidisciplinar Digital:**
