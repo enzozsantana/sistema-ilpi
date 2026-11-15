@@ -1,0 +1,2074 @@
+{
+  "inst": "Residencial Boa Vida",
+  "user": "s1",
+  "equipe": [
+    {
+      "id": "s1",
+      "nome": "Helena Prado",
+      "cat": "rt",
+      "funcao": "Enfermeira RT",
+      "conselho": "COREN-SP 111.111-ENF",
+      "setor": "Responsável técnica",
+      "area": "Enfermagem"
+    },
+    {
+      "id": "s2",
+      "nome": "Rafael Duarte",
+      "cat": "enf",
+      "funcao": "Enfermeiro",
+      "conselho": "COREN-SP 222.222-ENF",
+      "setor": "Enfermeiros",
+      "area": "Enfermagem"
+    },
+    {
+      "id": "s3",
+      "nome": "Valéria Campos",
+      "cat": "tec",
+      "funcao": "Auxiliar de enfermagem",
+      "conselho": "COREN-SP 333.333-AE",
+      "setor": "Diurno 12h"
+    },
+    {
+      "id": "s4",
+      "nome": "Ingrid Souza",
+      "cat": "tec",
+      "funcao": "Auxiliar de enfermagem",
+      "conselho": "COREN-SP 444.444-AE",
+      "setor": "Diurno 12h"
+    },
+    {
+      "id": "s5",
+      "nome": "Débora Lins",
+      "cat": "cuid",
+      "funcao": "Cuidadora",
+      "conselho": "",
+      "setor": "Diurno 12h"
+    },
+    {
+      "id": "s6",
+      "nome": "Sueli Matos",
+      "cat": "tec",
+      "funcao": "Auxiliar de enfermagem",
+      "conselho": "COREN-SP 555.555-AE",
+      "setor": "Noturno 12h"
+    },
+    {
+      "id": "s7",
+      "nome": "Cícero Alves",
+      "cat": "cuid",
+      "funcao": "Cuidador",
+      "conselho": "",
+      "setor": "Noturno 12h"
+    },
+    {
+      "id": "s8",
+      "nome": "Larissa Nunes",
+      "cat": "estag",
+      "funcao": "Estagiária de enfermagem",
+      "conselho": "",
+      "setor": "Estágio"
+    },
+    {
+      "id": "s9",
+      "nome": "Dra. Beatriz Moraes",
+      "cat": "med",
+      "funcao": "Médica",
+      "conselho": "CRM-SP 100.000",
+      "area": "Medicina",
+      "carga": "2h semanais",
+      "horario": "Segunda, 14h às 16h"
+    },
+    {
+      "id": "s10",
+      "nome": "Tiago Rocha",
+      "cat": "multi",
+      "funcao": "Fisioterapeuta",
+      "conselho": "CREFITO-3 50.000-F",
+      "area": "Fisioterapia",
+      "carga": "6h semanais",
+      "horario": "Terça e sexta, 8h às 11h"
+    },
+    {
+      "id": "s11",
+      "nome": "Paula Reis",
+      "cat": "multi",
+      "funcao": "Nutricionista",
+      "conselho": "CRN-3 60.000",
+      "area": "Nutrição",
+      "carga": "8h mensais",
+      "horario": "1x por mês, 8h às 18h"
+    },
+    {
+      "id": "s12",
+      "nome": "Marcos Vidal",
+      "cat": "multi",
+      "funcao": "Psicólogo",
+      "conselho": "CRP 06/70.000",
+      "area": "Psicologia",
+      "carga": "5h semanais",
+      "horario": "Terça e quinta, 14h30 às 17h"
+    }
+  ],
+  "escalaMes": {
+    "2026-11": {
+      "s1": [
+        "F",
+        "T",
+        "T",
+        "T",
+        "T",
+        "T",
+        "F",
+        "F",
+        "T",
+        "T",
+        "T",
+        "T",
+        "T",
+        "F",
+        "F",
+        "T",
+        "T",
+        "T",
+        "T",
+        "T",
+        "F",
+        "F",
+        "T",
+        "T",
+        "T",
+        "T",
+        "T",
+        "F",
+        "F",
+        "T"
+      ],
+      "s2": [
+        "F",
+        "M",
+        "M",
+        "M",
+        "M",
+        "M",
+        "M",
+        "F",
+        "M",
+        "M",
+        "M",
+        "M",
+        "M",
+        "F",
+        "F",
+        "M",
+        "M",
+        "M",
+        "M",
+        "M",
+        "M",
+        "F",
+        "M",
+        "M",
+        "M",
+        "M",
+        "M",
+        "F",
+        "F",
+        "M"
+      ],
+      "s3": [
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        ""
+      ],
+      "s4": [
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D"
+      ],
+      "s5": [
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D",
+        "",
+        "D"
+      ],
+      "s6": [
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        ""
+      ],
+      "s7": [
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N",
+        "",
+        "N"
+      ],
+      "s8": [
+        "F",
+        "T",
+        "T",
+        "T",
+        "T",
+        "T",
+        "F",
+        "F",
+        "T",
+        "T",
+        "T",
+        "T",
+        "T",
+        "F",
+        "F",
+        "T",
+        "T",
+        "T",
+        "T",
+        "T",
+        "F",
+        "F",
+        "T",
+        "T",
+        "T",
+        "T",
+        "T",
+        "F",
+        "F",
+        "T"
+      ]
+    }
+  },
+  "residentes": [
+    {
+      "id": "r1",
+      "nome": "Sebastião Arruda",
+      "sexo": "M",
+      "nasc": "1958-04-09",
+      "quarto": "4",
+      "admissao": "2025-08-12",
+      "escolaridade": "Fundamental completo",
+      "estadoCivil": "Divorciado(a)",
+      "filhos": 2,
+      "profissao": "Motorista",
+      "convenio": "SUS",
+      "alergias": "",
+      "doencas": [
+        "HAS",
+        "Diabetes",
+        "AVE"
+      ],
+      "outras": "Glaucoma",
+      "cirurgias": "",
+      "medico": "s9",
+      "status": "ativo",
+      "entrada": "Família",
+      "responsavel": {
+        "nome": "Cláudia Arruda",
+        "parentesco": "Filha",
+        "tel": "(17) 99999-0001"
+      },
+      "contrato": "2025-08-12",
+      "docs": {
+        "vacina": true,
+        "rg": true,
+        "cpf": true,
+        "sus": true,
+        "contrato": true,
+        "funerario": false
+      },
+      "pref": {
+        "gosta": "Sair para passear, ouvir música",
+        "naoGosta": "Atividade em grupo muito cedo",
+        "hobbies": "Futebol no rádio",
+        "musica": "Sertanejo raiz",
+        "religiao": "Católico",
+        "horario": "Tarde",
+        "comida": "Arroz, feijão e carne",
+        "comidaNao": "Sopa"
+      },
+      "aval": [
+        {
+          "id": "foagqcd",
+          "esc": "fugulin",
+          "d": "2026-10-05",
+          "resp": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "sig": {
+            "id": "s1",
+            "d": "2026-10-05",
+            "h": "09:00"
+          }
+        },
+        {
+          "id": "642ivwf",
+          "esc": "morse",
+          "d": "2026-10-05",
+          "resp": [
+            0,
+            1,
+            0,
+            0,
+            0,
+            0
+          ],
+          "sig": {
+            "id": "s1",
+            "d": "2026-10-05",
+            "h": "09:00"
+          }
+        },
+        {
+          "id": "ig33gvr",
+          "esc": "glasgow",
+          "d": "2026-10-05",
+          "resp": [
+            0,
+            0,
+            0
+          ],
+          "sig": {
+            "id": "s1",
+            "d": "2026-10-05",
+            "h": "09:00"
+          }
+        },
+        {
+          "id": "ahhmyqj",
+          "esc": "braden",
+          "d": "2026-10-05",
+          "resp": [
+            3,
+            3,
+            3,
+            3,
+            2,
+            2
+          ],
+          "sig": {
+            "id": "s1",
+            "d": "2026-10-05",
+            "h": "09:00"
+          }
+        }
+      ],
+      "pia": [
+        {
+          "id": "2m7d2m5",
+          "periodo": "Novembro e dezembro",
+          "inicio": "2026-11-02",
+          "reav": "2027-01-01",
+          "necessidades": [
+            "autonomia",
+            "cronicas"
+          ],
+          "obs": "Residente autônomo; preza pelas próprias decisões.",
+          "resultado": "",
+          "encaminhamentos": "Psicologia",
+          "sig": {
+            "id": "s1",
+            "d": "2026-11-02",
+            "h": "09:00"
+          }
+        }
+      ],
+      "cuidados": [
+        {
+          "id": "c1",
+          "texto": "Verificar, anotar SSVV e comunicar alterações",
+          "quem": "enfermagem"
+        },
+        {
+          "id": "c2",
+          "texto": "Incentivar ingestão hídrica de 250 mL e refeições sozinho 6x ao dia, conforme nutricionista",
+          "quem": "todos"
+        },
+        {
+          "id": "c3",
+          "texto": "Envolver nas atividades do plano individual e respeitar recusa na fisioterapia",
+          "quem": "todos"
+        },
+        {
+          "id": "c4",
+          "texto": "Autorizar saída com motorista de confiança (residente autônomo)",
+          "quem": "enfermagem"
+        }
+      ],
+      "estoque": [
+        {
+          "id": "e1",
+          "nome": "Pantoprazol 40 mg",
+          "unid": "comp",
+          "qtd": 12,
+          "min": 7
+        },
+        {
+          "id": "e2",
+          "nome": "Losartana potássica 50 mg",
+          "unid": "comp",
+          "qtd": 25,
+          "min": 7
+        },
+        {
+          "id": "e3",
+          "nome": "Dapagliflozina 10 mg",
+          "unid": "comp",
+          "qtd": 5,
+          "min": 7
+        },
+        {
+          "id": "e4",
+          "nome": "Colírio para glaucoma",
+          "unid": "gotas",
+          "qtd": 180,
+          "min": 40
+        },
+        {
+          "id": "e5",
+          "nome": "Ácido acetilsalicílico 100 mg",
+          "unid": "comp",
+          "qtd": 40,
+          "min": 7
+        },
+        {
+          "id": "e6",
+          "nome": "Macrogol sachê",
+          "unid": "sachê",
+          "qtd": 3,
+          "min": 2
+        },
+        {
+          "id": "e7",
+          "nome": "Bromoprida 4 mg/mL",
+          "unid": "gotas",
+          "qtd": 600,
+          "min": 100
+        },
+        {
+          "id": "e8",
+          "nome": "Fluoxetina 20 mg",
+          "unid": "comp",
+          "qtd": 30,
+          "min": 14
+        },
+        {
+          "id": "e9",
+          "nome": "Metformina 500 mg",
+          "unid": "comp",
+          "qtd": 60,
+          "min": 7
+        },
+        {
+          "id": "e10",
+          "nome": "Rosuvastatina 20 mg",
+          "unid": "comp",
+          "qtd": 28,
+          "min": 7
+        },
+        {
+          "id": "e11",
+          "nome": "Paracetamol 200 mg/mL",
+          "unid": "gotas",
+          "qtd": 500,
+          "min": 100
+        }
+      ],
+      "presc": [
+        {
+          "id": "4cl657f",
+          "inicio": "2026-09-15",
+          "dias": [],
+          "intervalo": 1,
+          "obs": "",
+          "prescritor": "s9",
+          "sig": {
+            "id": "s1",
+            "d": "2026-09-15",
+            "h": "09:00"
+          },
+          "suspensa": false,
+          "med": "Pantoprazol 40 mg",
+          "dose": "1 cp",
+          "via": "VO",
+          "tipo": "fixo",
+          "horarios": [
+            "07:00"
+          ],
+          "consumo": 1,
+          "estoqueId": "e1"
+        },
+        {
+          "id": "z43qkgr",
+          "inicio": "2026-09-15",
+          "dias": [],
+          "intervalo": 1,
+          "obs": "",
+          "prescritor": "s9",
+          "sig": {
+            "id": "s1",
+            "d": "2026-09-15",
+            "h": "09:00"
+          },
+          "suspensa": false,
+          "med": "Losartana potássica 50 mg",
+          "dose": "1 cp",
+          "via": "VO",
+          "tipo": "fixo",
+          "horarios": [
+            "07:00"
+          ],
+          "consumo": 1,
+          "estoqueId": "e2"
+        },
+        {
+          "id": "hof7liw",
+          "inicio": "2026-09-15",
+          "dias": [],
+          "intervalo": 1,
+          "obs": "",
+          "prescritor": "s9",
+          "sig": {
+            "id": "s1",
+            "d": "2026-09-15",
+            "h": "09:00"
+          },
+          "suspensa": false,
+          "med": "Dapagliflozina 10 mg",
+          "dose": "1 cp",
+          "via": "VO",
+          "tipo": "fixo",
+          "horarios": [
+            "07:00"
+          ],
+          "consumo": 1,
+          "estoqueId": "e3"
+        },
+        {
+          "id": "uqfekjy",
+          "inicio": "2026-09-15",
+          "dias": [],
+          "intervalo": 1,
+          "obs": "",
+          "prescritor": "s9",
+          "sig": {
+            "id": "s1",
+            "d": "2026-09-15",
+            "h": "09:00"
+          },
+          "suspensa": false,
+          "med": "Colírio para glaucoma",
+          "dose": "1 gota em cada olho",
+          "via": "Ocular",
+          "tipo": "fixo",
+          "horarios": [
+            "07:00"
+          ],
+          "consumo": 2,
+          "estoqueId": "e4"
+        },
+        {
+          "id": "ukr3wf7",
+          "inicio": "2026-09-15",
+          "dias": [],
+          "intervalo": 1,
+          "obs": "",
+          "prescritor": "s9",
+          "sig": {
+            "id": "s1",
+            "d": "2026-09-15",
+            "h": "09:00"
+          },
+          "suspensa": false,
+          "med": "Ácido acetilsalicílico 100 mg",
+          "dose": "1 cp",
+          "via": "VO",
+          "tipo": "fixo",
+          "horarios": [
+            "12:00"
+          ],
+          "consumo": 1,
+          "estoqueId": "e5"
+        },
+        {
+          "id": "2ul8z6w",
+          "inicio": "2026-09-15",
+          "dias": [
+            3,
+            6
+          ],
+          "intervalo": 1,
+          "obs": "",
+          "prescritor": "s9",
+          "sig": {
+            "id": "s1",
+            "d": "2026-09-15",
+            "h": "09:00"
+          },
+          "suspensa": false,
+          "med": "Macrogol sachê",
+          "dose": "1 sachê diluído",
+          "via": "VO",
+          "tipo": "semanal",
+          "horarios": [
+            "16:00"
+          ],
+          "consumo": 1,
+          "estoqueId": "e6"
+        },
+        {
+          "id": "8oxx83i",
+          "inicio": "2026-09-15",
+          "dias": [],
+          "intervalo": 1,
+          "obs": "Se vômito, até 3x ao dia",
+          "prescritor": "s9",
+          "sig": {
+            "id": "s1",
+            "d": "2026-09-15",
+            "h": "09:00"
+          },
+          "suspensa": false,
+          "med": "Bromoprida 4 mg/mL",
+          "dose": "40 gotas",
+          "via": "VO",
+          "tipo": "sn",
+          "horarios": [],
+          "consumo": 40,
+          "estoqueId": "e7"
+        },
+        {
+          "id": "zrbc9uj",
+          "inicio": "2026-09-15",
+          "dias": [],
+          "intervalo": 1,
+          "obs": "",
+          "prescritor": "s9",
+          "sig": {
+            "id": "s1",
+            "d": "2026-09-15",
+            "h": "09:00"
+          },
+          "suspensa": false,
+          "med": "Fluoxetina 20 mg",
+          "dose": "2 cp",
+          "via": "VO",
+          "tipo": "fixo",
+          "horarios": [
+            "07:00"
+          ],
+          "consumo": 2,
+          "estoqueId": "e8"
+        },
+        {
+          "id": "81mbcah",
+          "inicio": "2026-09-15",
+          "dias": [],
+          "intervalo": 1,
+          "obs": "",
+          "prescritor": "s9",
+          "sig": {
+            "id": "s1",
+            "d": "2026-09-15",
+            "h": "09:00"
+          },
+          "suspensa": false,
+          "med": "Metformina 500 mg",
+          "dose": "1 cp",
+          "via": "VO",
+          "tipo": "fixo",
+          "horarios": [
+            "19:00"
+          ],
+          "consumo": 1,
+          "estoqueId": "e9"
+        },
+        {
+          "id": "g5s1ceg",
+          "inicio": "2026-09-15",
+          "dias": [],
+          "intervalo": 1,
+          "obs": "",
+          "prescritor": "s9",
+          "sig": {
+            "id": "s1",
+            "d": "2026-09-15",
+            "h": "09:00"
+          },
+          "suspensa": false,
+          "med": "Rosuvastatina 20 mg",
+          "dose": "1 cp",
+          "via": "VO",
+          "tipo": "fixo",
+          "horarios": [
+            "19:00"
+          ],
+          "consumo": 1,
+          "estoqueId": "e10"
+        },
+        {
+          "id": "gorqm0b",
+          "inicio": "2026-09-15",
+          "dias": [],
+          "intervalo": 1,
+          "obs": "Se dor, até 4x ao dia",
+          "prescritor": "s9",
+          "sig": {
+            "id": "s1",
+            "d": "2026-09-15",
+            "h": "09:00"
+          },
+          "suspensa": false,
+          "med": "Paracetamol 200 mg/mL",
+          "dose": "40 gotas",
+          "via": "VO",
+          "tipo": "sn",
+          "horarios": [],
+          "consumo": 40,
+          "estoqueId": "e11"
+        },
+        {
+          "id": "m4rd5zw",
+          "inicio": "2026-11-06",
+          "dias": [],
+          "intervalo": 10,
+          "obs": "Controle",
+          "prescritor": "s9",
+          "sig": {
+            "id": "s1",
+            "d": "2026-09-15",
+            "h": "09:00"
+          },
+          "suspensa": false,
+          "med": "Glicemia capilar (dextro)",
+          "dose": "1 aferição",
+          "via": "Tópica",
+          "tipo": "intervalo",
+          "horarios": [
+            "07:00"
+          ],
+          "consumo": 0,
+          "estoqueId": null
+        }
+      ],
+      "anot": [
+        {
+          "id": "m208bby",
+          "pa": "120x70",
+          "pulso": 79,
+          "resp": 18,
+          "temp": 35.7,
+          "sat": 98,
+          "evac": "Ausente",
+          "diurese": "+++",
+          "texto": "Residente calmo, comunicativo, deambula sem auxílio. Aceitou medicações e refeições VO. Sem queixas.",
+          "sig": {
+            "id": "s3",
+            "d": "2026-11-11",
+            "h": "08:20"
+          }
+        },
+        {
+          "id": "dgb9lve",
+          "pa": "120x50",
+          "pulso": 69,
+          "resp": 19,
+          "temp": 34.2,
+          "sat": 95,
+          "evac": "Ausente",
+          "diurese": "+++",
+          "texto": "Residente calmo, confuso em alguns momentos. Aceitou refeições VO. Deambula.",
+          "sig": {
+            "id": "s4",
+            "d": "2026-11-12",
+            "h": "09:15"
+          }
+        },
+        {
+          "id": "nz8z4a0",
+          "pa": "120x80",
+          "pulso": 71,
+          "resp": 19,
+          "temp": 36,
+          "sat": 95,
+          "evac": "Ausente",
+          "diurese": "+++",
+          "texto": "Residente calmo, comunicativo. Deambula sem auxílio. Segue aos cuidados de enfermagem.",
+          "sig": {
+            "id": "s3",
+            "d": "2026-11-13",
+            "h": "08:42"
+          }
+        }
+      ],
+      "evol": [
+        {
+          "id": "r8yn53r",
+          "area": "Medicina",
+          "texto": "BEG, corado, hidratado, acianótico, anictérico, afebril. Sinais vitais estáveis. Assintomático.",
+          "sig": {
+            "id": "s9",
+            "d": "2026-11-05",
+            "h": "15:00"
+          }
+        },
+        {
+          "id": "ofb38ai",
+          "area": "Nutrição",
+          "texto": "Mantém peso e conduta.",
+          "peso": 74,
+          "sig": {
+            "id": "s11",
+            "d": "2026-03-19",
+            "h": "10:00"
+          }
+        },
+        {
+          "id": "713bk43",
+          "area": "Nutrição",
+          "texto": "Mantém peso e conduta.",
+          "peso": 74,
+          "sig": {
+            "id": "s11",
+            "d": "2026-04-18",
+            "h": "10:00"
+          }
+        },
+        {
+          "id": "5o6oek5",
+          "area": "Nutrição",
+          "texto": "Mantém peso e conduta.",
+          "peso": 76,
+          "sig": {
+            "id": "s11",
+            "d": "2026-05-18",
+            "h": "10:00"
+          }
+        },
+        {
+          "id": "rwmg9fb",
+          "area": "Nutrição",
+          "texto": "Mantém peso e conduta.",
+          "peso": 77,
+          "sig": {
+            "id": "s11",
+            "d": "2026-06-17",
+            "h": "10:00"
+          }
+        },
+        {
+          "id": "zj4r5oz",
+          "area": "Nutrição",
+          "texto": "Ganhou peso. Conduta mantida.",
+          "peso": 79,
+          "sig": {
+            "id": "s11",
+            "d": "2026-07-17",
+            "h": "10:00"
+          }
+        },
+        {
+          "id": "rehjrql",
+          "area": "Nutrição",
+          "texto": "Ganhou peso. Conduta mantida.",
+          "peso": 80,
+          "sig": {
+            "id": "s11",
+            "d": "2026-08-16",
+            "h": "10:00"
+          }
+        },
+        {
+          "id": "gln21lv",
+          "area": "Nutrição",
+          "texto": "Ganhou peso. Conduta mantida.",
+          "peso": 80,
+          "sig": {
+            "id": "s11",
+            "d": "2026-09-15",
+            "h": "10:00"
+          }
+        },
+        {
+          "id": "z34p7pm",
+          "area": "Nutrição",
+          "texto": "Ganhou peso. Conduta mantida.",
+          "peso": 81,
+          "sig": {
+            "id": "s11",
+            "d": "2026-10-17",
+            "h": "10:00"
+          }
+        },
+        {
+          "id": "33vyo3v",
+          "area": "Fisioterapia",
+          "texto": "Paciente em BEG. Realizou exercícios em grupo com ênfase em MMII e MMSS.",
+          "sig": {
+            "id": "s10",
+            "d": "2026-11-10",
+            "h": "08:00"
+          }
+        },
+        {
+          "id": "k0nyhrp",
+          "area": "Fisioterapia",
+          "texto": "Paciente não realizou atividade em grupo.",
+          "sig": {
+            "id": "s10",
+            "d": "2026-11-13",
+            "h": "08:00"
+          }
+        }
+      ],
+      "agenda": [
+        {
+          "id": "nwed3wm",
+          "area": "Psicologia",
+          "d": "2026-11-04",
+          "atividade": "Preenchendo figuras",
+          "sig": {
+            "id": "s12",
+            "d": "2026-11-04",
+            "h": "15:00"
+          }
+        },
+        {
+          "id": "il2cpwl",
+          "area": "Psicologia",
+          "d": "2026-11-06",
+          "atividade": "Completando objetos",
+          "sig": {
+            "id": "s12",
+            "d": "2026-11-06",
+            "h": "15:00"
+          }
+        },
+        {
+          "id": "veh7uau",
+          "area": "Psicologia",
+          "d": "2026-11-11",
+          "atividade": "Ordenação de horas",
+          "sig": {
+            "id": "s12",
+            "d": "2026-11-11",
+            "h": "15:00"
+          }
+        },
+        {
+          "id": "oadl3g8",
+          "area": "Psicologia",
+          "d": "2026-11-13",
+          "atividade": "Sequência lógica",
+          "sig": null
+        },
+        {
+          "id": "qtgt7lb",
+          "area": "Psicologia",
+          "d": "2026-11-18",
+          "atividade": "Bingo",
+          "sig": null
+        },
+        {
+          "id": "qxpw022",
+          "area": "Psicologia",
+          "d": "2026-11-20",
+          "atividade": "Classificação de objetos",
+          "sig": null
+        }
+      ]
+    },
+    {
+      "id": "r2",
+      "nome": "Aparecida Souza",
+      "sexo": "F",
+      "nasc": "1938-03-12",
+      "quarto": "3",
+      "admissao": "2023-05-02",
+      "escolaridade": "Fundamental incompleto",
+      "estadoCivil": "Viúvo(a)",
+      "filhos": 4,
+      "profissao": "Costureira",
+      "convenio": "Unimed",
+      "alergias": "Dipirona",
+      "doencas": [
+        "HAS"
+      ],
+      "outras": "",
+      "cirurgias": "Colecistectomia",
+      "medico": "s9",
+      "status": "ativo",
+      "entrada": "Família",
+      "responsavel": {
+        "nome": "Marcos Souza",
+        "parentesco": "Filho",
+        "tel": "(17) 99999-0002"
+      },
+      "contrato": "2023-05-02",
+      "docs": {
+        "vacina": true,
+        "rg": true,
+        "cpf": true,
+        "sus": true,
+        "convenio": true,
+        "contrato": true,
+        "funerario": true
+      },
+      "pref": {
+        "gosta": "Crochê",
+        "comida": "Bolo de fubá",
+        "musica": "Roberto Carlos"
+      },
+      "aval": [
+        {
+          "id": "tju9t7k",
+          "esc": "fugulin",
+          "d": "2026-10-05",
+          "resp": [
+            1,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0
+          ],
+          "sig": {
+            "id": "s1",
+            "d": "2026-10-05",
+            "h": "09:00"
+          }
+        },
+        {
+          "id": "1p8lshc",
+          "esc": "morse",
+          "d": "2026-10-15",
+          "resp": [
+            1,
+            1,
+            1,
+            0,
+            1,
+            1
+          ],
+          "sig": {
+            "id": "s1",
+            "d": "2026-10-15",
+            "h": "09:00"
+          }
+        }
+      ],
+      "pia": [],
+      "cuidados": [
+        {
+          "id": "c1",
+          "texto": "Verificar, anotar SSVV e comunicar alterações",
+          "quem": "enfermagem"
+        },
+        {
+          "id": "c2",
+          "texto": "Auxiliar na deambulação e manter calçado fechado (alto risco de queda)",
+          "quem": "todos"
+        },
+        {
+          "id": "c3",
+          "texto": "Mudança de decúbito a cada 2h no período noturno",
+          "quem": "todos"
+        }
+      ],
+      "estoque": [
+        {
+          "id": "e1",
+          "nome": "Losartana 50 mg",
+          "unid": "comp",
+          "qtd": 6,
+          "min": 7
+        },
+        {
+          "id": "e2",
+          "nome": "Omeprazol 20 mg",
+          "unid": "cáps",
+          "qtd": 20,
+          "min": 7
+        }
+      ],
+      "presc": [
+        {
+          "id": "t34qmvc",
+          "inicio": "2026-09-15",
+          "dias": [],
+          "intervalo": 1,
+          "obs": "",
+          "prescritor": "s9",
+          "sig": {
+            "id": "s1",
+            "d": "2026-09-15",
+            "h": "09:00"
+          },
+          "suspensa": false,
+          "med": "Losartana 50 mg",
+          "dose": "1 cp",
+          "via": "VO",
+          "tipo": "fixo",
+          "horarios": [
+            "08:00",
+            "20:00"
+          ],
+          "consumo": 1,
+          "estoqueId": "e1"
+        },
+        {
+          "id": "i9o2sa7",
+          "inicio": "2026-09-15",
+          "dias": [],
+          "intervalo": 1,
+          "obs": "",
+          "prescritor": "s9",
+          "sig": {
+            "id": "s1",
+            "d": "2026-09-15",
+            "h": "09:00"
+          },
+          "suspensa": false,
+          "med": "Omeprazol 20 mg",
+          "dose": "1 cáps",
+          "via": "VO",
+          "tipo": "fixo",
+          "horarios": [
+            "06:00"
+          ],
+          "consumo": 1,
+          "estoqueId": "e2"
+        }
+      ],
+      "anot": [
+        {
+          "id": "lt4f02f",
+          "pa": "150x90",
+          "pulso": 88,
+          "resp": 20,
+          "temp": 36.4,
+          "sat": 94,
+          "evac": "Ausente",
+          "diurese": "+++",
+          "texto": "Residente calma, refere tontura leve ao levantar. Comunicado à enfermeira.",
+          "sig": {
+            "id": "s4",
+            "d": "2026-11-13",
+            "h": "09:00"
+          }
+        }
+      ],
+      "evol": [],
+      "agenda": []
+    },
+    {
+      "id": "r3",
+      "nome": "Iracema Torres",
+      "sexo": "F",
+      "nasc": "1935-11-02",
+      "quarto": "1",
+      "admissao": "2022-09-10",
+      "escolaridade": "Não alfabetizado(a)",
+      "estadoCivil": "Viúvo(a)",
+      "filhos": 6,
+      "profissao": "Lavradora",
+      "convenio": "SUS",
+      "alergias": "",
+      "doencas": [
+        "Demência"
+      ],
+      "outras": "",
+      "cirurgias": "",
+      "medico": "s9",
+      "status": "ativo",
+      "entrada": "Assistência social",
+      "responsavel": {
+        "nome": "Rosa Torres",
+        "parentesco": "Sobrinha",
+        "tel": "(17) 99999-0003"
+      },
+      "contrato": "2022-09-10",
+      "docs": {
+        "vacina": false,
+        "rg": true,
+        "cpf": true,
+        "sus": true,
+        "contrato": true,
+        "funerario": true
+      },
+      "pref": {
+        "gosta": "Moda de viola",
+        "horario": "Manhã"
+      },
+      "aval": [
+        {
+          "id": "23vz564",
+          "esc": "fugulin",
+          "d": "2026-10-05",
+          "resp": [
+            2,
+            0,
+            2,
+            3,
+            3,
+            1,
+            3,
+            2,
+            0
+          ],
+          "sig": {
+            "id": "s1",
+            "d": "2026-10-05",
+            "h": "09:00"
+          }
+        },
+        {
+          "id": "q6w3hl9",
+          "esc": "braden",
+          "d": "2026-10-25",
+          "resp": [
+            1,
+            1,
+            0,
+            1,
+            1,
+            1
+          ],
+          "sig": {
+            "id": "s1",
+            "d": "2026-10-25",
+            "h": "09:00"
+          }
+        }
+      ],
+      "pia": [],
+      "cuidados": [
+        {
+          "id": "c1",
+          "texto": "Mudança de decúbito a cada 2 horas",
+          "quem": "todos"
+        },
+        {
+          "id": "c2",
+          "texto": "Hidratar a pele com AGE após o banho",
+          "quem": "todos"
+        },
+        {
+          "id": "c3",
+          "texto": "Oferecer água de 1 em 1 hora (espessada)",
+          "quem": "todos"
+        }
+      ],
+      "estoque": [
+        {
+          "id": "e1",
+          "nome": "Sinvastatina 20 mg",
+          "unid": "comp",
+          "qtd": 40,
+          "min": 7
+        },
+        {
+          "id": "e2",
+          "nome": "Memantina 10 mg",
+          "unid": "comp",
+          "qtd": 10,
+          "min": 7
+        }
+      ],
+      "presc": [
+        {
+          "id": "6auoik1",
+          "inicio": "2026-09-15",
+          "dias": [],
+          "intervalo": 1,
+          "obs": "",
+          "prescritor": "s9",
+          "sig": {
+            "id": "s1",
+            "d": "2026-09-15",
+            "h": "09:00"
+          },
+          "suspensa": false,
+          "med": "Sinvastatina 20 mg",
+          "dose": "1 cp",
+          "via": "VO",
+          "tipo": "fixo",
+          "horarios": [
+            "20:00"
+          ],
+          "consumo": 1,
+          "estoqueId": "e1"
+        },
+        {
+          "id": "yvmeny8",
+          "inicio": "2026-09-15",
+          "dias": [],
+          "intervalo": 1,
+          "obs": "",
+          "prescritor": "s9",
+          "sig": {
+            "id": "s1",
+            "d": "2026-09-15",
+            "h": "09:00"
+          },
+          "suspensa": false,
+          "med": "Memantina 10 mg",
+          "dose": "1 cp",
+          "via": "VO",
+          "tipo": "fixo",
+          "horarios": [
+            "08:00",
+            "20:00"
+          ],
+          "consumo": 1,
+          "estoqueId": "e2"
+        }
+      ],
+      "anot": [],
+      "evol": [],
+      "agenda": []
+    },
+    {
+      "id": "r4",
+      "nome": "Benedito Lima",
+      "sexo": "M",
+      "nasc": "1941-08-30",
+      "quarto": "5",
+      "admissao": "2024-01-15",
+      "escolaridade": "Médio completo",
+      "estadoCivil": "Casado(a)",
+      "filhos": 3,
+      "profissao": "Ferroviário",
+      "convenio": "SUS",
+      "alergias": "",
+      "doencas": [
+        "Diabetes"
+      ],
+      "outras": "",
+      "cirurgias": "",
+      "medico": "s9",
+      "status": "ativo",
+      "entrada": "Família",
+      "responsavel": {
+        "nome": "Joana Lima",
+        "parentesco": "Esposa",
+        "tel": "(17) 99999-0004"
+      },
+      "contrato": "2024-01-15",
+      "docs": {
+        "vacina": true,
+        "rg": true,
+        "cpf": true,
+        "sus": true,
+        "contrato": true,
+        "funerario": true
+      },
+      "pref": {},
+      "aval": [
+        {
+          "id": "1fffjrb",
+          "esc": "fugulin",
+          "d": "2026-10-05",
+          "resp": [
+            1,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0
+          ],
+          "sig": {
+            "id": "s1",
+            "d": "2026-10-05",
+            "h": "09:00"
+          }
+        }
+      ],
+      "pia": [],
+      "cuidados": [
+        {
+          "id": "c1",
+          "texto": "Glicemia capilar antes do café e do jantar",
+          "quem": "enfermagem"
+        }
+      ],
+      "estoque": [
+        {
+          "id": "e1",
+          "nome": "Metformina 850 mg",
+          "unid": "comp",
+          "qtd": 90,
+          "min": 14
+        }
+      ],
+      "presc": [
+        {
+          "id": "6bhzilq",
+          "inicio": "2026-09-15",
+          "dias": [],
+          "intervalo": 1,
+          "obs": "",
+          "prescritor": "s9",
+          "sig": {
+            "id": "s1",
+            "d": "2026-09-15",
+            "h": "09:00"
+          },
+          "suspensa": false,
+          "med": "Metformina 850 mg",
+          "dose": "1 cp",
+          "via": "VO",
+          "tipo": "fixo",
+          "horarios": [
+            "08:00",
+            "12:00",
+            "20:00"
+          ],
+          "consumo": 1,
+          "estoqueId": "e1"
+        }
+      ],
+      "anot": [],
+      "evol": [],
+      "agenda": []
+    }
+  ],
+  "casa": [
+    {
+      "id": "h1",
+      "nome": "Fralda geriátrica G",
+      "unid": "un",
+      "qtd": 140,
+      "min": 60,
+      "consumoDia": 12
+    },
+    {
+      "id": "h2",
+      "nome": "Lenço umedecido",
+      "unid": "pct",
+      "qtd": 6,
+      "min": 4,
+      "consumoDia": 0.5
+    },
+    {
+      "id": "h3",
+      "nome": "Creme barreira",
+      "unid": "tubo",
+      "qtd": 3,
+      "min": 2,
+      "consumoDia": 0.2
+    },
+    {
+      "id": "h4",
+      "nome": "Luva de procedimento M",
+      "unid": "cx",
+      "qtd": 5,
+      "min": 3,
+      "consumoDia": 0.4
+    },
+    {
+      "id": "h5",
+      "nome": "Fita de glicemia",
+      "unid": "un",
+      "qtd": 40,
+      "min": 30,
+      "consumoDia": 3
+    }
+  ],
+  "adm": {},
+  "sn": [],
+  "cuidChk": {},
+  "documentos": [
+    {
+      "id": "azcszfw",
+      "nome": "Alvará de funcionamento",
+      "orgao": "Prefeitura",
+      "validade": "2027-06-12"
+    },
+    {
+      "id": "s11g9t0",
+      "nome": "Licença sanitária",
+      "orgao": "Vigilância Sanitária (responsável: RT)",
+      "validade": "2026-12-09"
+    },
+    {
+      "id": "c0vqj00",
+      "nome": "Inscrição no CMDPI",
+      "orgao": "Conselho Municipal dos Direitos da Pessoa Idosa",
+      "validade": "2027-12-19"
+    },
+    {
+      "id": "t67g6ut",
+      "nome": "Certidão de Responsabilidade Técnica",
+      "orgao": "COREN-SP (órgão de classe)",
+      "validade": "2026-11-26"
+    }
+  ],
+  "pops": [
+    {
+      "id": "9fpqqov",
+      "titulo": "Administração de medicamentos",
+      "tipo": "POP",
+      "revisao": "2026-08-06"
+    },
+    {
+      "id": "6hlw759",
+      "titulo": "Higienização das mãos",
+      "tipo": "POP",
+      "revisao": "2025-10-10"
+    },
+    {
+      "id": "r8t60gp",
+      "titulo": "Banho no leito e higiene íntima",
+      "tipo": "POP",
+      "revisao": "2026-06-17"
+    },
+    {
+      "id": "pb3kg9a",
+      "titulo": "Prevenção de quedas",
+      "tipo": "Protocolo",
+      "revisao": "2026-04-28"
+    },
+    {
+      "id": "5fs8g6y",
+      "titulo": "Prevenção de lesão por pressão",
+      "tipo": "Protocolo",
+      "revisao": "2026-09-25"
+    },
+    {
+      "id": "h19glwh",
+      "titulo": "Manual de boas práticas da ILPI",
+      "tipo": "Manual",
+      "revisao": "2026-01-18"
+    },
+    {
+      "id": "42scte1",
+      "titulo": "Fluxo de óbito",
+      "tipo": "Fluxograma",
+      "revisao": "2026-08-16"
+    },
+    {
+      "id": "1qtahyt",
+      "titulo": "Fluxo de urgência e remoção",
+      "tipo": "Fluxograma",
+      "revisao": "2025-07-02"
+    },
+    {
+      "id": "nzguatv",
+      "titulo": "Fluxo de admissão do residente",
+      "tipo": "Fluxograma",
+      "revisao": "2026-10-15"
+    }
+  ],
+  "treinamentos": [
+    {
+      "id": "1nhp3g6",
+      "data": "2026-10-18",
+      "tema": "Prevenção de quedas na prática",
+      "presentes": [
+        "s1",
+        "s2",
+        "s3",
+        "s4",
+        "s5",
+        "s6"
+      ]
+    }
+  ],
+  "temperaturas": [
+    {
+      "id": "hliw120",
+      "d": "2026-11-04",
+      "turno": "manha",
+      "h": "07:00",
+      "max": 4.8999999999999995,
+      "min": 3.8,
+      "mom": 4.2,
+      "amb": 28,
+      "sig": {
+        "id": "s4",
+        "d": "2026-11-04",
+        "h": "07:00"
+      }
+    },
+    {
+      "id": "al3s4wn",
+      "d": "2026-11-04",
+      "turno": "noite",
+      "h": "19:00",
+      "max": 5,
+      "min": 3.7,
+      "mom": 4.1,
+      "amb": 29,
+      "sig": {
+        "id": "s7",
+        "d": "2026-11-04",
+        "h": "19:00"
+      }
+    },
+    {
+      "id": "bbxpdeo",
+      "d": "2026-11-05",
+      "turno": "manha",
+      "h": "07:00",
+      "max": 4.8,
+      "min": 3.9,
+      "mom": 4.1,
+      "amb": 29,
+      "sig": {
+        "id": "s3",
+        "d": "2026-11-05",
+        "h": "07:00"
+      }
+    },
+    {
+      "id": "tk6gwdn",
+      "d": "2026-11-05",
+      "turno": "noite",
+      "h": "19:00",
+      "max": 5.1,
+      "min": 3.7,
+      "mom": 4.1,
+      "amb": 29,
+      "sig": {
+        "id": "s6",
+        "d": "2026-11-05",
+        "h": "19:00"
+      }
+    },
+    {
+      "id": "tt1wrxa",
+      "d": "2026-11-06",
+      "turno": "manha",
+      "h": "07:00",
+      "max": 5,
+      "min": 3.8,
+      "mom": 4,
+      "amb": 28,
+      "sig": {
+        "id": "s4",
+        "d": "2026-11-06",
+        "h": "07:00"
+      }
+    },
+    {
+      "id": "kap36zm",
+      "d": "2026-11-06",
+      "turno": "noite",
+      "h": "19:00",
+      "max": 5,
+      "min": 3.7,
+      "mom": 4.1,
+      "amb": 29,
+      "sig": {
+        "id": "s7",
+        "d": "2026-11-06",
+        "h": "19:00"
+      }
+    },
+    {
+      "id": "5qz1f7n",
+      "d": "2026-11-07",
+      "turno": "manha",
+      "h": "07:00",
+      "max": 4.8999999999999995,
+      "min": 3.9,
+      "mom": 4.3,
+      "amb": 29,
+      "sig": {
+        "id": "s3",
+        "d": "2026-11-07",
+        "h": "07:00"
+      }
+    },
+    {
+      "id": "m6ikubz",
+      "d": "2026-11-07",
+      "turno": "noite",
+      "h": "19:00",
+      "max": 5.1,
+      "min": 3.7,
+      "mom": 4.1,
+      "amb": 29,
+      "sig": {
+        "id": "s6",
+        "d": "2026-11-07",
+        "h": "19:00"
+      }
+    },
+    {
+      "id": "fvh1hrd",
+      "d": "2026-11-08",
+      "turno": "manha",
+      "h": "07:00",
+      "max": 4.8,
+      "min": 3.8,
+      "mom": 4.2,
+      "amb": 28,
+      "sig": {
+        "id": "s4",
+        "d": "2026-11-08",
+        "h": "07:00"
+      }
+    },
+    {
+      "id": "2198gic",
+      "d": "2026-11-08",
+      "turno": "noite",
+      "h": "19:00",
+      "max": 5,
+      "min": 3.7,
+      "mom": 4.1,
+      "amb": 29,
+      "sig": {
+        "id": "s7",
+        "d": "2026-11-08",
+        "h": "19:00"
+      }
+    },
+    {
+      "id": "rtnyiby",
+      "d": "2026-11-09",
+      "turno": "manha",
+      "h": "07:00",
+      "max": 5,
+      "min": 3.9,
+      "mom": 4.1,
+      "amb": 29,
+      "sig": {
+        "id": "s3",
+        "d": "2026-11-09",
+        "h": "07:00"
+      }
+    },
+    {
+      "id": "ia857ec",
+      "d": "2026-11-09",
+      "turno": "noite",
+      "h": "19:00",
+      "max": 5.1,
+      "min": 3.7,
+      "mom": 4.1,
+      "amb": 29,
+      "sig": {
+        "id": "s6",
+        "d": "2026-11-09",
+        "h": "19:00"
+      }
+    },
+    {
+      "id": "ctghy6c",
+      "d": "2026-11-10",
+      "turno": "manha",
+      "h": "07:00",
+      "max": 4.8999999999999995,
+      "min": 3.8,
+      "mom": 4,
+      "amb": 28,
+      "sig": {
+        "id": "s4",
+        "d": "2026-11-10",
+        "h": "07:00"
+      }
+    },
+    {
+      "id": "71ebs6g",
+      "d": "2026-11-10",
+      "turno": "noite",
+      "h": "19:00",
+      "max": 5,
+      "min": 3.7,
+      "mom": 4.1,
+      "amb": 29,
+      "sig": {
+        "id": "s7",
+        "d": "2026-11-10",
+        "h": "19:00"
+      }
+    },
+    {
+      "id": "6ksz783",
+      "d": "2026-11-11",
+      "turno": "manha",
+      "h": "07:00",
+      "max": 4.8,
+      "min": 3.9,
+      "mom": 4.3,
+      "amb": 29,
+      "sig": {
+        "id": "s3",
+        "d": "2026-11-11",
+        "h": "07:00"
+      }
+    },
+    {
+      "id": "vhe0nra",
+      "d": "2026-11-11",
+      "turno": "noite",
+      "h": "19:00",
+      "max": 5.1,
+      "min": 3.7,
+      "mom": 8.4,
+      "amb": 29,
+      "sig": {
+        "id": "s6",
+        "d": "2026-11-11",
+        "h": "19:00"
+      }
+    },
+    {
+      "id": "s9fngi7",
+      "d": "2026-11-12",
+      "turno": "manha",
+      "h": "07:00",
+      "max": 5,
+      "min": 3.8,
+      "mom": 4.2,
+      "amb": 28,
+      "sig": {
+        "id": "s4",
+        "d": "2026-11-12",
+        "h": "07:00"
+      }
+    },
+    {
+      "id": "bf5314z",
+      "d": "2026-11-12",
+      "turno": "noite",
+      "h": "19:00",
+      "max": 5,
+      "min": 3.7,
+      "mom": 4.1,
+      "amb": 29,
+      "sig": {
+        "id": "s7",
+        "d": "2026-11-12",
+        "h": "19:00"
+      }
+    },
+    {
+      "id": "csl9t7g",
+      "d": "2026-11-13",
+      "turno": "manha",
+      "h": "07:00",
+      "max": 4.8999999999999995,
+      "min": 3.9,
+      "mom": 4.1,
+      "amb": 29,
+      "sig": {
+        "id": "s3",
+        "d": "2026-11-13",
+        "h": "07:00"
+      }
+    },
+    {
+      "id": "91w787s",
+      "d": "2026-11-13",
+      "turno": "noite",
+      "h": "19:00",
+      "max": 5.1,
+      "min": 3.7,
+      "mom": 4.1,
+      "amb": 29,
+      "sig": {
+        "id": "s6",
+        "d": "2026-11-13",
+        "h": "19:00"
+      }
+    }
+  ],
+  "eventos": [
+    {
+      "id": "8ajuita",
+      "resId": "r3",
+      "tipo": "desidratacao",
+      "data": "2026-11-08"
+    }
+  ],
+  "tarefas": [
+    {
+      "id": "gv2imk6",
+      "tarefa": "Repor água e copos nos quartos",
+      "resp": "s5",
+      "dias": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "id": "w3y6m70",
+      "tarefa": "Trocar roupa de cama dos quartos 1 a 5",
+      "resp": "s5",
+      "dias": [
+        1,
+        4
+      ]
+    },
+    {
+      "id": "n9mm879",
+      "tarefa": "Conferir validade dos medicamentos",
+      "resp": "s2",
+      "dias": [
+        5
+      ]
+    },
+    {
+      "id": "yf7h4kr",
+      "tarefa": "Limpar a geladeira de medicamentos",
+      "resp": "s3",
+      "dias": [
+        6
+      ]
+    }
+  ],
+  "feitas": {}
+}

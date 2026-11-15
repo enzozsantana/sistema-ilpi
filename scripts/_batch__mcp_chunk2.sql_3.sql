@@ -1,0 +1,4 @@
+insert into public.pops (id,titulo,tipo,revisao) values ('h19glwh','Manual de boas práticas da ILPI','Manual','2026-01-18');
+insert into public.pops (id,titulo,tipo,revisao) values ('42scte1','Fluxo de óbito','Fluxograma','2026-08-16');
+insert into public.pops (id,titulo,tipo,revisao) values ('1qtahyt','Fluxo de urgência e remoção','Fluxograma','2025-07-02');
+insert into public.pops (id,titulo,tipo,revisao) values ('nzguatv','Fluxo de admissão do residente','Fluxograma','2026-10-15');

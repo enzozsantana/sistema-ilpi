@@ -1,0 +1,12 @@
+insert into public.evolucoes (id,residente_id,area,texto,peso,assinatura) values ('zj4r5oz','r1','Nutrição','Ganhou peso. Conduta mantida.',79,'{"id":"s11","d":"2026-07-17","h":"10:00"}'::jsonb);
+insert into public.evolucoes (id,residente_id,area,texto,peso,assinatura) values ('rehjrql','r1','Nutrição','Ganhou peso. Conduta mantida.',80,'{"id":"s11","d":"2026-08-16","h":"10:00"}'::jsonb);
+insert into public.evolucoes (id,residente_id,area,texto,peso,assinatura) values ('gln21lv','r1','Nutrição','Ganhou peso. Conduta mantida.',80,'{"id":"s11","d":"2026-09-15","h":"10:00"}'::jsonb);
+insert into public.evolucoes (id,residente_id,area,texto,peso,assinatura) values ('z34p7pm','r1','Nutrição','Ganhou peso. Conduta mantida.',81,'{"id":"s11","d":"2026-10-17","h":"10:00"}'::jsonb);
+insert into public.evolucoes (id,residente_id,area,texto,peso,assinatura) values ('33vyo3v','r1','Fisioterapia','Paciente em BEG. Realizou exercícios em grupo com ênfase em MMII e MMSS.',null,'{"id":"s10","d":"2026-11-10","h":"08:00"}'::jsonb);
+insert into public.evolucoes (id,residente_id,area,texto,peso,assinatura) values ('k0nyhrp','r1','Fisioterapia','Paciente não realizou atividade em grupo.',null,'{"id":"s10","d":"2026-11-13","h":"08:00"}'::jsonb);
+insert into public.agendas (id,residente_id,area,data,atividade,assinatura) values ('nwed3wm','r1','Psicologia','2026-11-04','Preenchendo figuras','{"id":"s12","d":"2026-11-04","h":"15:00"}'::jsonb);
+insert into public.agendas (id,residente_id,area,data,atividade,assinatura) values ('il2cpwl','r1','Psicologia','2026-11-06','Completando objetos','{"id":"s12","d":"2026-11-06","h":"15:00"}'::jsonb);
+insert into public.agendas (id,residente_id,area,data,atividade,assinatura) values ('veh7uau','r1','Psicologia','2026-11-11','Ordenação de horas','{"id":"s12","d":"2026-11-11","h":"15:00"}'::jsonb);
+insert into public.agendas (id,residente_id,area,data,atividade,assinatura) values ('oadl3g8','r1','Psicologia','2026-11-13','Sequência lógica','null'::jsonb);
+insert into public.agendas (id,residente_id,area,data,atividade,assinatura) values ('qtgt7lb','r1','Psicologia','2026-11-18','Bingo','null'::jsonb);
+insert into public.agendas (id,residente_id,area,data,atividade,assinatura) values ('qxpw022','r1','Psicologia','2026-11-20','Classificação de objetos','null'::jsonb);

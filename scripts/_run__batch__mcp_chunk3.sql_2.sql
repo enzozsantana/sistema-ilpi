@@ -1,0 +1,1 @@
+{"query":"insert into public.tarefas (id,tarefa,responsavel,dias) values ('n9mm879','Conferir validade dos medicamentos','s2','[5]'::jsonb);\ninsert into public.tarefas (id,tarefa,responsavel,dias) values ('yf7h4kr','Limpar a geladeira de medicamentos','s3','[6]'::jsonb);"}

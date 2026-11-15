@@ -1,0 +1,422 @@
+import type {
+  AgendaItem,
+  Anotacao,
+  ArquivoResidente,
+  Assinatura,
+  AvaliacaoEscala,
+  Categoria,
+  Cuidado,
+  DocumentoInstituicao,
+  EventoVigilancia,
+  EscalaKey,
+  Evolucao,
+  ItemEstoque,
+  Pia,
+  PopDocumento,
+  Prescricao,
+  Profissional,
+  RegistroAdm,
+  Residente,
+  StatusAdm,
+  TemperaturaGeladeira,
+  TipoPrescricao,
+  Treinamento,
+} from '../types/ilpi'
+import { doseKey } from './business/medication'
+
+type DbTipoPresc = 'diario' | 'semanal' | 'intervalo' | 'sn'
+
+function mapTipoPresc(tipo: DbTipoPresc): TipoPrescricao {
+  if (tipo === 'diario') return 'fixo'
+  return tipo
+}
+
+function asSig(raw: unknown): Assinatura {
+  const s = (raw ?? {}) as Record<string, string>
+  return { id: s.id ?? '', d: s.d ?? '', h: s.h ?? '' }
+}
+
+function str(d: string | null | undefined): string | undefined {
+  return d ?? undefined
+}
+
+export function mapProfissional(row: {
+  id: string
+  nome: string
+  categoria: Categoria
+  funcao: string
+  conselho?: string | null
+  setor?: string | null
+  area?: string | null
+  carga?: string | null
+  horario?: string | null
+  foto?: string | null
+  ativo?: boolean | null
+}): Profissional {
+  return {
+    id: row.id,
+    nome: row.nome,
+    cat: row.categoria,
+    funcao: row.funcao,
+    conselho: row.conselho ?? undefined,
+    setor: row.setor ?? undefined,
+    area: row.area ?? undefined,
+    carga: row.carga ?? undefined,
+    horario: row.horario ?? undefined,
+    foto: row.foto ?? undefined,
+    ativo: row.ativo ?? true,
+  }
+}
+
+export function mapItemEstoque(row: {
+  id: string
+  nome: string
+  unidade: string
+  quantidade: number
+  minimo: number
+  consumo_dia?: number | null
+}): ItemEstoque {
+  return {
+    id: row.id,
+    nome: row.nome,
+    unid: row.unidade,
+    qtd: Number(row.quantidade),
+    min: Number(row.minimo),
+    consumoDia: row.consumo_dia != null ? Number(row.consumo_dia) : undefined,
+  }
+}
+
+export function mapPrescricao(row: {
+  id: string
+  medicamento: string
+  dose?: string | null
+  via?: string | null
+  tipo: DbTipoPresc
+  horarios: unknown
+  dias: unknown
+  intervalo?: number | null
+  consumo: number
+  item_estoque_id?: string | null
+  inicio?: string | null
+  fim?: string | null
+  obs?: string | null
+  prescritor_id?: string | null
+  suspensa: boolean
+  assinatura: unknown
+}): Prescricao {
+  return {
+    id: row.id,
+    med: row.medicamento,
+    dose: row.dose ?? '',
+    via: row.via ?? '',
+    tipo: mapTipoPresc(row.tipo),
+    horarios: (row.horarios as string[]) ?? [],
+    dias: (row.dias as number[]) ?? [],
+    intervalo: row.intervalo ?? undefined,
+    consumo: Number(row.consumo),
+    estoqueId: row.item_estoque_id ?? null,
+    inicio: row.inicio ?? '',
+    fim: row.fim ?? undefined,
+    obs: row.obs ?? undefined,
+    prescritor: row.prescritor_id ?? undefined,
+    suspensa: row.suspensa,
+    sig: asSig(row.assinatura),
+  }
+}
+
+export function mapAvaliacao(row: {
+  id: string
+  escala: string
+  data: string
+  respostas: unknown
+  assinatura: unknown
+}): AvaliacaoEscala {
+  return {
+    id: row.id,
+    esc: row.escala as EscalaKey,
+    d: row.data,
+    resp: (row.respostas as number[]) ?? [],
+    sig: asSig(row.assinatura),
+  }
+}
+
+export function mapPia(row: {
+  id: string
+  periodo?: string | null
+  inicio?: string | null
+  reavaliacao?: string | null
+  necessidades: unknown
+  obs?: string | null
+  resultado?: string | null
+  encaminhamentos?: string | null
+  assinatura: unknown
+}): Pia {
+  return {
+    id: row.id,
+    periodo: row.periodo ?? undefined,
+    inicio: row.inicio ?? '',
+    reav: row.reavaliacao ?? undefined,
+    necessidades: (row.necessidades as string[]) ?? [],
+    obs: row.obs ?? undefined,
+    resultado: row.resultado ?? undefined,
+    encaminhamentos: row.encaminhamentos ?? undefined,
+    sig: asSig(row.assinatura),
+  }
+}
+
+export function mapCuidado(row: {
+  id: string
+  texto: string
+  quem: 'todos' | 'enfermagem' | 'cuidador'
+}): Cuidado {
+  return { id: row.id, texto: row.texto, quem: row.quem }
+}
+
+export function mapAnotacao(row: {
+  id: string
+  pa?: string | null
+  pulso?: string | null
+  resp?: string | null
+  temp?: string | null
+  sat?: string | null
+  evac?: string | null
+  diurese?: string | null
+  texto?: string | null
+  assinatura: unknown
+}): Anotacao {
+  return {
+    id: row.id,
+    pa: row.pa ?? undefined,
+    pulso: row.pulso ?? undefined,
+    resp: row.resp ?? undefined,
+    temp: row.temp ?? undefined,
+    sat: row.sat ?? undefined,
+    evac: row.evac ?? undefined,
+    diurese: row.diurese ?? undefined,
+    texto: row.texto ?? '',
+    sig: asSig(row.assinatura),
+  }
+}
+
+export function mapEvolucao(row: {
+  id: string
+  area: string
+  texto?: string | null
+  peso?: number | null
+  assinatura: unknown
+}): Evolucao {
+  return {
+    id: row.id,
+    area: row.area,
+    texto: row.texto ?? '',
+    peso: row.peso != null ? Number(row.peso) : undefined,
+    sig: asSig(row.assinatura),
+  }
+}
+
+export function mapAgenda(row: {
+  id: string
+  area: string
+  data: string
+  atividade: string
+  assinatura?: unknown | null
+}): AgendaItem {
+  const sig = row.assinatura
+  return {
+    id: row.id,
+    area: row.area,
+    d: row.data,
+    atividade: row.atividade,
+    sig: sig ? asSig(sig) : null,
+  }
+}
+
+export function mapArquivo(row: {
+  id: string
+  nome: string
+  categoria?: string | null
+  data?: string | null
+  tipo?: string | null
+  area?: string | null
+}): ArquivoResidente {
+  return {
+    id: row.id,
+    nome: row.nome,
+    cat: row.categoria ?? undefined,
+    data: row.data ?? undefined,
+    tipo: row.tipo ?? undefined,
+    area: row.area ?? undefined,
+  }
+}
+
+export function mapResidenteBase(row: {
+  id: string
+  nome: string
+  sexo?: string | null
+  nasc?: string | null
+  quarto?: string | null
+  admissao?: string | null
+  escolaridade?: string | null
+  estado_civil?: string | null
+  filhos?: string | null
+  profissao?: string | null
+  convenio?: string | null
+  alergias?: string | null
+  doencas?: unknown
+  outras?: string | null
+  cirurgias?: string | null
+  medico_id?: string | null
+  status?: string | null
+  obito_data?: string | null
+  entrada?: string | null
+  responsavel?: unknown
+  contrato?: string | null
+  docs?: unknown
+  pref?: unknown
+  foto?: string | null
+}): Residente {
+  const resp = (row.responsavel ?? {}) as Record<string, string>
+  return {
+    id: row.id,
+    nome: row.nome,
+    sexo: row.sexo ?? undefined,
+    nasc: str(row.nasc),
+    quarto: row.quarto ?? undefined,
+    admissao: row.admissao ?? '',
+    escolaridade: row.escolaridade ?? undefined,
+    estadoCivil: row.estado_civil ?? undefined,
+    filhos: row.filhos != null ? Number(row.filhos) || row.filhos : undefined,
+    profissao: row.profissao ?? undefined,
+    convenio: row.convenio ?? undefined,
+    alergias: row.alergias ?? '',
+    doencas: (row.doencas as string[]) ?? [],
+    outras: row.outras ?? undefined,
+    cirurgias: row.cirurgias ?? undefined,
+    medico: row.medico_id ?? undefined,
+    status: (row.status as Residente['status']) ?? 'ativo',
+    obitoData: str(row.obito_data),
+    entrada: row.entrada ?? undefined,
+    responsavel: {
+      nome: resp.nome,
+      parentesco: resp.parentesco,
+      tel: resp.tel,
+    },
+    contrato: row.contrato ?? undefined,
+    docs: (row.docs as Record<string, boolean>) ?? {},
+    pref: (row.pref as Record<string, string>) ?? {},
+    foto: row.foto ?? undefined,
+    presc: [],
+    estoque: [],
+    aval: [],
+    pia: [],
+    cuidados: [],
+    anot: [],
+    evol: [],
+    agenda: [],
+    arquivos: [],
+  }
+}
+
+export function buildAdmMap(
+  rows: {
+    data: string
+    residente_id: string
+    prescricao_id: string
+    horario: string
+    status: StatusAdm
+    motivo?: string | null
+    assinatura: unknown
+  }[],
+): Record<string, Record<string, RegistroAdm>> {
+  const adm: Record<string, Record<string, RegistroAdm>> = {}
+  for (const row of rows) {
+    const key = doseKey(row.residente_id, row.prescricao_id, row.horario)
+    if (!adm[row.data]) adm[row.data] = {}
+    adm[row.data][key] = {
+      st: row.status,
+      motivo: row.motivo ?? undefined,
+      sig: asSig(row.assinatura),
+    }
+  }
+  return adm
+}
+
+export function mapTemperatura(row: {
+  id: string
+  data: string
+  turno: 'manha' | 'noite'
+  hora?: string | null
+  max?: number | null
+  min?: number | null
+  momento?: number | null
+  ambiente?: number | null
+  assinatura: unknown
+}): TemperaturaGeladeira {
+  return {
+    id: row.id,
+    d: row.data,
+    turno: row.turno,
+    h: row.hora ?? '',
+    max: Number(row.max ?? 0),
+    min: Number(row.min ?? 0),
+    mom: Number(row.momento ?? 0),
+    amb: Number(row.ambiente ?? 0),
+    sig: asSig(row.assinatura),
+  }
+}
+
+export function mapDocumentoInst(row: {
+  id: string
+  nome: string
+  orgao?: string | null
+  validade?: string | null
+}): DocumentoInstituicao {
+  return {
+    id: row.id,
+    nome: row.nome,
+    orgao: row.orgao ?? '',
+    validade: row.validade ?? '',
+  }
+}
+
+export function mapPop(row: {
+  id: string
+  titulo: string
+  tipo: string
+  revisao?: string | null
+}): PopDocumento {
+  return {
+    id: row.id,
+    titulo: row.titulo,
+    tipo: row.tipo,
+    revisao: row.revisao ?? '',
+  }
+}
+
+export function mapTreinamento(row: {
+  id: string
+  data: string
+  tema: string
+  presentes: unknown
+}): Treinamento {
+  return {
+    id: row.id,
+    data: row.data,
+    tema: row.tema,
+    presentes: (row.presentes as string[]) ?? [],
+  }
+}
+
+export function mapEvento(row: {
+  id: string
+  residente_id: string
+  tipo: string
+  data: string
+}): EventoVigilancia {
+  return {
+    id: row.id,
+    resId: row.residente_id,
+    tipo: row.tipo as EventoVigilancia['tipo'],
+    data: row.data,
+  }
+}

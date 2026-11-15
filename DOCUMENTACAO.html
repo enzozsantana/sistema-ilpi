@@ -1,0 +1,619 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sistema ILPI: documentação</title>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F4F7F5;--ink:#18231F;--muted:#5B6B65;--line:#D5DED9;--brand:#1F5E52;--soft:#DCEBE5;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#101715;--ink:#E6EEEA;--muted:#9AABA4;--line:#2A3632;--brand:#6CC2AE;--soft:#1C3530;color-scheme:dark}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Atkinson Hyperlegible",system-ui,sans-serif}
+main{max-width:860px;margin:0 auto;padding:32px 16px 64px}
+h1,h2,h3{font-family:"Bricolage Grotesque",system-ui,sans-serif;line-height:1.2}
+h1{font-size:2rem;color:var(--brand)}h2{margin-top:2.2em;padding-top:.6em;border-top:2px solid var(--line)}
+table{border-collapse:collapse;width:100%;display:block;overflow-x:auto;font-size:.9rem;margin:1em 0}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}th{background:var(--soft)}
+code,pre{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem}pre{background:var(--soft);padding:12px;border-radius:8px;overflow-x:auto}
+hr{border:0;border-top:1px solid var(--line)}
+@media print{body{background:#fff;color:#000}h2{break-before:auto}table{display:table}}
+</style></head><body><main><h1>Sistema ILPI: documentação do protótipo</h1>
+<p>Versão 3 do protótipo, novembro de 2026.</p>
+<p>Este documento descreve o que o protótipo faz, como as partes se conectam e o que falta para virar um sistema de verdade. Ele foi escrito para duas pessoas: a equipe de enfermagem que pensou o sistema e o desenvolvedor que vai construí-lo.</p>
+<hr />
+<h2>1. O que é</h2>
+<p>Um sistema de gestão para Instituição de Longa Permanência para Idosos (ILPI) que substitui os formulários em papel da casa: anotação de enfermagem, prescrição médica com checagem, plano individual de cuidados, PIA, escalas, controle de geladeira, escala de trabalho e documentos da instituição.</p>
+<p>O diferencial é que <strong>as partes conversam entre si</strong>:</p>
+<ul>
+<li>A <strong>prescrição médica</strong> gera a ronda de medicação do dia.</li>
+<li>Cada dose checada <strong>baixa sozinha do estoque</strong> daquele residente.</li>
+<li>O estoque calcula <strong>até que dia cada remédio dura</strong> e monta o pedido para a família no WhatsApp.</li>
+<li>As <strong>escalas</strong> (Fugulin, Morse, Braden, Glasgow, MNA) sugerem o que entra no <strong>PIA</strong>.</li>
+<li>O <strong>Fugulin</strong> de todos os residentes calcula o <strong>dimensionamento de cuidadores</strong> e compara com a escala do dia.</li>
+<li>As <strong>ocorrências</strong> registradas nas anotações geram os <strong>indicadores da Vigilância</strong>.</li>
+<li>A tela de abertura mostra <strong>só os alertas que cabem à função</strong> de quem entrou.</li>
+</ul>
+<hr />
+<h2>2. Arquivos deste pacote</h2>
+<table>
+<thead>
+<tr>
+<th>Arquivo</th>
+<th>O que é</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sistema-ilpi.html</code></td>
+<td>O protótipo completo. Abre direto no navegador, no computador ou no celular.</td>
+</tr>
+<tr>
+<td><code>DOCUMENTACAO.md</code></td>
+<td>Este documento.</td>
+</tr>
+<tr>
+<td><code>DOCUMENTACAO.html</code></td>
+<td>Este mesmo documento, formatado para ler no navegador.</td>
+</tr>
+<tr>
+<td><code>dados-exemplo.json</code></td>
+<td>Os dados fictícios do protótipo, no formato usado pelo sistema. Serve de referência para o banco de dados.</td>
+</tr>
+<tr>
+<td><code>LEIA-ME.txt</code></td>
+<td>Instruções rápidas.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>3. Como usar o protótipo</h2>
+<ol>
+<li>Abra <code>sistema-ilpi.html</code> em um navegador (Chrome, Edge, Safari ou Firefox).</li>
+<li>No topo, em <strong>Entrou como</strong>, escolha o profissional. A tela muda conforme a função.</li>
+<li>Os dados ficam salvos <strong>somente naquele navegador e naquele aparelho</strong>.</li>
+<li>Para voltar aos dados de exemplo: entre como Enfermeira RT, vá em <strong>Gestão</strong> e use <strong>Restaurar dados de exemplo</strong>.</li>
+</ol>
+<p><strong>Importante:</strong> todos os nomes, números de conselho e dados clínicos do protótipo são fictícios. Não cadastre dados reais de residentes no protótipo, porque ele não tem login, criptografia nem cópia de segurança.</p>
+<hr />
+<h2>4. Perfis e o que cada um vê</h2>
+<p>O acesso é definido pela <strong>categoria</strong> do profissional, escolhida no cadastro da equipe.</p>
+<h3>4.1 Menu principal</h3>
+<table>
+<thead>
+<tr>
+<th>Tela</th>
+<th>RT / Enfermeiro</th>
+<th>Técnico / Auxiliar</th>
+<th>Estagiário</th>
+<th>Cuidador</th>
+<th>Médico</th>
+<th>Multi (fisio, nutri, psico)</th>
+<th>Apoio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Plantão</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Sim</td>
+</tr>
+<tr>
+<td>Residentes (pastas)</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Não</td>
+</tr>
+<tr>
+<td>Estoque</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Não</td>
+<td>Não</td>
+<td>Não</td>
+<td>Não</td>
+<td>Não</td>
+</tr>
+<tr>
+<td>Rotinas</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Só tarefas</td>
+<td>Não</td>
+<td>Não</td>
+<td>Só tarefas</td>
+</tr>
+<tr>
+<td>Equipe</td>
+<td>Sim (edita)</td>
+<td>Sim (vê)</td>
+<td>Sim (vê)</td>
+<td>Sim (vê)</td>
+<td>Não</td>
+<td>Não</td>
+<td>Não</td>
+</tr>
+<tr>
+<td>Gestão</td>
+<td>Sim</td>
+<td>Não</td>
+<td>Não</td>
+<td>Não</td>
+<td>Não</td>
+<td>Não</td>
+<td>Não</td>
+</tr>
+</tbody>
+</table>
+<h3>4.2 Abas da pasta do residente</h3>
+<table>
+<thead>
+<tr>
+<th>Aba</th>
+<th>RT / Enf.</th>
+<th>Téc. / Aux.</th>
+<th>Estagiário</th>
+<th>Cuidador</th>
+<th>Médico</th>
+<th>Multi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pasta (resumo)</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Sim</td>
+</tr>
+<tr>
+<td>Ficha</td>
+<td>Edita</td>
+<td>Vê</td>
+<td>Vê</td>
+<td>Vê</td>
+<td>Vê</td>
+<td>Vê</td>
+</tr>
+<tr>
+<td>Avaliações</td>
+<td>Todas, edita</td>
+<td>Todas, vê</td>
+<td>Todas, vê</td>
+<td>Não</td>
+<td>Todas, vê</td>
+<td>Só a escala da área</td>
+</tr>
+<tr>
+<td>PIA enfermagem</td>
+<td>Edita</td>
+<td>Vê</td>
+<td>Vê</td>
+<td>Não</td>
+<td>Vê</td>
+<td>Não</td>
+</tr>
+<tr>
+<td>Plano de cuidados</td>
+<td>Edita</td>
+<td>Checa</td>
+<td>Checa</td>
+<td>Checa</td>
+<td>Não</td>
+<td>Não</td>
+</tr>
+<tr>
+<td>Prescrição médica</td>
+<td>Transcreve</td>
+<td>Checa doses</td>
+<td>Checa doses</td>
+<td>Não</td>
+<td>Prescreve</td>
+<td>Não</td>
+</tr>
+<tr>
+<td>Anotações</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Não</td>
+<td>Vê</td>
+<td>Não</td>
+</tr>
+<tr>
+<td>Evolução</td>
+<td>Todas</td>
+<td>Não</td>
+<td>Não</td>
+<td>Não</td>
+<td>Todas</td>
+<td>Só a da própria área</td>
+</tr>
+<tr>
+<td>Exames e documentos</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Não</td>
+<td>Não</td>
+<td>Sim</td>
+<td>Sim</td>
+</tr>
+<tr>
+<td>Estoque</td>
+<td>Sim</td>
+<td>Sim</td>
+<td>Não</td>
+<td>Não</td>
+<td>Não</td>
+<td>Não</td>
+</tr>
+<tr>
+<td>Prontuário completo</td>
+<td>Sim</td>
+<td>Não</td>
+<td>Não</td>
+<td>Não</td>
+<td>Sim</td>
+<td>Não</td>
+</tr>
+</tbody>
+</table>
+<h3>4.3 Escalas por área</h3>
+<table>
+<thead>
+<tr>
+<th>Escala</th>
+<th>Quem aplica</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fugulin (grau de dependência)</td>
+<td>Enfermeiro</td>
+</tr>
+<tr>
+<td>Morse (risco de queda)</td>
+<td>Enfermeiro e fisioterapeuta</td>
+</tr>
+<tr>
+<td>Braden (risco de lesão por pressão)</td>
+<td>Enfermeiro</td>
+</tr>
+<tr>
+<td>Glasgow (nível de consciência)</td>
+<td>Enfermeiro</td>
+</tr>
+<tr>
+<td>MNA triagem (estado nutricional)</td>
+<td>Enfermeiro e nutricionista</td>
+</tr>
+</tbody>
+</table>
+<p>Psicólogo não tem escala cadastrada. A aba Avaliações some para ele.</p>
+<h3>4.4 Regras de bloqueio</h3>
+<ul>
+<li>O cuidador <strong>não checa medicação</strong>, só cuidados.</li>
+<li>A equipe multi <strong>não vê</strong> temperatura da geladeira, estoque, escala de enfermagem nem alertas de outras áreas.</li>
+<li>Quem checou um cuidado é o único que pode desfazer, além do RT e do enfermeiro.</li>
+</ul>
+<hr />
+<h2>5. Módulos</h2>
+<h3>5.1 Plantão</h3>
+<p>Tela inicial de cada profissional. Mostra:</p>
+<ul>
+<li>Data, saudação e o código do plantão na escala (D, N, M, T etc.).</li>
+<li><strong>Alertas</strong> filtrados pela função, com o mais grave primeiro. Cada alerta leva direto à tela que resolve o problema.</li>
+<li><strong>Medicação do dia</strong> (enfermagem): doses agrupadas por horário. Ao tocar, a janela mostra a <strong>foto do residente</strong>, a alergia e o estoque, com três opções: administrado, recusou ou não administrado. Recusa e não administração exigem motivo.</li>
+<li>Medicamentos <strong>se necessário</strong> (SN), com registro do motivo.</li>
+<li><strong>Plano de cuidados</strong> (enfermagem e cuidadores): checagem com "AT" assinado.</li>
+<li><strong>Sinais vitais e anotação</strong> de cada residente.</li>
+<li><strong>Minhas tarefas</strong> da escala de organização.</li>
+<li>Para médico e multi: atividades planejadas para hoje e atalho para as pastas.</li>
+</ul>
+<h3>5.2 Residentes (pastas)</h3>
+<p>Lista em forma de pastas, com foto, quarto, idade, alergia e selos de grau de dependência, documentos pendentes e remédios acabando.</p>
+<p>Dentro da pasta:</p>
+<ul>
+<li><strong>Pasta:</strong> resumo do prontuário com os quadros que a função pode ver.</li>
+<li><strong>Ficha de acolhimento:</strong> identificação, escolaridade, profissão, estado civil, filhos, convênio, médico, origem da solicitação de entrada, alergias, cirurgias, doenças de base, responsável, contrato, documentos entregues e participação do residente (do que gosta, o que não gosta, música, comida, religião, horário preferido).</li>
+<li><strong>Avaliações:</strong> escalas com soma e classificação automáticas e histórico.</li>
+<li><strong>PIA de enfermagem:</strong> baseado em 15 necessidades padronizadas (meta, intervenções e como avaliar). O sistema sugere quais marcar a partir das escalas, polifarmácia (5 ou mais medicamentos), doenças de base e variação de peso.</li>
+<li><strong>Plano de cuidados:</strong> prescrição de enfermagem em grade semanal com AT por dia e assinatura.</li>
+<li><strong>Prescrição médica:</strong> itens com dose, via e frequência (diário, dias da semana, a cada N dias ou SN), ligados ao estoque. A grade semanal de checagem replica a folha de papel.</li>
+<li><strong>Anotações de enfermagem:</strong> PA, pulso, respiração, temperatura, saturação, evacuação e diurese, com frases prontas, gráficos de tendência e alerta de valores alterados. Também registra ocorrências (queda, desidratação, escabiose etc.).</li>
+<li><strong>Evolução:</strong> por área profissional, com atividades planejadas (ex.: psicologia) e gráfico de peso (nutrição).</li>
+<li><strong>Exames e documentos:</strong> anexos de foto ou PDF (exame, laudo, receita, documento pessoal, termo).</li>
+<li><strong>Estoque:</strong> medicamentos do residente.</li>
+<li><strong>Prontuário completo:</strong> junta todas as abas para imprimir ou salvar em PDF.</li>
+</ul>
+<h3>5.3 Estoque</h3>
+<ul>
+<li><strong>Medicamentos dos residentes:</strong> cada residente tem o próprio estoque. O consumo vem da prescrição.</li>
+<li><strong>Materiais da casa:</strong> fraldas, luvas, fitas de glicemia etc., com consumo diário informado manualmente.</li>
+<li>Botões <strong>Pedir à família</strong> (por residente) e <strong>Lista do mês para WhatsApp</strong> (materiais da casa).</li>
+</ul>
+<h3>5.4 Rotinas</h3>
+<ul>
+<li><strong>Temperatura da geladeira:</strong> máxima, mínima, momento e ambiente, manhã e noite, com gráfico da faixa segura de 2 a 8 °C e tabela do mês (só enfermagem).</li>
+<li><strong>Escala de organização:</strong> tarefas por dia da semana e responsável, com checklist.</li>
+</ul>
+<h3>5.5 Equipe</h3>
+<ul>
+<li>Quem está de plantão hoje.</li>
+<li><strong>Escala mensal de enfermagem</strong> com os códigos D (dia 12h), N (noite 12h), M (manhã), T (tarde), F (folga), FE (férias), L (licença), H (hospitalização) e EX (extra). Preenchida tocando nos dias.</li>
+<li>Equipe multiprofissional com carga horária e horário.</li>
+<li>Cadastro de profissionais (categoria, função, conselho, setor e área).</li>
+<li><strong>Treinamentos mensais</strong> com lista de presença.</li>
+</ul>
+<h3>5.6 Gestão (RT e enfermeiro)</h3>
+<ul>
+<li><strong>Grau de dependência e dimensionamento</strong> a partir do Fugulin.</li>
+<li><strong>Alvarás e licenças</strong> com validade e alerta (Prefeitura, Vigilância Sanitária, CMDPI, Certidão de RT no COREN e outros).</li>
+<li><strong>Manuais, protocolos, POPs e fluxogramas</strong>, com alerta de revisão anual.</li>
+<li><strong>Indicadores da Vigilância</strong>, com botão para copiar para a planilha.</li>
+<li>Nome da instituição.</li>
+</ul>
+<hr />
+<h2>6. Regras de negócio</h2>
+<h3>6.1 Medicação e estoque</h3>
+<ul>
+<li><strong>Horários do dia:</strong> item diário usa todos os horários; item semanal só nos dias marcados; item "a cada N dias" conta a partir da data de início; SN não entra na ronda.</li>
+<li><strong>Consumo por dia</strong> de um item de estoque = soma, nas prescrições ativas ligadas a ele, de <code>gasto por administração × nº de horários</code>, ajustado por <code>dias/7</code> (semanal) ou <code>1/N</code> (a cada N dias). SN não entra no cálculo.</li>
+<li><strong>Dias restantes</strong> = quantidade ÷ consumo por dia.</li>
+<li><strong>Nível do estoque:</strong></li>
+<li>Crítico: 3 dias ou menos, ou quantidade zero.</li>
+<li>Acabando: 7 dias ou menos, ou abaixo do mínimo.</li>
+<li>Em dia: acima disso.</li>
+<li><strong>Quantidade a pedir</strong> (30 dias) = <code>consumo × 30 + mínimo − quantidade atual</code>, arredondado para cima.</li>
+<li>Checar "administrado" <strong>baixa</strong> o estoque; desfazer a checagem <strong>devolve</strong>. Se não houver estoque suficiente, a checagem é bloqueada.</li>
+<li>Dose sem checagem <strong>30 minutos</strong> após o horário vira "atrasada".</li>
+<li>Ao incluir um medicamento que contém o texto de uma alergia registrada, o sistema <strong>bloqueia</strong> até que alguém confirme que falou com o prescritor.</li>
+</ul>
+<h3>6.2 Sinais vitais (alerta automático)</h3>
+<table>
+<thead>
+<tr>
+<th>Sinal</th>
+<th>Alerta quando</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PA</td>
+<td>Sistólica ≥ 140 ou diastólica ≥ 90 (elevada); sistólica &lt; 90 ou diastólica &lt; 60 (baixa)</td>
+</tr>
+<tr>
+<td>Pulso</td>
+<td>&lt; 60 (bradicardia) ou &gt; 100 (taquicardia)</td>
+</tr>
+<tr>
+<td>Respiração</td>
+<td>&lt; 12 ou &gt; 24</td>
+</tr>
+<tr>
+<td>Temperatura</td>
+<td>&lt; 35 °C (hipotermia) ou ≥ 37,8 °C (febre)</td>
+</tr>
+<tr>
+<td>Saturação</td>
+<td>&lt; 92%</td>
+</tr>
+</tbody>
+</table>
+<p>Esses limites são de referência geral e devem ser revistos pela RT. Na versão final, o ideal é permitir limites individuais por residente.</p>
+<h3>6.3 Escalas</h3>
+<table>
+<thead>
+<tr>
+<th>Escala</th>
+<th>Classificação usada</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fugulin (9 itens, 1 a 4 pontos)</td>
+<td>Até 14: grau 1. De 15 a 20: grau 2. Acima de 20: grau 3.</td>
+</tr>
+<tr>
+<td>Morse</td>
+<td>0 a 24: sem risco. 25 a 50: baixo risco. Acima de 50: alto risco.</td>
+</tr>
+<tr>
+<td>Braden</td>
+<td>≤ 9: muito alto. 10 a 12: alto. 13 a 14: moderado. 15 a 18: baixo. ≥ 19: sem risco.</td>
+</tr>
+<tr>
+<td>Glasgow</td>
+<td>15: sem alteração. 13 a 14: leve. 9 a 12: moderada. ≤ 8: grave.</td>
+</tr>
+<tr>
+<td>MNA triagem</td>
+<td>12 a 14: normal. 8 a 11: risco de desnutrição. 0 a 7: desnutrição.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Atenção:</strong> a conversão da soma do Fugulin em grau 1, 2 ou 3 da RDC 502/2021 foi uma simplificação do protótipo. A equipe precisa validar esses cortes antes da versão final.</p>
+<h3>6.4 Dimensionamento de cuidadores</h3>
+<p>Pela proporção da RDC 502/2021 da Anvisa:</p>
+<ul>
+<li>Grau 1: 1 cuidador para cada 20 residentes, com carga de 8 horas por dia.</li>
+<li>Grau 2: 1 cuidador para cada 10 residentes, por turno.</li>
+<li>Grau 3: 1 cuidador para cada 6 residentes, por turno.</li>
+</ul>
+<p>O sistema compara o necessário com técnicos, auxiliares e cuidadores escalados hoje no dia (D, M, T) e na noite (N). A norma vigente deve ser conferida sempre.</p>
+<h3>6.5 Indicadores da Vigilância</h3>
+<p><code>Taxa = casos no mês ÷ residentes no mês × 100</code></p>
+<ul>
+<li>Residentes no mês: acolhidos até o fim do mês e sem óbito antes do início do mês.</li>
+<li>Mortalidade, DDA, escabiose e desidratação contam <strong>eventos</strong>.</li>
+<li>Lesão por pressão e desnutrição contam <strong>residentes</strong> com o evento (prevalência).</li>
+</ul>
+<p>É preciso conferir o modelo exato da planilha exigida pela Vigilância Sanitária do município.</p>
+<h3>6.6 Alertas por função</h3>
+<table>
+<thead>
+<tr>
+<th>Alerta</th>
+<th>Quem vê</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Doses sem checagem</td>
+<td>Enfermagem</td>
+</tr>
+<tr>
+<td>Sinal vital alterado na última anotação</td>
+<td>Enfermagem e médico</td>
+</tr>
+<tr>
+<td>Geladeira fora da faixa ou sem registro da manhã</td>
+<td>Enfermagem</td>
+</tr>
+<tr>
+<td>Estoque acabando (residente e casa)</td>
+<td>RT e enfermeiro</td>
+</tr>
+<tr>
+<td>Alvará ou licença vencendo em até 60 dias</td>
+<td>RT e enfermeiro</td>
+</tr>
+<tr>
+<td>SSVV sem anotação depois das 10h</td>
+<td>RT e enfermeiro</td>
+</tr>
+<tr>
+<td>Variação de peso de 5% ou mais</td>
+<td>RT e enfermeiro</td>
+</tr>
+<tr>
+<td>Fugulin com mais de 90 dias ou sem PIA</td>
+<td>RT e enfermeiro</td>
+</tr>
+<tr>
+<td>PIA com reavaliação vencida</td>
+<td>RT e enfermeiro</td>
+</tr>
+<tr>
+<td>Treinamento do mês não registrado</td>
+<td>RT e enfermeiro</td>
+</tr>
+<tr>
+<td>POP ou protocolo sem revisão há mais de 1 ano</td>
+<td>RT e enfermeiro</td>
+</tr>
+<tr>
+<td>Documentos pendentes na ficha</td>
+<td>RT e enfermeiro</td>
+</tr>
+</tbody>
+</table>
+<h3>6.7 Assinatura</h3>
+<p>Todo registro guarda <strong>quem</strong> (id do profissional), <strong>data</strong> e <strong>hora</strong>. Na tela aparece como carimbo: nome, conselho e número, data e hora.</p>
+<hr />
+<h2>7. Modelo de dados</h2>
+<p>O protótipo guarda tudo em um único objeto JSON. O arquivo <code>dados-exemplo.json</code> mostra a estrutura completa. Na versão final, cada bloco abaixo deve virar uma tabela.</p>
+<h3>7.1 Entidades principais</h3>
+<pre><code>instituicao       nome
+profissional      id, nome, categoria, funcao, conselho, setor, area, carga, horario
+residente         id, nome, sexo, nasc, quarto, admissao, escolaridade, estadoCivil,
+                  filhos, profissao, convenio, alergias, doencas[], outras, cirurgias,
+                  medico (id), status (ativo | obito), obitoData, entrada,
+                  responsavel {nome, parentesco, tel}, contrato,
+                  docs {vacina, rg, cpf, sus, convenio, contrato, funerario, obito},
+                  pref {gosta, naoGosta, hobbies, musica, religiao, horario, comida, comidaNao},
+                  foto
+avaliacao         id, residente, escala, data, respostas[], assinatura
+pia               id, residente, periodo, inicio, reavaliacao, necessidades[], obs,
+                  resultado, encaminhamentos, assinatura
+cuidado           id, residente, texto, quem (todos | enfermagem | cuidador)
+checagem_cuidado  data, residente, cuidado, assinatura
+item_estoque      id, residente (ou casa), nome, unidade, quantidade, minimo,
+                  consumoDia (só casa), entradas[]
+prescricao        id, residente, medicamento, dose, via, tipo (fixo | semanal | intervalo | sn),
+                  horarios[], dias[], intervalo, consumo, item_estoque, inicio, fim,
+                  obs, prescritor, suspensa, assinatura
+administracao     data, residente, prescricao, horario, status (dado | recusado | nao),
+                  motivo, assinatura
+administracao_sn  id, residente, prescricao, motivo, assinatura
+anotacao          id, residente, pa, pulso, resp, temp, sat, evac, diurese, texto, assinatura
+evolucao          id, residente, area, texto, peso, assinatura
+agenda            id, residente, area, data, atividade, assinatura (quando realizada)
+arquivo           id, residente, nome, categoria, data, tipo, arquivo, area, assinatura
+ocorrencia        id, residente, tipo, data
+temperatura       id, data, turno, hora, max, min, momento, ambiente, assinatura
+escala_mes        mes, profissional, codigos[dia]
+tarefa            id, tarefa, responsavel, dias[]
+tarefa_feita      data, tarefa
+documento_inst    id, nome, orgao, validade
+pop               id, titulo, tipo (POP | Protocolo | Manual | Fluxograma), revisao
+treinamento       id, data, tema, presentes[]
+</code></pre>
+<h3>7.2 Formato da assinatura</h3>
+<pre><code class="language-json">{ &quot;id&quot;: &quot;s3&quot;, &quot;d&quot;: &quot;2026-11-13&quot;, &quot;h&quot;: &quot;08:20&quot; }
+</code></pre>
+<h3>7.3 Chave de uma dose</h3>
+<p><code>residente | prescricao | horario</code> (ex.: <code>r1|p7|07:00</code>), agrupada pela data.</p>
+<hr />
+<h2>8. Limitações do protótipo</h2>
+<ul>
+<li><strong>Sem servidor:</strong> os dados ficam no navegador de um aparelho. Não sincronizam entre celulares.</li>
+<li><strong>Sem login:</strong> a troca de usuário é livre, só para demonstração.</li>
+<li><strong>Assinatura não tem validade legal:</strong> é só o registro de quem fez.</li>
+<li><strong>Arquivos com limite:</strong> fotos são reduzidas e PDFs ficam limitados a 1,5 MB, porque o armazenamento do navegador é pequeno.</li>
+<li><strong>Sem histórico de alterações:</strong> editar a ficha substitui o valor anterior.</li>
+<li><strong>Sem cópia de segurança.</strong></li>
+</ul>
+<hr />
+<h2>9. O que é preciso para a versão final</h2>
+<h3>9.1 Segurança e LGPD</h3>
+<p>Dados de saúde são <strong>dados pessoais sensíveis</strong> pela LGPD (Lei 13.709/2018). A versão final precisa de:</p>
+<ul>
+<li>Login individual com senha forte e, de preferência, verificação em duas etapas.</li>
+<li>Permissões aplicadas <strong>no servidor</strong>, não só na tela.</li>
+<li>Criptografia na transmissão (HTTPS) e no armazenamento.</li>
+<li>Registro de auditoria: quem viu, criou, alterou ou excluiu cada informação.</li>
+<li>Cópia de segurança automática.</li>
+<li>Termo de consentimento e política de privacidade.</li>
+<li>Prazo de guarda do prontuário conforme as normas do conselho profissional.</li>
+</ul>
+<h3>9.2 Assinatura eletrônica</h3>
+<p>Para que o prontuário eletrônico substitua o papel, a assinatura deve seguir as regras do conselho profissional e da legislação de prontuário eletrônico, em geral com certificado digital ICP-Brasil. Esse ponto precisa ser confirmado com o COREN-SP e com o desenvolvedor.</p>
+<h3>9.3 Registros que não podem ser apagados</h3>
+<p>Anotação, checagem, evolução e prescrição não devem ser apagadas nem editadas depois de assinadas. A correção deve ser feita por um novo registro de retificação, que mantém o original visível.</p>
+<h3>9.4 Sugestão de tecnologia</h3>
+<p>Qualquer tecnologia web moderna atende. Uma combinação comum:</p>
+<ul>
+<li><strong>Aplicativo:</strong> web responsivo (PWA), para funcionar no celular do plantão sem precisar de loja de aplicativos.</li>
+<li><strong>Servidor e banco:</strong> banco relacional (PostgreSQL, por exemplo) com API autenticada.</li>
+<li><strong>Arquivos:</strong> armazenamento de objetos com acesso privado.</li>
+<li><strong>Notificações:</strong> alertas de estoque e de validade por e-mail ou WhatsApp.</li>
+</ul>
+<h3>9.5 Melhorias sugeridas</h3>
+<ul>
+<li>Limites de sinais vitais individuais por residente.</li>
+<li>Leitura da receita por foto para preencher a prescrição.</li>
+<li>Aviso automático ao responsável quando o remédio estiver acabando.</li>
+<li>Portal da família, com acesso restrito.</li>
+<li>Relatório mensal de indicadores em PDF.</li>
+<li>Funcionamento sem internet, com sincronização posterior.</li>
+<li>Etiqueta com QR Code no quarto ou na pulseira para abrir a pasta do residente.</li>
+</ul>
+<hr />
+<h2>10. Pontos que a equipe precisa validar</h2>
+<ol>
+<li>Cortes do Fugulin para os graus 1, 2 e 3.</li>
+<li>Limites de alerta dos sinais vitais.</li>
+<li>Modelo da planilha de indicadores da Vigilância do município.</li>
+<li>Lista das 15 necessidades do PIA e seus textos.</li>
+<li>Quem pode ver e editar cada aba (seção 4).</li>
+<li>Códigos da escala de trabalho.</li>
+<li>Exigências de assinatura do COREN-SP para prontuário eletrônico.</li>
+</ol></main></body></html>

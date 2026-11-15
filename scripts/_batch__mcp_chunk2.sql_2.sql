@@ -1,0 +1,12 @@
+insert into public.itens_estoque (id,residente_id,escopo,nome,unidade,quantidade,minimo,consumo_dia) values ('h3',null,'casa','Creme barreira','un',3,2,0.2);
+insert into public.itens_estoque (id,residente_id,escopo,nome,unidade,quantidade,minimo,consumo_dia) values ('h4',null,'casa','Luva de procedimento M','un',5,3,0.4);
+insert into public.itens_estoque (id,residente_id,escopo,nome,unidade,quantidade,minimo,consumo_dia) values ('h5',null,'casa','Fita de glicemia','un',40,30,3);
+insert into public.documentos_inst (id,nome,orgao,validade) values ('azcszfw','Alvará de funcionamento','Prefeitura','2027-06-12');
+insert into public.documentos_inst (id,nome,orgao,validade) values ('s11g9t0','Licença sanitária','Vigilância Sanitária (responsável: RT)','2026-12-09');
+insert into public.documentos_inst (id,nome,orgao,validade) values ('c0vqj00','Inscrição no CMDPI','Conselho Municipal dos Direitos da Pessoa Idosa','2027-12-19');
+insert into public.documentos_inst (id,nome,orgao,validade) values ('t67g6ut','Certidão de Responsabilidade Técnica','COREN-SP (órgão de classe)','2026-11-26');
+insert into public.pops (id,titulo,tipo,revisao) values ('9fpqqov','Administração de medicamentos','POP','2026-08-06');
+insert into public.pops (id,titulo,tipo,revisao) values ('6hlw759','Higienização das mãos','POP','2025-10-10');
+insert into public.pops (id,titulo,tipo,revisao) values ('r8t60gp','Banho no leito e higiene íntima','POP','2026-06-17');
+insert into public.pops (id,titulo,tipo,revisao) values ('pb3kg9a','Prevenção de quedas','Protocolo','2026-04-28');
+insert into public.pops (id,titulo,tipo,revisao) values ('5fs8g6y','Prevenção de lesão por pressão','Protocolo','2026-09-25');

@@ -1,0 +1,17 @@
+SISTEMA ILPI - PROTÓTIPO (versão 3, novembro de 2026)
+
+Conteúdo desta pasta:
+  sistema-ilpi.html   O sistema. Abra no navegador (Chrome, Edge, Safari ou Firefox).
+  DOCUMENTACAO.html   Documentação completa para ler no navegador ou imprimir.
+  DOCUMENTACAO.md     A mesma documentação, em formato de texto para o desenvolvedor.
+  dados-exemplo.json  Dados fictícios no formato do sistema (referência para o banco de dados).
+
+Como testar:
+  1. Abra sistema-ilpi.html.
+  2. No topo, em "Entrou como", escolha um profissional. Cada função vê telas diferentes.
+  3. Os dados ficam salvos só naquele navegador e naquele aparelho.
+
+Atenção:
+  Todos os nomes e dados do protótipo são fictícios.
+  Não cadastre dados reais de residentes no protótipo: ele não tem login,
+  criptografia nem cópia de segurança. Veja a seção 9 da documentação.
