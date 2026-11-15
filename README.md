@@ -13,11 +13,14 @@ O sistema está publicado e operando online gratuitamente:
 - **Repositório GitHub:** [https://github.com/enzozsantana/sistema-ilpi](https://github.com/enzozsantana/sistema-ilpi)
 - **Banco de Dados & Autenticação:** Supabase Cloud (PostgreSQL 15 + RLS)
 
-### 🔑 Contas de Demonstração Rápidas (1-Clique na tela de Login):
-- **Administrador:** `admin@senecurare.com` | `admin123`
-- **Enfermeira RT:** `clarice@senecurare.com` | `rt123456`
-- **Médico:** `marcos@senecurare.com` | `med123456`
-- **Cuidadora:** `maria@senecurare.com` | `cuid123456`
+### 🔑 Contas de Demonstração Ativas (Senha universal: `ILPI-Demo-2026!`):
+- **Enfermeira RT (Responsável Técnica):** `s1@ilpi.demo` (Helena Prado — acesso total clínico e administrativo)
+- **Médica:** `s9@ilpi.demo` (Dra. Beatriz Moraes — prescrições médicas e evoluções)
+- **Cuidadora:** `s5@ilpi.demo` (Débora Lins — plantão, rondas e checagem de cuidados)
+- **Fisioterapeuta:** `s10@ilpi.demo` (Tiago Rocha — evoluções multidisciplinares)
+- **Enfermeiro:** `s2@ilpi.demo` (Rafael Duarte)
+- **Nutricionista:** `s11@ilpi.demo` (Paula Reis)
+- **Psicólogo:** `s12@ilpi.demo` (Marcos Vidal)
 
 ---
 

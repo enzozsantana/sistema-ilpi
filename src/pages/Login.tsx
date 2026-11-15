@@ -39,8 +39,8 @@ export default function Login() {
     if (res.erro) setErro(res.erro)
   }
 
-  function preencherDemo() {
-    setEmail('s1@ilpi.demo')
+  function preencherDemo(demoEmail: string = 's1@ilpi.demo') {
+    setEmail(demoEmail)
     setPassword('ILPI-Demo-2026!')
     setErro('')
     setShowPassword(true)
@@ -209,23 +209,62 @@ export default function Login() {
 
               {/* Demo Credentials Box */}
               <div className="pt-2">
-                <div className="p-3.5 rounded-xl border border-border/60 bg-muted/30 space-y-2 text-xs">
+                <div className="p-3.5 rounded-xl border border-border/60 bg-muted/30 space-y-2.5 text-xs">
                   <div className="flex items-center justify-between font-semibold text-foreground">
                     <span className="flex items-center gap-1.5">
                       <Sparkles className="size-3.5 text-primary" />
-                      Acesso de Demonstração
+                      Perfis de Demonstração (1-Clique)
                     </span>
-                    <span className="text-[10px] text-muted-foreground">RT Helena</span>
+                    <span className="text-[10px] text-muted-foreground font-mono">Senha: ILPI-Demo-2026!</span>
                   </div>
-                  <p className="text-muted-foreground text-[11px]">
-                    E-mail: <code className="bg-background px-1 py-0.5 rounded border border-border/50 text-foreground font-mono">s1@ilpi.demo</code>
-                  </p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => preencherDemo('s1@ilpi.demo')}
+                      className="h-8 text-[11px] font-medium rounded-lg bg-background hover:bg-muted justify-start px-2 truncate"
+                      title="Helena Prado — Enfermeira RT"
+                    >
+                      🩺 RT Helena
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => preencherDemo('s9@ilpi.demo')}
+                      className="h-8 text-[11px] font-medium rounded-lg bg-background hover:bg-muted justify-start px-2 truncate"
+                      title="Dra. Beatriz Moraes — Médica"
+                    >
+                      ⚕️ Dra. Beatriz (Med)
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => preencherDemo('s5@ilpi.demo')}
+                      className="h-8 text-[11px] font-medium rounded-lg bg-background hover:bg-muted justify-start px-2 truncate"
+                      title="Débora Lins — Cuidadora"
+                    >
+                      🤝 Débora (Cuidadora)
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => preencherDemo('s10@ilpi.demo')}
+                      className="h-8 text-[11px] font-medium rounded-lg bg-background hover:bg-muted justify-start px-2 truncate"
+                      title="Tiago Rocha — Fisioterapeuta"
+                    >
+                      🏃 Tiago (Fisioterapeuta)
+                    </Button>
+                  </div>
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    onClick={preencherDemo}
-                    className="w-full h-8 text-xs font-semibold rounded-lg bg-background hover:bg-muted"
+                    onClick={() => preencherDemo('s1@ilpi.demo')}
+                    className="w-full h-7 text-[11px] text-muted-foreground hover:text-foreground font-semibold rounded-lg"
                   >
                     Preencher dados de demonstração
                   </Button>
