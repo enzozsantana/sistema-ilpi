@@ -11,7 +11,7 @@ import type {
   ResultadoCalcInd,
 } from '../../types/ilpi'
 
-const INDICADORES_VIGILANCIA: [string, string][] = [
+export const INDICADORES_VIGILANCIA: [string, string][] = [
   ['obito', 'Taxa de mortalidade'],
   ['dda', 'Incidência de doença diarreica aguda'],
   ['escabiose', 'Incidência de escabiose'],
@@ -19,6 +19,16 @@ const INDICADORES_VIGILANCIA: [string, string][] = [
   ['lpp', 'Prevalência de lesão por pressão'],
   ['desnutricao', 'Prevalência de desnutrição'],
 ]
+
+export const ROTULO_EVENTO: Record<string, string> = {
+  obito: 'Taxa de mortalidade (Óbito)',
+  dda: 'Incidência de DDA (Doença Diarreica Aguda)',
+  escabiose: 'Incidência de escabiose',
+  desidratacao: 'Incidência de desidratação',
+  lpp: 'Prevalência de lesão por pressão (LPP)',
+  desnutricao: 'Prevalência de desnutrição',
+  queda: 'Queda',
+}
 
 export function ativos(residentes: Residente[]): Residente[] {
   return residentes.filter((r) => r.status !== 'obito')
@@ -52,7 +62,7 @@ export function calcInd(
     const c = prevalencia
       ? new Set(ev.filter((e) => e.tipo === k).map((e) => e.resId)).size
       : ev.filter((e) => e.tipo === k).length
-    return { n, c, taxa: den ? (c / den) * 100 : 0 }
+    return { tipo: k, n, c, taxa: den ? (c / den) * 100 : 0 }
   })
   return { den, rows }
 }

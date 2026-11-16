@@ -3,7 +3,7 @@ import { AREAS, CATS_ARQ, DOCS, MODELOS_ANOT, TIPOS_PRESC } from '../../lib/cons
 import { agoraHM, fmt, idade, iso } from '../../lib/business/dates'
 import { consumoDia, diasRest, nivelEst } from '../../lib/business/estoque'
 import { SCALES, totalEsc, ultAval } from '../../lib/business/escalas'
-import { presAtiva, freqTxt as freqTxtMed } from '../../lib/business/medication'
+import { presAtiva, freqTxt as freqTxtMed, detectControlado, isMedicamentoControlado } from '../../lib/business/medication'
 import { flags } from '../../lib/business/ssvv'
 import { can, canAval, canTab, escalasVisiveis } from '../../lib/permissions'
 import { supabase } from '../../lib/supabase'
@@ -15,6 +15,7 @@ import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
 import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
+import { Checkbox } from '../../components/ui/checkbox'
 import { StatusBadge, Allergy } from '../../components/Ui'
 import {
   Dialog,
@@ -40,9 +41,11 @@ import {
   FileCheck,
   FileText,
   HeartPulse,
+  Lock,
   Package,
   Pill,
   Plus,
+  ShieldAlert,
   Trash2,
   User,
 } from 'lucide-react'
@@ -183,7 +186,19 @@ export function TabPasta({ r, profNome }: Ctx) {
         <CardContent className="p-4 space-y-2">
           {meds.slice(0, 5).map((p) => (
             <div key={p.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/30 text-xs">
-              <span className="font-semibold text-foreground">{p.med}</span>
+              <span className="font-semibold text-foreground flex items-center gap-1.5 flex-wrap">
+                {p.med}
+                {isMedicamentoControlado(p) && (
+                  <Badge
+                    variant="outline"
+                    className="text-[9px] px-1.5 py-0 h-4 bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/35 font-semibold gap-1 inline-flex items-center"
+                    title="Medicamento sob controle especial (Portaria 344/98)"
+                  >
+                    <ShieldAlert className="size-2.5 text-amber-600 dark:text-amber-400" />
+                    Controlado
+                  </Badge>
+                )}
+              </span>
               <span className="text-muted-foreground">{freqTxtMed(p)} ({p.via})</span>
             </div>
           ))}
@@ -575,7 +590,7 @@ export function TabAval({ r, cat, area }: Ctx) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {keys.map((k) => {
-          if (!canAval(cat, area, k)) return null
+          const podeEditar = canAval(cat, area, k)
           const lista = r.aval.filter((a) => a.esc === k)
           const ult = lista[lista.length - 1]
           const total = ult ? totalEsc(k, ult.resp) : 0
@@ -587,11 +602,18 @@ export function TabAval({ r, cat, area }: Ctx) {
                 <CardHeader className="pb-3 border-b border-border/40 bg-muted/20">
                   <CardTitle className="text-sm font-bold flex items-center justify-between">
                     <span>{SCALES[k].nome}</span>
-                    {ult && cl && (
-                      <Badge variant="outline" className={cn('text-xs font-semibold', cl.nivel === 'danger' ? 'bg-rose-500/10 text-rose-600 border-rose-500/25' : cl.nivel === 'warn' ? 'bg-amber-500/10 text-amber-600 border-amber-500/25' : 'bg-emerald-500/10 text-emerald-600 border-emerald-500/25')}>
-                        {cl.txt}
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {!podeEditar && (
+                        <Badge variant="outline" className="text-[10px] text-muted-foreground border-border/60 bg-muted/40 font-normal">
+                          Apenas visualização
+                        </Badge>
+                      )}
+                      {ult && cl && (
+                        <Badge variant="outline" className={cn('text-xs font-semibold', cl.nivel === 'danger' ? 'bg-rose-500/10 text-rose-600 border-rose-500/25' : cl.nivel === 'warn' ? 'bg-amber-500/10 text-amber-600 border-amber-500/25' : 'bg-emerald-500/10 text-emerald-600 border-emerald-500/25')}>
+                          {cl.txt}
+                        </Badge>
+                      )}
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 space-y-2 text-xs">
@@ -610,14 +632,21 @@ export function TabAval({ r, cat, area }: Ctx) {
               </div>
 
               <div className="p-3 border-t border-border/40 bg-muted/10">
-                <Button
-                  size="xs"
-                  onClick={() => abrirModal(k)}
-                  className="w-full gap-1.5 text-xs font-semibold bg-[#123F4A] hover:bg-[#123F4A]/90 text-white"
-                >
-                  <Plus className="size-3" />
-                  Aplicar Nova {SCALES[k].nome}
-                </Button>
+                {podeEditar ? (
+                  <Button
+                    size="xs"
+                    onClick={() => abrirModal(k)}
+                    className="w-full gap-1.5 text-xs font-semibold bg-[#123F4A] hover:bg-[#123F4A]/90 text-white"
+                  >
+                    <Plus className="size-3" />
+                    Aplicar Nova {SCALES[k].nome}
+                  </Button>
+                ) : (
+                  <div className="text-center py-1 text-[11px] text-muted-foreground font-medium flex items-center justify-center gap-1.5">
+                    <Lock className="size-3 text-muted-foreground" />
+                    <span>Visualização clínica (preenchimento restrito à Enfermagem/Médico)</span>
+                  </div>
+                )}
               </div>
             </Card>
           )
@@ -626,7 +655,7 @@ export function TabAval({ r, cat, area }: Ctx) {
 
       {/* Modal de Aplicação da Escala */}
       <Dialog open={modalAval} onOpenChange={setModalAval}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] sm:max-w-4xl lg:max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-base font-bold flex items-center justify-between">
               <span>Aplicar Escala {defAtual?.nome} — {r.nome}</span>
@@ -645,31 +674,36 @@ export function TabAval({ r, cat, area }: Ctx) {
             {defAtual?.itens.map(([pergunta, opcoes], idx) => {
               const valorAtual = respostas[idx] ?? 0
               return (
-                <div key={idx} className="p-3 rounded-xl bg-muted/30 border border-border/50 space-y-2">
-                  <span className="font-semibold text-foreground block">
+                <div key={idx} className="p-3.5 rounded-xl bg-muted/30 border border-border/50 space-y-2.5">
+                  <span className="font-semibold text-foreground block text-sm">
                     {idx + 1}. {pergunta}
                   </span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {opcoes.map(([opcaoTexto, pontos], optIdx) => {
-                      const selecionado = valorAtual === pontos
+                      const selecionado = valorAtual === optIdx
                       return (
                         <button
                           key={optIdx}
                           type="button"
                           onClick={() => {
                             const clone = [...respostas]
-                            clone[idx] = pontos
+                            clone[idx] = optIdx
                             setRespostas(clone)
                           }}
                           className={cn(
-                            'p-2 rounded-lg border text-left text-xs transition-all flex items-center justify-between gap-2',
+                            'p-3 rounded-lg border text-left text-xs transition-all flex items-start justify-between gap-2.5',
                             selecionado
-                              ? 'bg-[#123F4A] text-white border-[#123F4A] font-semibold'
-                              : 'bg-background hover:bg-muted text-muted-foreground'
+                              ? 'bg-[#123F4A] text-white border-[#123F4A] font-medium shadow-xs'
+                              : 'bg-background hover:bg-muted text-muted-foreground hover:text-foreground'
                           )}
                         >
-                          <span className="truncate">{opcaoTexto}</span>
-                          <span className="text-[10px] opacity-75 shrink-0">+{pontos}</span>
+                          <span className="leading-relaxed flex-1 break-words">{opcaoTexto}</span>
+                          <span className={cn(
+                            'text-[10px] shrink-0 font-semibold px-1.5 py-0.5 rounded mt-0.5',
+                            selecionado ? 'bg-white/20 text-white' : 'bg-muted text-foreground/70 border border-border/40'
+                          )}>
+                            +{pontos}
+                          </span>
                         </button>
                       )
                     })}
@@ -1130,6 +1164,20 @@ export function TabPresc({ r, cat }: Ctx) {
   const [tipo, setTipo] = useState<'diario' | 'sn' | 'dias' | 'intervalo'>('diario')
   const [horariosStr, setHorariosStr] = useState('08:00')
   const [obs, setObs] = useState('')
+  const [controlado, setControlado] = useState(false)
+  const [controladoManual, setControladoManual] = useState(false)
+
+  function handleAbrirModal() {
+    setMed('')
+    setDose('')
+    setVia('VO')
+    setTipo('diario')
+    setHorariosStr('08:00')
+    setObs('')
+    setControlado(false)
+    setControladoManual(false)
+    setModalNova(true)
+  }
 
   async function handleSalvarPrescricao(e: React.FormEvent) {
     e.preventDefault()
@@ -1139,7 +1187,7 @@ export function TabPresc({ r, cat }: Ctx) {
     const id = 'p_' + Math.random().toString(36).substring(2, 9)
     const horarios = horariosStr.split(',').map((s) => s.trim()).filter(Boolean)
 
-    const { error } = await supabase.from('prescricoes').insert({
+    const basePayload = {
       id,
       residente_id: r.id,
       medicamento: med.trim(),
@@ -1156,8 +1204,21 @@ export function TabPresc({ r, cat }: Ctx) {
       obs: obs.trim(),
       prescritor_id: profissional.id,
       suspensa: false,
-      assinatura: { id: profissional.id, d: T, h: agoraHM() },
+      assinatura: { id: profissional.id, d: T, h: agoraHM(), controlado },
+    }
+
+    // Tenta inserir com a coluna controlado (se existir no schema do banco)
+    let { error } = await supabase.from('prescricoes').insert({
+      ...basePayload,
+      controlado,
     })
+
+    // Fallback gracioso se a coluna 'controlado' ainda não existir na tabela PostgreSQL
+    if (error && (error.code === '42703' || error.message?.includes('controlado'))) {
+      const resFallback = await supabase.from('prescricoes').insert(basePayload)
+      error = resFallback.error
+    }
+
     setSalvando(false)
 
     if (error) {
@@ -1171,6 +1232,8 @@ export function TabPresc({ r, cat }: Ctx) {
     setDose('')
     setHorariosStr('08:00')
     setObs('')
+    setControlado(false)
+    setControladoManual(false)
     await data.refresh()
   }
 
@@ -1197,7 +1260,7 @@ export function TabPresc({ r, cat }: Ctx) {
         {can(cat, 'presc') && (
           <Button
             size="xs"
-            onClick={() => setModalNova(true)}
+            onClick={handleAbrirModal}
             className="gap-1.5 rounded-lg text-xs font-semibold bg-[#123F4A] hover:bg-[#123F4A]/90 text-white"
           >
             <Plus className="size-3" />
@@ -1219,7 +1282,21 @@ export function TabPresc({ r, cat }: Ctx) {
           <TableBody>
             {r.presc.map((p) => (
               <TableRow key={p.id}>
-                <TableCell className="font-bold text-foreground text-xs">{p.med}</TableCell>
+                <TableCell className="text-xs">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-bold text-foreground">{p.med}</span>
+                    {isMedicamentoControlado(p) && (
+                      <Badge
+                        variant="outline"
+                        className="text-[9px] px-1.5 py-0 h-4 bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/35 font-semibold gap-1 inline-flex items-center"
+                        title="Medicamento sujeito a controle especial (Portaria 344/98)"
+                      >
+                        <ShieldAlert className="size-2.5 text-amber-600 dark:text-amber-400" />
+                        Controlado
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell className="text-xs text-muted-foreground">{p.dose} ({p.via})</TableCell>
                 <TableCell className="text-xs font-medium">{freqTxtMed(p)}</TableCell>
                 <TableCell className="text-xs">
@@ -1271,12 +1348,71 @@ export function TabPresc({ r, cat }: Ctx) {
                 <Input
                   id="pMed"
                   value={med}
-                  onChange={(e) => setMed(e.target.value)}
-                  placeholder="Ex: Losartana Potássica 50 mg"
+                  onChange={(e) => {
+                    const val = e.target.value
+                    setMed(val)
+                    if (!controladoManual) {
+                      setControlado(detectControlado(val))
+                    }
+                  }}
+                  placeholder="Ex: Clonazepam 2 mg ou Losartana Potássica 50 mg"
                   required
                   className="h-8 text-xs"
                 />
               </div>
+
+              {/* Bloco de identificação de Medicamento Controlado */}
+              <div
+                className={cn(
+                  'p-3 rounded-lg border transition-colors flex items-start gap-3',
+                  controlado
+                    ? 'bg-amber-500/10 border-amber-500/30 text-amber-950 dark:text-amber-200'
+                    : 'bg-muted/30 border-border/60'
+                )}
+              >
+                <Checkbox
+                  id="pControlado"
+                  checked={controlado}
+                  onCheckedChange={(checked) => {
+                    setControladoManual(true)
+                    setControlado(!!checked)
+                  }}
+                  className="mt-0.5 data-checked:bg-amber-600 data-checked:border-amber-600"
+                />
+                <div className="space-y-1 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Label
+                      htmlFor="pControlado"
+                      className="text-xs font-bold cursor-pointer flex items-center gap-1.5"
+                    >
+                      <ShieldAlert
+                        className={cn(
+                          'size-3.5',
+                          controlado ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'
+                        )}
+                      />
+                      Medicamento Controlado / Psicotrópico
+                    </Label>
+                    {controlado && (
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40"
+                      >
+                        Portaria 344/98
+                      </Badge>
+                    )}
+                    {controlado && !controladoManual && detectControlado(med) && (
+                      <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium italic">
+                        (detectado automaticamente)
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-snug">
+                    Identifica receitas retidas, guarda em armário trancado e medicação com dupla checagem no plantão.
+                  </p>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label htmlFor="pDose" className="text-[11px] font-semibold">Dose por Tomada</Label>
@@ -1993,7 +2129,7 @@ export function TabEstoque({ r }: Ctx) {
         <CardTitle className="text-sm font-bold flex items-center justify-between">
           <span className="flex items-center gap-2">
             <Package className="size-4 text-primary" />
-            Estoque Individual de Medicamentos
+            Estoque Individual (Medicamentos & Materiais de Higiene)
           </span>
           <Badge variant="secondary" className="text-xs">
             {r.estoque.length} itens
@@ -2004,7 +2140,7 @@ export function TabEstoque({ r }: Ctx) {
         <Table>
           <TableHeader className="bg-muted/30">
             <TableRow>
-              <TableHead className="text-xs font-semibold">Item / Medicamento</TableHead>
+              <TableHead className="text-xs font-semibold">Material / Insumo / Medicamento</TableHead>
               <TableHead className="text-xs font-semibold">Saldo Atual</TableHead>
               <TableHead className="text-xs font-semibold">Consumo Diário</TableHead>
               <TableHead className="text-xs font-semibold text-right">Autonomia Prevista</TableHead>

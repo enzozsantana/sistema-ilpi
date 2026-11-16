@@ -104,6 +104,7 @@ export interface Prescricao {
   obs?: string
   prescritor?: string
   suspensa?: boolean
+  controlado?: boolean
   sig?: Assinatura
 }
 
@@ -296,6 +297,7 @@ export interface ClassifEscala {
 }
 
 export interface IndicadorLinha {
+  tipo?: string
   n: string
   c: number
   taxa: number

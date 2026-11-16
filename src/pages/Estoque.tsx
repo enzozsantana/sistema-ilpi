@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
-import { consumoDia, diasRest, nivelEst, qtdPedir } from '../lib/business/estoque'
 import { agoraHM, fmt, iso, num, primeiro } from '../lib/business/dates'
+import { consumoDia, diasRest, nivelEst, qtdPedir } from '../lib/business/estoque'
 import { can } from '../lib/permissions'
 import { supabase } from '../lib/supabase'
-import { useIlpiData } from '../contexts/IlpiDataContext'
 import { useAuth } from '../contexts/AuthContext'
+import { useIlpiData } from '../contexts/IlpiDataContext'
 import { Avatar, EmptyState, PageHeader, StatusBadge } from '../components/Ui'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
@@ -31,14 +31,13 @@ import {
   AlertTriangle,
   ArrowDownToLine,
   CheckCircle2,
-  Copy,
   Package,
-  PackageCheck,
   Plus,
   Search,
   Share2,
   ShoppingCart,
   SlidersHorizontal,
+  Users,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -57,26 +56,24 @@ interface ItemComOrigem {
 
 export default function Estoque() {
   const data = useIlpiData()
-  const { residentes, casa } = data
+  const { residentes } = data
   const { profissional } = useAuth()
   const [busca, setBusca] = useState('')
-  const [abaEstoque, setAbaEstoque] = useState<'residentes' | 'casa'>('residentes')
+  const [apenasEmFalta, setApenasEmFalta] = useState(false)
 
-  // Modais de ação no Supabase
+  // Modais de ação
   const [modalEntrada, setModalEntrada] = useState(false)
   const [modalNovoItem, setModalNovoItem] = useState(false)
   const [modalAjuste, setModalAjuste] = useState<ItemComOrigem | null>(null)
   const [salvando, setSalvando] = useState(false)
 
-  // Estados do formulário de Entrada
-  const [entradaEscopo, setEntradaEscopo] = useState<'residente' | 'casa'>('residente')
+  // Estados do formulário de Entrada Individual
   const [entradaResId, setEntradaResId] = useState('')
   const [entradaItemId, setEntradaItemId] = useState('')
   const [entradaQtd, setEntradaQtd] = useState('')
   const [entradaObs, setEntradaObs] = useState('')
 
-  // Estados do formulário de Novo Item
-  const [novoEscopo, setNovoEscopo] = useState<'residente' | 'casa'>('residente')
+  // Estados do formulário de Novo Item Individual
   const [novoResId, setNovoResId] = useState('')
   const [novoNome, setNovoNome] = useState('')
   const [novoUnidade, setNovoUnidade] = useState('un')
@@ -92,13 +89,15 @@ export default function Estoque() {
     return residentes.filter((r) => r.status !== 'obito')
   }, [residentes])
 
-  // Aggregate stats
-  const { criticos, alertas, emDia } = useMemo(() => {
+  // Estatísticas agregadas do estoque individual
+  const { criticos, alertas, emDia, totalItens } = useMemo(() => {
     let crit = 0
     let al = 0
     let ok = 0
+    let total = 0
     residentesAtivos.forEach((r) => {
       r.estoque.forEach((it) => {
+        total++
         const c = consumoDia(r, it, T)
         const d = diasRest(c, it.qtd)
         if (d <= 3) crit++
@@ -106,24 +105,29 @@ export default function Estoque() {
         else ok++
       })
     })
-    return { criticos: crit, alertas: al, emDia: ok }
+    return { criticos: crit, alertas: al, emDia: ok, totalItens: total }
   }, [residentesAtivos])
 
   const residentesFiltrados = useMemo(() => {
-    if (!busca.trim()) return residentesAtivos
-    const q = busca.toLowerCase()
-    return residentesAtivos.filter((r) => {
-      const matchRes = r.nome.toLowerCase().includes(q)
-      const matchMed = r.estoque.some((it) => it.nome.toLowerCase().includes(q))
-      return matchRes || matchMed
-    })
-  }, [residentesAtivos, busca])
+    let list = residentesAtivos
 
-  const casaFiltrada = useMemo(() => {
-    if (!busca.trim()) return casa
+    if (apenasEmFalta) {
+      list = list.filter((r) =>
+        r.estoque.some((it) => {
+          const c = consumoDia(r, it, T)
+          return nivelEst(c, it) !== 'ok'
+        })
+      )
+    }
+
+    if (!busca.trim()) return list
     const q = busca.toLowerCase()
-    return casa.filter((it) => it.nome.toLowerCase().includes(q))
-  }, [casa, busca])
+    return list.filter((r) => {
+      const matchRes = r.nome.toLowerCase().includes(q) || (r.quarto?.toLowerCase().includes(q) ?? false)
+      const matchItem = r.estoque.some((it) => it.nome.toLowerCase().includes(q))
+      return matchRes || matchItem
+    })
+  }, [residentesAtivos, busca, apenasEmFalta])
 
   async function copiarWhatsFamilia(resId: string) {
     const r = residentes.find((x) => x.id === resId)
@@ -138,39 +142,47 @@ export default function Estoque() {
       .filter(Boolean)
 
     if (!linhas.length) {
-      toast.info(`O estoque de ${primeiro(r.nome)} está em dia. Nenhum pedido necessário.`)
+      toast.info(`O estoque individual de ${primeiro(r.nome)} está em dia. Nenhum pedido necessário.`)
       return
     }
 
-    const t = `Olá! Notificação do Residencial Senecurare — ${primeiro(r.nome)}:\n\nSolicitamos reposição dos seguintes itens:\n${linhas.join('\n')}\n\nFavor entregar na enfermagem. Obrigado!`
+    const t = `Olá! Notificação da equipe de enfermagem — ${primeiro(r.nome)} (Quarto ${r.quarto}):\n\nSolicitamos a reposição dos seguintes itens de uso individual:\n${linhas.join('\n')}\n\nFavor entregar na instituição aos cuidados da enfermagem. Muito obrigado!`
     await navigator.clipboard.writeText(t)
-    toast.success('Mensagem copiada para a área de transferência!')
+    toast.success('Mensagem de reposição copiada para o WhatsApp!')
   }
 
-  async function copiarListaComprasCasa() {
-    const linhas = casa
-      .map((it) => {
-        const c = it.consumoDia ?? 0
-        const q = qtdPedir(c, it)
-        return q > 0 ? `• ${it.nome}: ${num(q)} ${it.unid}` : null
-      })
-      .filter(Boolean)
+  async function copiarListaReposicaoGeral() {
+    const blocos: string[] = []
+    residentesAtivos.forEach((r) => {
+      const linhas = r.estoque
+        .map((it) => {
+          const c = consumoDia(r, it, T)
+          const q = qtdPedir(c, it)
+          if (q <= 0) return null
+          return `  • ${it.nome}: repor ${num(q)} ${it.unid} (saldo: ${it.qtd} ${it.unid})`
+        })
+        .filter(Boolean)
 
-    if (!linhas.length) {
-      toast.info('Nenhum item com estoque abaixo do mínimo.')
+      if (linhas.length) {
+        const respInfo = r.responsavel?.nome
+          ? ` · Contato: ${r.responsavel.nome} (${r.responsavel.tel || 'sem tel'})`
+          : ''
+        blocos.push(`👤 ${r.nome} (Quarto ${r.quarto})${respInfo}:\n${linhas.join('\n')}`)
+      }
+    })
+
+    if (!blocos.length) {
+      toast.info('Todos os residentes estão com estoque individual em dia!')
       return
     }
 
-    const t = `Lista de Compras da Casa — ${fmt(T)}:\n\n${linhas.join('\n')}\n\nGerado automaticamente pelo Sistema Senecurare.`
+    const t = `Lista Geral de Reposição Individual (Famílias) — ${fmt(T)}:\n\n${blocos.join('\n\n')}\n\nGerado pelo Sistema ILPI.`
     await navigator.clipboard.writeText(t)
-    toast.success('Lista de compras copiada com sucesso!')
+    toast.success('Lista de reposição das famílias copiada com sucesso!')
   }
 
-  function abrirEntradaRapida(item: ItemComOrigem, escopo: 'residente' | 'casa') {
-    setEntradaEscopo(escopo)
-    if (escopo === 'residente') {
-      setEntradaResId(item.residenteId || '')
-    }
+  function abrirEntradaRapida(item: ItemComOrigem) {
+    setEntradaResId(item.residenteId || '')
     setEntradaItemId(item.id)
     setEntradaQtd('')
     setEntradaObs('')
@@ -202,7 +214,7 @@ export default function Estoque() {
       return
     }
 
-    // 2. Atualiza saldo atômico em itens_estoque
+    // 2. Atualiza saldo em itens_estoque
     const { data: itemAtual } = await supabase
       .from('itens_estoque')
       .select('quantidade')
@@ -222,7 +234,7 @@ export default function Estoque() {
       return
     }
 
-    toast.success(`Entrada de +${qtdNum} registrada com sucesso no estoque!`)
+    toast.success(`Entrada de +${qtdNum} registrada com sucesso no estoque do residente!`)
     setModalEntrada(false)
     setEntradaQtd('')
     setEntradaObs('')
@@ -232,24 +244,24 @@ export default function Estoque() {
   async function handleSalvarNovoItem(e: React.FormEvent) {
     e.preventDefault()
     if (!novoNome.trim() || !profissional) {
-      toast.error('Informe o nome do item / medicamento.')
+      toast.error('Informe o nome do item / medicamento / material.')
       return
     }
-    if (novoEscopo === 'residente' && !novoResId) {
+    if (!novoResId) {
       toast.error('Selecione o residente correspondente.')
       return
     }
 
     setSalvando(true)
-    const id = (novoEscopo === 'residente' ? `${novoResId}_` : 'casa_') + 'e_' + Math.random().toString(36).substring(2, 7)
+    const id = `${novoResId}_e_` + Math.random().toString(36).substring(2, 7)
     const qtdInicial = Number(novoQtd) || 0
     const minCalculado = Number(novoMin) || 0
     const consDiaNum = novoConsumoDia ? Number(novoConsumoDia) : null
 
     const { error } = await supabase.from('itens_estoque').insert({
       id,
-      residente_id: novoEscopo === 'residente' ? novoResId : null,
-      escopo: novoEscopo,
+      residente_id: novoResId,
+      escopo: 'residente',
       nome: novoNome.trim(),
       unidade: novoUnidade.trim(),
       quantidade: qtdInicial,
@@ -264,7 +276,7 @@ export default function Estoque() {
       return
     }
 
-    toast.success('Item cadastrado com sucesso no estoque!')
+    toast.success('Item cadastrado com sucesso no estoque individual!')
     setModalNovoItem(false)
     setNovoNome('')
     setNovoQtd('0')
@@ -303,8 +315,8 @@ export default function Estoque() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Controle de Estoque & Farmácia"
-        lede="Medicamentos individualizados dos residentes e suprimentos de consumo geral da instituição."
+        title="Controle de Estoque & Materiais Individuais"
+        lede="Medicamentos, produtos de higiene (shampoo, sabonete) e materiais de cuidados de uso individual de cada residente."
         actions={
           <div className="flex items-center gap-2 flex-wrap">
             {can(profissional?.cat ?? 'cuid', 'estoque') && (
@@ -312,8 +324,10 @@ export default function Estoque() {
                 <Button
                   size="sm"
                   onClick={() => {
-                    setEntradaEscopo('residente')
-                    setEntradaResId(residentesAtivos[0]?.id || '')
+                    const primeiroResId = residentesAtivos[0]?.id || ''
+                    setEntradaResId(primeiroResId)
+                    const prim = data.getResidente(primeiroResId)
+                    setEntradaItemId(prim?.estoque[0]?.id || '')
                     setModalEntrada(true)
                   }}
                   className="rounded-xl text-xs font-semibold gap-1.5 bg-[#123F4A] hover:bg-[#123F4A]/90 text-white shadow-xs"
@@ -326,14 +340,13 @@ export default function Estoque() {
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    setNovoEscopo('residente')
                     setNovoResId(residentesAtivos[0]?.id || '')
                     setModalNovoItem(true)
                   }}
                   className="rounded-xl text-xs font-semibold gap-1.5"
                 >
                   <Plus className="size-3.5" />
-                  <span>+ Novo Item</span>
+                  <span>+ Novo Item / Material</span>
                 </Button>
               </>
             )}
@@ -341,11 +354,11 @@ export default function Estoque() {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => void copiarListaComprasCasa()}
+              onClick={() => void copiarListaReposicaoGeral()}
               className="rounded-xl text-xs font-semibold gap-1.5"
             >
               <ShoppingCart className="size-3.5" />
-              <span>Lista de Compras</span>
+              <span>Lista de Reposição (Famílias)</span>
             </Button>
           </div>
         }
@@ -405,35 +418,37 @@ export default function Estoque() {
           <CardContent className="p-3.5 flex items-center justify-between">
             <div>
               <span className="text-[11px] font-medium text-muted-foreground block">
-                Materiais da Instituição
+                Total de Residentes
               </span>
-              <span className="text-xl font-bold text-foreground">{casa.length}</span>
+              <span className="text-xl font-bold text-foreground">
+                {residentesAtivos.length} <span className="text-xs font-normal text-muted-foreground">({totalItens} itens)</span>
+              </span>
             </div>
-            <div className="size-8 rounded-lg bg-teal-500/10 text-teal-600 flex items-center justify-center">
-              <PackageCheck className="size-4" />
+            <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+              <Users className="size-4" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Toolbar & Tab Switcher */}
+      {/* Toolbar & Filters */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl bg-card border border-border/70 shadow-xs">
         <div className="flex items-center gap-1.5 p-1 bg-muted/60 rounded-xl border border-border/40">
           <Button
             size="xs"
-            variant={abaEstoque === 'residentes' ? 'default' : 'ghost'}
-            onClick={() => setAbaEstoque('residentes')}
+            variant={!apenasEmFalta ? 'default' : 'ghost'}
+            onClick={() => setApenasEmFalta(false)}
             className="text-xs rounded-lg h-7 px-3 font-semibold"
           >
-            Medicamentos dos Residentes
+            Todos os Residentes
           </Button>
           <Button
             size="xs"
-            variant={abaEstoque === 'casa' ? 'default' : 'ghost'}
-            onClick={() => setAbaEstoque('casa')}
+            variant={apenasEmFalta ? 'default' : 'ghost'}
+            onClick={() => setApenasEmFalta(true)}
             className="text-xs rounded-lg h-7 px-3 font-semibold"
           >
-            Materiais da Casa ({casa.length})
+            Apenas com Itens em Falta {criticos + alertas > 0 && `(${criticos + alertas})`}
           </Button>
         </div>
 
@@ -441,7 +456,7 @@ export default function Estoque() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Filtrar por residente ou item..."
+            placeholder="Buscar por residente ou material (shampoo, fralda, medicamento)..."
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             className="pl-9 h-8 text-xs rounded-xl bg-background"
@@ -449,299 +464,177 @@ export default function Estoque() {
         </div>
       </div>
 
-      {/* Content based on Tab */}
-      {abaEstoque === 'residentes' ? (
-        <div className="space-y-4">
-          {residentesFiltrados.map((r) => {
-            const itensBaixos = r.estoque.filter((it) => {
-              const c = consumoDia(r, it, T)
-              return nivelEst(c, it) !== 'ok'
-            }).length
+      {/* Lista de Residentes com seus respectivos estoques individuais */}
+      <div className="space-y-4">
+        {residentesFiltrados.map((r) => {
+          const itensBaixos = r.estoque.filter((it) => {
+            const c = consumoDia(r, it, T)
+            return nivelEst(c, it) !== 'ok'
+          }).length
 
-            return (
-              <Card key={r.id} className="border border-border/70 shadow-2xs overflow-hidden">
-                <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/40 bg-muted/20 px-5 pt-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar r={r} size="sm" />
-                    <div>
-                      <CardTitle className="text-sm font-bold font-heading">{r.nome}</CardTitle>
-                      <span className="text-[11px] text-muted-foreground">Quarto {r.quarto}</span>
-                    </div>
+          return (
+            <Card key={r.id} className="border border-border/70 shadow-2xs overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/40 bg-muted/20 px-5 pt-4">
+                <div className="flex items-center gap-3">
+                  <Avatar r={r} size="sm" />
+                  <div>
+                    <CardTitle className="text-sm font-bold font-heading">{r.nome}</CardTitle>
+                    <span className="text-[11px] text-muted-foreground">
+                      Quarto {r.quarto} {r.responsavel?.nome ? `· Resp: ${r.responsavel.nome}` : ''}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {itensBaixos > 0 && (
-                      <Badge variant="destructive" className="text-[10px]">
-                        {itensBaixos} item(ns) em falta
-                      </Badge>
-                    )}
-                    <Button
-                      size="xs"
-                      variant="outline"
-                      onClick={() => void copiarWhatsFamilia(r.id)}
-                      className="rounded-lg text-xs gap-1.5 font-semibold bg-background"
-                    >
-                      <Share2 className="size-3 text-emerald-600" />
-                      <span>Pedir à família</span>
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader className="bg-muted/10">
-                      <TableRow>
-                        <TableHead className="text-xs font-semibold">Medicamento</TableHead>
-                        <TableHead className="text-xs font-semibold">Saldo Atual</TableHead>
-                        <TableHead className="text-xs font-semibold">Estoque Mínimo</TableHead>
-                        <TableHead className="text-xs font-semibold">Consumo/Dia</TableHead>
-                        <TableHead className="text-xs font-semibold">Autonomia</TableHead>
-                        <TableHead className="text-xs font-semibold text-right">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {r.estoque.map((it) => {
-                        const c = consumoDia(r, it, T)
-                        const n = nivelEst(c, it)
-                        const d = diasRest(c, it.qtd)
-
-                        return (
-                          <TableRow key={it.id}>
-                            <TableCell className="font-bold text-xs text-foreground">{it.nome}</TableCell>
-                            <TableCell className="text-xs font-semibold text-foreground">
-                              {it.qtd} {it.unid}
-                            </TableCell>
-                            <TableCell className="text-xs text-muted-foreground">
-                              {it.min} {it.unid}
-                            </TableCell>
-                            <TableCell className="text-xs font-medium">
-                              {c.toFixed(1)} {it.unid}/dia
-                            </TableCell>
-                            <TableCell>
-                              <StatusBadge tone={n === 'ok' ? 'ok' : n === 'warn' ? 'warn' : 'danger'}>
-                                {Number.isFinite(d) ? `${Math.floor(d)} dias` : '–'}
-                              </StatusBadge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {can(profissional?.cat ?? 'cuid', 'estoque') && (
-                                <div className="flex items-center justify-end gap-1">
-                                  <Button
-                                    size="xs"
-                                    variant="outline"
-                                    onClick={() =>
-                                      abrirEntradaRapida(
-                                        { ...it, residenteId: r.id, residenteNome: r.nome },
-                                        'residente'
-                                      )
-                                    }
-                                    className="h-6 px-2 text-[11px] gap-1 font-semibold text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/10"
-                                    title="Dar entrada de nova remessa trazida pela família"
-                                  >
-                                    <ArrowDownToLine className="size-3" />
-                                    <span>+ Entrada</span>
-                                  </Button>
-                                  <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    onClick={() => {
-                                      setModalAjuste({ ...it, residenteId: r.id, residenteNome: r.nome })
-                                      setAjusteQtd(String(it.qtd))
-                                    }}
-                                    className="size-6 text-muted-foreground hover:text-foreground"
-                                    title="Retificar / Inventariar saldo"
-                                  >
-                                    <SlidersHorizontal className="size-3" />
-                                  </Button>
-                                </div>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            )
-          })}
-
-          {!residentesFiltrados.length && (
-            <EmptyState title="Nenhum residente ou medicamento encontrado">
-              Tente alterar os termos de busca no campo acima.
-            </EmptyState>
-          )}
-        </div>
-      ) : (
-        <Card className="border border-border/70 shadow-xs overflow-hidden rounded-2xl">
-          <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/40 bg-muted/20 px-5 pt-4">
-            <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <PackageCheck className="size-4 text-primary" />
-              Materiais & Insumos de Uso Coletivo
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              {can(profissional?.cat ?? 'cuid', 'estoque') && (
-                <Button
-                  size="xs"
-                  onClick={() => {
-                    setNovoEscopo('casa')
-                    setModalNovoItem(true)
-                  }}
-                  className="gap-1.5 rounded-lg text-xs font-semibold bg-[#123F4A] hover:bg-[#123F4A]/90 text-white"
-                >
-                  <Plus className="size-3" />
-                  Novo Material da Casa
-                </Button>
-              )}
-              <Button
-                size="xs"
-                variant="outline"
-                onClick={() => void copiarListaComprasCasa()}
-                className="text-xs rounded-lg gap-1.5"
-              >
-                <Copy className="size-3" />
-                Copiar lista
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader className="bg-muted/10">
-                <TableRow>
-                  <TableHead className="text-xs font-semibold">Material / Insumo</TableHead>
-                  <TableHead className="text-xs font-semibold">Saldo em Estoque</TableHead>
-                  <TableHead className="text-xs font-semibold">Estoque Mínimo</TableHead>
-                  <TableHead className="text-xs font-semibold">Consumo Estimado/Dia</TableHead>
-                  <TableHead className="text-xs font-semibold">Status de Reposição</TableHead>
-                  <TableHead className="text-xs font-semibold text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {casaFiltrada.map((it) => {
-                  const c = it.consumoDia ?? 0
-                  const q = qtdPedir(c, it)
-                  const precisaComprar = q > 0
-
-                  return (
-                    <TableRow key={it.id}>
-                      <TableCell className="font-bold text-xs text-foreground">{it.nome}</TableCell>
-                      <TableCell className="text-xs font-semibold text-foreground">
-                        {it.qtd} {it.unid}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {it.min} {it.unid}
-                      </TableCell>
-                      <TableCell className="text-xs font-medium">
-                        {it.consumoDia != null ? `${it.consumoDia} ${it.unid}/dia` : '–'}
-                      </TableCell>
-                      <TableCell>
-                        {precisaComprar ? (
-                          <Badge variant="destructive" className="text-[11px] font-semibold">
-                            Comprar {num(q)} {it.unid}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-[11px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                            Estoque OK
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {can(profissional?.cat ?? 'cuid', 'estoque') && (
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              size="xs"
-                              variant="outline"
-                              onClick={() => abrirEntradaRapida(it, 'casa')}
-                              className="h-6 px-2 text-[11px] gap-1 font-semibold text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/10"
-                              title="Dar entrada de suprimento comprado"
-                            >
-                              <ArrowDownToLine className="size-3" />
-                              <span>+ Entrada</span>
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => {
-                                setModalAjuste(it)
-                                setAjusteQtd(String(it.qtd))
-                              }}
-                              className="size-6 text-muted-foreground hover:text-foreground"
-                              title="Retificar / Inventariar saldo"
-                            >
-                              <SlidersHorizontal className="size-3" />
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
+                </div>
+                <div className="flex items-center gap-2">
+                  {itensBaixos > 0 && (
+                    <Badge variant="destructive" className="text-[10px]">
+                      {itensBaixos} item(ns) para reposição
+                    </Badge>
+                  )}
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    onClick={() => void copiarWhatsFamilia(r.id)}
+                    className="rounded-lg text-xs gap-1.5 font-semibold bg-background"
+                    title="Copiar mensagem para o WhatsApp do responsável"
+                  >
+                    <Share2 className="size-3 text-emerald-600" />
+                    <span>Pedir à família</span>
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader className="bg-muted/10">
+                    <TableRow>
+                      <TableHead className="text-xs font-semibold">Material / Medicamento</TableHead>
+                      <TableHead className="text-xs font-semibold">Saldo Atual</TableHead>
+                      <TableHead className="text-xs font-semibold">Estoque Mínimo</TableHead>
+                      <TableHead className="text-xs font-semibold">Consumo/Dia</TableHead>
+                      <TableHead className="text-xs font-semibold">Autonomia Prevista</TableHead>
+                      <TableHead className="text-xs font-semibold text-right">Ações</TableHead>
                     </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+                  </TableHeader>
+                  <TableBody>
+                    {r.estoque.map((it) => {
+                      const c = consumoDia(r, it, T)
+                      const n = nivelEst(c, it)
+                      const d = diasRest(c, it.qtd)
 
-      {/* Modal: Lançar Entrada de Estoque */}
+                      return (
+                        <TableRow key={it.id}>
+                          <TableCell className="font-bold text-xs text-foreground">
+                            {it.nome}
+                          </TableCell>
+                          <TableCell className="text-xs font-semibold text-foreground">
+                            {it.qtd} {it.unid}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {it.min} {it.unid}
+                          </TableCell>
+                          <TableCell className="text-xs font-medium">
+                            {c > 0 ? `${c.toFixed(1)} ${it.unid}/dia` : '–'}
+                          </TableCell>
+                          <TableCell>
+                            <StatusBadge tone={n === 'ok' ? 'ok' : n === 'warn' ? 'warn' : 'danger'}>
+                              {Number.isFinite(d) ? `${Math.floor(d)} dias` : '–'}
+                            </StatusBadge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {can(profissional?.cat ?? 'cuid', 'estoque') && (
+                              <div className="flex items-center justify-end gap-1">
+                                <Button
+                                  size="xs"
+                                  variant="outline"
+                                  onClick={() =>
+                                    abrirEntradaRapida({
+                                      ...it,
+                                      residenteId: r.id,
+                                      residenteNome: r.nome,
+                                    })
+                                  }
+                                  className="h-6 px-2 text-[11px] gap-1 font-semibold text-emerald-700 dark:text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/10"
+                                  title="Dar entrada de nova remessa entregue pela família"
+                                >
+                                  <ArrowDownToLine className="size-3" />
+                                  <span>+ Entrada</span>
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    setModalAjuste({ ...it, residenteId: r.id, residenteNome: r.nome })
+                                    setAjusteQtd(String(it.qtd))
+                                  }}
+                                  className="size-6 text-muted-foreground hover:text-foreground"
+                                  title="Retificar saldo físico"
+                                >
+                                  <SlidersHorizontal className="size-3" />
+                                </Button>
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                    {!r.estoque.length && (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-4 text-xs text-muted-foreground italic">
+                          Nenhum material ou medicamento cadastrado para este residente.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )
+        })}
+
+        {!residentesFiltrados.length && (
+          <EmptyState title="Nenhum residente ou material encontrado">
+            Tente alterar os termos de busca ou desativar o filtro de itens em falta.
+          </EmptyState>
+        )}
+      </div>
+
+      {/* Modal: Lançar Entrada de Estoque Individual */}
       <Dialog open={modalEntrada} onOpenChange={setModalEntrada}>
         <DialogContent className="max-w-md">
           <form onSubmit={handleSalvarEntrada}>
             <DialogHeader>
               <DialogTitle className="text-base font-bold flex items-center gap-2">
                 <ArrowDownToLine className="size-4 text-emerald-600" />
-                Registrar Entrada no Estoque
+                Registrar Entrada de Material / Medicamento
               </DialogTitle>
               <DialogDescription className="text-xs">
-                Lançamento de medicamentos entregues pela família ou insumos comprados para a casa.
+                Lançamento de fraldas, shampoo, produtos de higiene ou medicamentos entregues pela família do residente.
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-3 py-3 text-xs">
               <div className="space-y-1">
-                <Label className="text-[11px] font-semibold">Destino do Item</Label>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    size="xs"
-                    variant={entradaEscopo === 'residente' ? 'default' : 'outline'}
-                    onClick={() => setEntradaEscopo('residente')}
-                    className="flex-1 text-xs"
-                  >
-                    Medicamento de Residente
-                  </Button>
-                  <Button
-                    type="button"
-                    size="xs"
-                    variant={entradaEscopo === 'casa' ? 'default' : 'outline'}
-                    onClick={() => setEntradaEscopo('casa')}
-                    className="flex-1 text-xs"
-                  >
-                    Material Coletivo da Casa
-                  </Button>
-                </div>
+                <Label htmlFor="entRes" className="text-[11px] font-semibold">Residente *</Label>
+                <select
+                  id="entRes"
+                  value={entradaResId}
+                  onChange={(e) => {
+                    const novoId = e.target.value
+                    setEntradaResId(novoId)
+                    const r = data.getResidente(novoId)
+                    setEntradaItemId(r?.estoque[0]?.id || '')
+                  }}
+                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
+                >
+                  {residentesAtivos.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.nome} (Quarto {r.quarto})
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              {entradaEscopo === 'residente' && (
-                <div className="space-y-1">
-                  <Label htmlFor="entRes" className="text-[11px] font-semibold">Residente *</Label>
-                  <select
-                    id="entRes"
-                    value={entradaResId}
-                    onChange={(e) => {
-                      setEntradaResId(e.target.value)
-                      const r = data.getResidente(e.target.value)
-                      setEntradaItemId(r?.estoque[0]?.id || '')
-                    }}
-                    className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                  >
-                    {residentesAtivos.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.nome} (Quarto {r.quarto})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
               <div className="space-y-1">
-                <Label htmlFor="entItem" className="text-[11px] font-semibold">Item / Medicamento *</Label>
+                <Label htmlFor="entItem" className="text-[11px] font-semibold">Material / Medicamento *</Label>
                 <select
                   id="entItem"
                   value={entradaItemId}
@@ -750,10 +643,7 @@ export default function Estoque() {
                   className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                 >
                   <option value="">Selecione o item...</option>
-                  {(entradaEscopo === 'residente'
-                    ? data.getResidente(entradaResId)?.estoque ?? []
-                    : casa
-                  ).map((it) => (
+                  {(data.getResidente(entradaResId)?.estoque ?? []).map((it) => (
                     <option key={it.id} value={it.id}>
                       {it.nome} (Saldo atual: {it.qtd} {it.unid})
                     </option>
@@ -761,30 +651,31 @@ export default function Estoque() {
                 </select>
               </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="entQtd" className="text-[11px] font-semibold">Quantidade Recebida *</Label>
-                <Input
-                  id="entQtd"
-                  type="number"
-                  min="1"
-                  step="any"
-                  value={entradaQtd}
-                  onChange={(e) => setEntradaQtd(e.target.value)}
-                  placeholder="Ex: 30 comprimidos, 2 caixas..."
-                  required
-                  className="h-8 text-xs"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label htmlFor="entObs" className="text-[11px] font-semibold">Observações / Lote / Validade</Label>
-                <Input
-                  id="entObs"
-                  value={entradaObs}
-                  onChange={(e) => setEntradaObs(e.target.value)}
-                  placeholder="Ex: Entregue pela filha, lote 4821, val 12/2027..."
-                  className="h-8 text-xs"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="entQtd" className="text-[11px] font-semibold">Quantidade Recebida *</Label>
+                  <Input
+                    id="entQtd"
+                    type="number"
+                    min="1"
+                    step="any"
+                    value={entradaQtd}
+                    onChange={(e) => setEntradaQtd(e.target.value)}
+                    placeholder="Ex: 5"
+                    required
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="entObs" className="text-[11px] font-semibold">Observações</Label>
+                  <Input
+                    id="entObs"
+                    value={entradaObs}
+                    onChange={(e) => setEntradaObs(e.target.value)}
+                    placeholder="Ex: Trazido pela filha Joana"
+                    className="h-8 text-xs"
+                  />
+                </div>
               </div>
             </div>
 
@@ -795,80 +686,54 @@ export default function Estoque() {
               <Button
                 type="submit"
                 size="sm"
-                disabled={salvando || !entradaItemId}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+                disabled={salvando}
+                className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold"
               >
-                {salvando ? 'Registrando...' : 'Confirmar Entrada'}
+                {salvando ? 'Salvando...' : 'Confirmar Entrada'}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* Modal: Cadastrar Novo Item no Estoque */}
+      {/* Modal: Cadastrar Novo Item Individual */}
       <Dialog open={modalNovoItem} onOpenChange={setModalNovoItem}>
         <DialogContent className="max-w-md">
           <form onSubmit={handleSalvarNovoItem}>
             <DialogHeader>
               <DialogTitle className="text-base font-bold flex items-center gap-2">
-                <Package className="size-4 text-[#123F4A]" />
-                Cadastrar Novo Item no Estoque
+                <Plus className="size-4 text-[#123F4A]" />
+                Cadastrar Material ou Medicamento Individual
               </DialogTitle>
               <DialogDescription className="text-xs">
-                Cadastre um novo fármaco para um residente ou suprimento para a instituição.
+                Cadastre fraldas, shampoo, sabonete, hidratante, pomadas ou medicamentos de uso individual do residente.
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-3 py-3 text-xs">
               <div className="space-y-1">
-                <Label className="text-[11px] font-semibold">Escopo do Item</Label>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    size="xs"
-                    variant={novoEscopo === 'residente' ? 'default' : 'outline'}
-                    onClick={() => setNovoEscopo('residente')}
-                    className="flex-1 text-xs"
-                  >
-                    Residente
-                  </Button>
-                  <Button
-                    type="button"
-                    size="xs"
-                    variant={novoEscopo === 'casa' ? 'default' : 'outline'}
-                    onClick={() => setNovoEscopo('casa')}
-                    className="flex-1 text-xs"
-                  >
-                    Uso Coletivo (Casa)
-                  </Button>
-                </div>
+                <Label htmlFor="novoRes" className="text-[11px] font-semibold">Residente *</Label>
+                <select
+                  id="novoRes"
+                  value={novoResId}
+                  onChange={(e) => setNovoResId(e.target.value)}
+                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
+                >
+                  {residentesAtivos.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.nome} (Quarto {r.quarto})
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              {novoEscopo === 'residente' && (
-                <div className="space-y-1">
-                  <Label htmlFor="novoRes" className="text-[11px] font-semibold">Residente *</Label>
-                  <select
-                    id="novoRes"
-                    value={novoResId}
-                    onChange={(e) => setNovoResId(e.target.value)}
-                    className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                  >
-                    {residentesAtivos.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.nome} (Quarto {r.quarto})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
               <div className="space-y-1">
-                <Label htmlFor="novoNome" className="text-[11px] font-semibold">Nome do Item / Medicamento *</Label>
+                <Label htmlFor="novoNome" className="text-[11px] font-semibold">Nome do Material / Insumo / Medicamento *</Label>
                 <Input
                   id="novoNome"
                   value={novoNome}
                   onChange={(e) => setNovoNome(e.target.value)}
-                  placeholder="Ex: Clonazepam 2 mg ou Fralda Geriátrica G"
+                  placeholder="Ex: Shampoo Neutro, Fralda Geriátrica G, Sabonete Líquido..."
                   required
                   className="h-8 text-xs"
                 />
@@ -883,12 +748,13 @@ export default function Estoque() {
                     onChange={(e) => setNovoUnidade(e.target.value)}
                     className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                   >
-                    <option value="un">un (comp/item)</option>
-                    <option value="cx">caixa</option>
+                    <option value="un">unidade (un)</option>
                     <option value="frasco">frasco</option>
-                    <option value="ampola">ampola</option>
-                    <option value="pacote">pacote</option>
+                    <option value="pacote">pacote (pct)</option>
+                    <option value="tubo">tubo / bisnaga</option>
+                    <option value="cx">caixa (cx)</option>
                     <option value="sachê">sachê</option>
+                    <option value="rolo">rolo</option>
                   </select>
                 </div>
                 <div className="space-y-1">
@@ -897,6 +763,7 @@ export default function Estoque() {
                     id="novoQtd"
                     type="number"
                     min="0"
+                    step="any"
                     value={novoQtd}
                     onChange={(e) => setNovoQtd(e.target.value)}
                     className="h-8 text-xs"
@@ -908,6 +775,7 @@ export default function Estoque() {
                     id="novoMin"
                     type="number"
                     min="0"
+                    step="any"
                     value={novoMin}
                     onChange={(e) => setNovoMin(e.target.value)}
                     className="h-8 text-xs"
@@ -915,21 +783,19 @@ export default function Estoque() {
                 </div>
               </div>
 
-              {novoEscopo === 'casa' && (
-                <div className="space-y-1">
-                  <Label htmlFor="novoConsumo" className="text-[11px] font-semibold">Consumo Estimado/Dia</Label>
-                  <Input
-                    id="novoConsumo"
-                    type="number"
-                    step="0.1"
-                    min="0"
-                    value={novoConsumoDia}
-                    onChange={(e) => setNovoConsumoDia(e.target.value)}
-                    placeholder="Ex: 5 pacotes/dia"
-                    className="h-8 text-xs"
-                  />
-                </div>
-              )}
+              <div className="space-y-1">
+                <Label htmlFor="novoConsumo" className="text-[11px] font-semibold">Consumo Estimado / Dia (opcional)</Label>
+                <Input
+                  id="novoConsumo"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={novoConsumoDia}
+                  onChange={(e) => setNovoConsumoDia(e.target.value)}
+                  placeholder="Ex: 4 (para fraldas) ou 0.1 (para shampoo)"
+                  className="h-8 text-xs"
+                />
+              </div>
             </div>
 
             <DialogFooter>
@@ -942,7 +808,7 @@ export default function Estoque() {
                 disabled={salvando}
                 className="bg-[#123F4A] hover:bg-[#123F4A]/90 text-white font-semibold"
               >
-                {salvando ? 'Cadastrando...' : 'Cadastrar Item'}
+                {salvando ? 'Cadastrando...' : 'Cadastrar Material'}
               </Button>
             </DialogFooter>
           </form>
@@ -960,8 +826,8 @@ export default function Estoque() {
                   Ajuste de Inventário — {modalAjuste.nome}
                 </DialogTitle>
                 <DialogDescription className="text-xs">
-                  {modalAjuste.residenteNome ? `Residente: ${modalAjuste.residenteNome}` : 'Material coletivo da casa'}.
-                  Retifique o saldo físico conferido na farmácia.
+                  Residente: <strong>{modalAjuste.residenteNome}</strong>.
+                  Retifique o saldo físico real do item individual conferido no armário do residente.
                 </DialogDescription>
               </DialogHeader>
 
@@ -993,7 +859,7 @@ export default function Estoque() {
                     id="ajMot"
                     value={ajusteMotivo}
                     onChange={(e) => setAjusteMotivo(e.target.value)}
-                    placeholder="Ex: Auditoria mensal, quebra acidental de frasco..."
+                    placeholder="Ex: Auditoria mensal, produto danificado..."
                     className="h-8 text-xs"
                   />
                 </div>

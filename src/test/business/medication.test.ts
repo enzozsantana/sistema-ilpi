@@ -7,6 +7,8 @@ import {
   dosesDia,
   isDoseLate,
   freqTxt,
+  detectControlado,
+  isMedicamentoControlado,
 } from '../../lib/business/medication'
 import type { Prescricao, Residente } from '../../types/ilpi'
 
@@ -157,6 +159,41 @@ describe('Medication Business Rules & Dose Scheduling', () => {
         obs: 'em caso de febre ou dor',
       }
       expect(freqTxt(sn)).toBe('Se necessário. em caso de febre ou dor')
+    })
+  })
+
+  describe('Remédios Controlados (Portaria 344/98)', () => {
+    it('detectControlado: reconhece substâncias e nomes comerciais controlados', () => {
+      expect(detectControlado('Clonazepam 2 mg')).toBe(true)
+      expect(detectControlado('Rivotril 0,5mg')).toBe(true)
+      expect(detectControlado('Quetiapina 25mg')).toBe(true)
+      expect(detectControlado('Fluoxetina 20 mg')).toBe(true)
+      expect(detectControlado('Diazepam 10mg')).toBe(true)
+      expect(detectControlado('Morfina 10mg/mL')).toBe(true)
+      expect(detectControlado('Tramadol 50 mg')).toBe(true)
+      expect(detectControlado('Gardenal 100mg')).toBe(true)
+      expect(detectControlado('Carbamazepina 200mg')).toBe(true)
+      expect(detectControlado('Zolpidem 10mg')).toBe(true)
+    })
+
+    it('detectControlado: não marca medicamentos comuns não controlados', () => {
+      expect(detectControlado('Losartana Potássica 50 mg')).toBe(false)
+      expect(detectControlado('Dipirona 500 mg')).toBe(false)
+      expect(detectControlado('Omeprazol 20 mg')).toBe(false)
+      expect(detectControlado('Paracetamol 750 mg')).toBe(false)
+      expect(detectControlado('Sinvastatina 20 mg')).toBe(false)
+      expect(detectControlado('')).toBe(false)
+    })
+
+    it('isMedicamentoControlado: respeita flag explícita ou recorre à detecção', () => {
+      // Explícito true
+      expect(isMedicamentoControlado({ med: 'Medicamento X', controlado: true })).toBe(true)
+      // Explícito false mesmo com nome controlado
+      expect(isMedicamentoControlado({ med: 'Clonazepam 2 mg', controlado: false })).toBe(false)
+      // Indefinido: usa detecção automática
+      expect(isMedicamentoControlado({ med: 'Clonazepam 2 mg' })).toBe(true)
+      expect(isMedicamentoControlado({ med: 'Dipirona 500mg' })).toBe(false)
+      expect(isMedicamentoControlado(null)).toBe(false)
     })
   })
 })

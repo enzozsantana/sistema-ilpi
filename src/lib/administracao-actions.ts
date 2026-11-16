@@ -31,20 +31,22 @@ export async function checarAdministracao(p: ChecarAdmParams): Promise<{ ok: boo
   if (p.status === 'dado' && p.prescricao?.estoqueId) {
     const { data: item, error: eItem } = await supabase
       .from('itens_estoque')
-      .select('quantidade, consumo')
+      .select('quantidade')
       .eq('id', p.prescricao.estoqueId)
       .maybeSingle()
     if (eItem) return { ok: false, erro: eItem.message }
-    const qtd = Number(item?.quantidade ?? 0)
-    const gasto = Number(p.prescricao.consumo ?? 1)
-    if (qtd < gasto) {
-      return { ok: false, erro: 'Estoque insuficiente para registrar a dose.' }
+    if (item) {
+      const qtd = Number(item.quantidade ?? 0)
+      const gasto = Number(p.prescricao.consumo ?? 1)
+      if (qtd < gasto) {
+        return { ok: false, erro: 'Estoque insuficiente para registrar a dose.' }
+      }
+      const { error: upd } = await supabase
+        .from('itens_estoque')
+        .update({ quantidade: qtd - gasto })
+        .eq('id', p.prescricao.estoqueId)
+      if (upd) return { ok: false, erro: upd.message }
     }
-    const { error: upd } = await supabase
-      .from('itens_estoque')
-      .update({ quantidade: qtd - gasto })
-      .eq('id', p.prescricao.estoqueId)
-    if (upd) return { ok: false, erro: upd.message }
   }
 
   await supabase

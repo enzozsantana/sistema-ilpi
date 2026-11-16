@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { diffDays, fmt, iso, mesKey } from '../lib/business/dates'
-import { calcInd, dimensionamento } from '../lib/business/indicadores'
+import { calcInd, dimensionamento, INDICADORES_VIGILANCIA, ROTULO_EVENTO } from '../lib/business/indicadores'
 import { useIlpiData } from '../contexts/IlpiDataContext'
 import { useAuth } from '../contexts/AuthContext'
 import { can } from '../lib/permissions'
@@ -41,18 +41,22 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  ClipboardList,
   Copy,
   Edit,
+  Eye,
   FileCheck2,
   FileText,
+  ListFilter,
   Plus,
   Scale,
+  ShieldAlert,
   ShieldCheck,
   Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import type { DocumentoInstituicao, PopDocumento } from '../types/ilpi'
+import type { DocumentoInstituicao, EventoTipo, EventoVigilancia, PopDocumento } from '../types/ilpi'
 
 const T = iso(new Date())
 const MK_ATUAL = mesKey(new Date())
@@ -97,10 +101,146 @@ export default function Gestao() {
   const [docParaExcluir, setDocParaExcluir] = useState<DocumentoInstituicao | null>(null)
   const [popParaExcluir, setPopParaExcluir] = useState<PopDocumento | null>(null)
 
+  // Ocorrências do Mês Selecionado (Vigilância Sanitária)
+  const [anoInd, mesIndNum] = mesInd.split('-').map(Number)
+  const iniInd = iso(new Date(anoInd, mesIndNum - 1, 1))
+  const fimInd = iso(new Date(anoInd, mesIndNum, 0))
+
+  const eventosDoMes = useMemo(() => {
+    return eventos
+      .filter((e) => e.data >= iniInd && e.data <= fimInd)
+      .sort((a, b) => b.data.localeCompare(a.data))
+  }, [eventos, iniInd, fimInd])
+
+  // Dialog State: Gerenciar Ocorrências do Mês
+  const [dialogOcorrenciasOpen, setDialogOcorrenciasOpen] = useState(false)
+  const [filtroTipoOco, setFiltroTipoOco] = useState<string>('todos')
+
+  const eventosFiltrados = useMemo(() => {
+    if (filtroTipoOco === 'todos') return eventosDoMes
+    return eventosDoMes.filter((e) => e.tipo === filtroTipoOco)
+  }, [eventosDoMes, filtroTipoOco])
+
+  // Dialog State: Nova / Editar Ocorrência
+  const [dialogOcoFormOpen, setDialogOcoFormOpen] = useState(false)
+  const [ocoEditando, setOcoEditando] = useState<EventoVigilancia | null>(null)
+  const [salvandoOco, setSalvandoOco] = useState(false)
+  const [ocoTipo, setOcoTipo] = useState<EventoTipo>('lpp')
+  const [ocoResId, setOcoResId] = useState<string>('')
+  const [ocoData, setOcoData] = useState<string>(T)
+  const [ocoRelato, setOcoRelato] = useState<string>('')
+
+  // Dialog State: Exclusão de Ocorrência
+  const [ocoParaExcluir, setOcoParaExcluir] = useState<EventoVigilancia | null>(null)
+
   function navegarMesInd(offset: number) {
     const [ano, mes] = mesInd.split('-').map(Number)
     const d = new Date(ano, mes - 1 + offset, 1)
     setMesInd(mesKey(d))
+  }
+
+  function abrirNovaOcorrencia(tipoPredefinido?: EventoTipo) {
+    setOcoEditando(null)
+    setOcoTipo(tipoPredefinido || 'lpp')
+    const dataDefault = mesInd === MK_ATUAL ? T : `${mesInd}-01`
+    setOcoData(dataDefault)
+    setOcoResId(residentes[0]?.id || '')
+    setOcoRelato('')
+    setDialogOcoFormOpen(true)
+  }
+
+  function abrirEditarOcorrencia(ev: EventoVigilancia) {
+    setOcoEditando(ev)
+    setOcoTipo(ev.tipo)
+    setOcoData(ev.data)
+    setOcoResId(ev.resId || '')
+    setOcoRelato('')
+    setDialogOcoFormOpen(true)
+  }
+
+  function abrirGerenciarTipo(tipo: string) {
+    setFiltroTipoOco(tipo)
+    setDialogOcorrenciasOpen(true)
+  }
+
+  async function handleSalvarOcorrencia() {
+    if (!ocoResId) {
+      toast.error('Selecione o residente envolvido.')
+      return
+    }
+    if (!ocoData) {
+      toast.error('Informe a data da ocorrência.')
+      return
+    }
+
+    setSalvandoOco(true)
+
+    if (ocoEditando) {
+      const { error } = await supabase
+        .from('ocorrencias')
+        .update({
+          residente_id: ocoResId,
+          tipo: ocoTipo,
+          data: ocoData,
+        })
+        .eq('id', ocoEditando.id)
+
+      setSalvandoOco(false)
+      if (error) {
+        toast.error(`Erro ao atualizar ocorrência: ${error.message}`)
+        return
+      }
+      toast.success('Ocorrência sanitária atualizada! Indicadores recalculados.')
+    } else {
+      const id = 'oco_' + Math.random().toString(36).substring(2, 9)
+      const { error } = await supabase
+        .from('ocorrencias')
+        .insert({
+          id,
+          residente_id: ocoResId,
+          tipo: ocoTipo,
+          data: ocoData,
+        })
+
+      if (error) {
+        setSalvandoOco(false)
+        toast.error(`Erro ao registrar ocorrência: ${error.message}`)
+        return
+      }
+
+      if (ocoRelato.trim() && profissional) {
+        const anotId = 'a_' + Math.random().toString(36).substring(2, 9)
+        await supabase.from('anotacoes').insert({
+          id: anotId,
+          residente_id: ocoResId,
+          texto: `[INTERCORRÊNCIA SANITÁRIA - ${ocoTipo.toUpperCase()}] ${ocoRelato.trim()}`,
+          assinatura: { id: profissional.id, d: ocoData, h: '12:00' },
+        })
+      }
+
+      setSalvandoOco(false)
+      toast.success('Ocorrência sanitária registrada! Indicadores atualizados.')
+    }
+
+    setDialogOcoFormOpen(false)
+    await refresh()
+  }
+
+  async function handleExcluirOcorrencia() {
+    if (!ocoParaExcluir) return
+    const { error } = await supabase
+      .from('ocorrencias')
+      .delete()
+      .eq('id', ocoParaExcluir.id)
+
+    if (error) {
+      toast.error(`Erro ao remover ocorrência: ${error.message}`)
+      return
+    }
+
+    toast.success('Ocorrência sanitária excluída e indicadores atualizados.')
+    setOcoParaExcluir(null)
+    await refresh()
   }
 
   async function copiarIndicadores() {
@@ -670,6 +810,34 @@ export default function Gestao() {
               <Copy className="size-3" />
               Copiar tabela
             </Button>
+
+            {podeGerir && (
+              <>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  onClick={() => {
+                    setFiltroTipoOco('todos')
+                    setDialogOcorrenciasOpen(true)
+                  }}
+                  className="text-xs rounded-lg gap-1.5 h-8"
+                  title="Ver, editar ou excluir ocorrências deste mês"
+                >
+                  <ClipboardList className="size-3.5 text-amber-600" />
+                  Gerenciar Ocorrências ({eventosDoMes.length})
+                </Button>
+
+                <Button
+                  size="xs"
+                  onClick={() => abrirNovaOcorrencia()}
+                  className="text-xs rounded-lg gap-1.5 h-8 bg-amber-600 hover:bg-amber-700 text-white font-medium"
+                  title="Lançar nova ocorrência / evento sentinela no mês"
+                >
+                  <Plus className="size-3.5" />
+                  Lançar Ocorrência
+                </Button>
+              </>
+            )}
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -679,18 +847,78 @@ export default function Gestao() {
                 <TableHead className="text-xs font-semibold">Indicador de Qualidade</TableHead>
                 <TableHead className="text-xs font-semibold">Ocorrências / Casos</TableHead>
                 <TableHead className="text-xs font-semibold text-right">Taxa Percentual (%)</TableHead>
+                {podeGerir && (
+                  <TableHead className="text-xs font-semibold text-right pr-4">Ações / Edição</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
               {ind.rows.map((row) => (
-                <TableRow key={row.n}>
-                  <TableCell className="font-bold text-xs text-foreground">{row.n}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{row.c} caso(s)</TableCell>
+                <TableRow key={row.n} className="hover:bg-muted/30 transition-colors">
+                  <TableCell className="font-bold text-xs text-foreground">
+                    <div className="flex items-center gap-2">
+                      <span>{row.n}</span>
+                      {row.tipo && (
+                        <span className="text-[10px] text-muted-foreground uppercase font-mono bg-muted/60 px-1.5 py-0.5 rounded">
+                          {row.tipo}
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-xs">
+                    {row.c > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => row.tipo && abrirGerenciarTipo(row.tipo)}
+                        className="inline-flex items-center gap-1 font-semibold text-amber-700 dark:text-amber-400 hover:underline cursor-pointer"
+                        title="Ver e gerenciar os casos deste indicador"
+                      >
+                        <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
+                        {row.c} caso(s) registrado(s)
+                      </button>
+                    ) : (
+                      <span className="text-muted-foreground">0 casos</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">
-                    <Badge variant="secondary" className="font-mono text-xs font-semibold">
+                    <Badge
+                      variant={row.c > 0 ? 'default' : 'secondary'}
+                      className={cn(
+                        'font-mono text-xs font-semibold',
+                        row.c > 0 && 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30'
+                      )}
+                    >
                       {row.taxa.toFixed(1)}%
                     </Badge>
                   </TableCell>
+                  {podeGerir && (
+                    <TableCell className="text-right pr-4">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {row.c > 0 && (
+                          <Button
+                            size="xs"
+                            variant="ghost"
+                            className="h-7 px-2 text-[11px] gap-1 text-muted-foreground hover:text-foreground"
+                            onClick={() => row.tipo && abrirGerenciarTipo(row.tipo)}
+                            title="Ver e editar casos deste indicador"
+                          >
+                            <Eye className="size-3" />
+                            Ver / Editar
+                          </Button>
+                        )}
+                        <Button
+                          size="xs"
+                          variant="outline"
+                          className="h-7 px-2 text-[11px] gap-1 text-amber-700 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/10"
+                          onClick={() => abrirNovaOcorrencia(row.tipo as EventoTipo)}
+                          title={`Lançar novo caso de ${row.n}`}
+                        >
+                          <Plus className="size-3" />
+                          Lançar caso
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -917,6 +1145,312 @@ export default function Gestao() {
             </Button>
             <Button variant="destructive" size="sm" onClick={handleExcluirPop}>
               Excluir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Gerenciar Ocorrências Sanitárias do Mês */}
+      <Dialog open={dialogOcorrenciasOpen} onOpenChange={setDialogOcorrenciasOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+          <DialogHeader className="pb-2 border-b border-border/40">
+            <div className="flex items-center justify-between gap-4">
+              <div className="space-y-0.5">
+                <DialogTitle className="flex items-center gap-2 text-base">
+                  <ShieldAlert className="size-5 text-amber-600" />
+                  Ocorrências da Vigilância Sanitária — {mesInd}
+                </DialogTitle>
+                <DialogDescription className="text-xs">
+                  Eventos sentinela registrados no mês selecionado que compõem as taxas da RDC 502/2021.
+                </DialogDescription>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => abrirNovaOcorrencia(filtroTipoOco !== 'todos' ? (filtroTipoOco as EventoTipo) : undefined)}
+                className="bg-amber-600 hover:bg-amber-700 text-white gap-1.5 shrink-0 text-xs h-8"
+              >
+                <Plus className="size-3.5" />
+                Nova Ocorrência
+              </Button>
+            </div>
+
+            {/* Filtro por Indicador */}
+            <div className="flex items-center gap-2 pt-2 flex-wrap">
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <ListFilter className="size-3 text-muted-foreground" />
+                Filtrar:
+              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <Button
+                  size="xs"
+                  variant={filtroTipoOco === 'todos' ? 'default' : 'outline'}
+                  onClick={() => setFiltroTipoOco('todos')}
+                  className={cn(
+                    'h-6 text-[11px] rounded-full px-2.5',
+                    filtroTipoOco === 'todos' && 'bg-amber-600 hover:bg-amber-700 text-white'
+                  )}
+                >
+                  Todos ({eventosDoMes.length})
+                </Button>
+                {INDICADORES_VIGILANCIA.map(([k, n]) => {
+                  const qtd = eventosDoMes.filter((e) => e.tipo === k).length
+                  return (
+                    <Button
+                      key={k}
+                      size="xs"
+                      variant={filtroTipoOco === k ? 'default' : 'outline'}
+                      onClick={() => setFiltroTipoOco(k)}
+                      className={cn(
+                        'h-6 text-[11px] rounded-full px-2.5',
+                        filtroTipoOco === k && 'bg-amber-600 hover:bg-amber-700 text-white'
+                      )}
+                    >
+                      {n.split(' ')[0]} {n.includes('(') ? n.match(/\((.*?)\)/)?.[0] : ''} ({qtd})
+                    </Button>
+                  )
+                })}
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="overflow-y-auto flex-1 py-2">
+            {eventosFiltrados.length === 0 ? (
+              <div className="py-12 text-center space-y-2">
+                <div className="size-10 rounded-full bg-muted/60 flex items-center justify-center mx-auto text-muted-foreground">
+                  <CheckCircle2 className="size-5" />
+                </div>
+                <p className="text-xs font-medium text-foreground">
+                  Nenhuma ocorrência registrada para os filtros selecionados no mês {mesInd}.
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  Você pode lançar novos eventos sentinela ou retificar ocorrências a qualquer momento.
+                </p>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  onClick={() => abrirNovaOcorrencia(filtroTipoOco !== 'todos' ? (filtroTipoOco as EventoTipo) : undefined)}
+                  className="mt-2 text-xs gap-1"
+                >
+                  <Plus className="size-3" />
+                  Lançar Ocorrência
+                </Button>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="text-xs">
+                    <TableHead className="w-28">Data</TableHead>
+                    <TableHead>Indicador / Evento</TableHead>
+                    <TableHead>Residente</TableHead>
+                    <TableHead className="text-right w-24">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {eventosFiltrados.map((ev) => {
+                    const res = residentes.find((r) => r.id === ev.resId)
+                    return (
+                      <TableRow key={ev.id} className="text-xs hover:bg-muted/40">
+                        <TableCell className="font-mono text-muted-foreground whitespace-nowrap">
+                          {fmt(ev.data)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="font-normal text-[11px] bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20">
+                            {ROTULO_EVENTO[ev.tipo] || ev.tipo}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {res ? (
+                            <span>
+                              {res.nome}{' '}
+                              {res.quarto && (
+                                <span className="text-[11px] text-muted-foreground font-normal">
+                                  (Q. {res.quarto})
+                                </span>
+                              )}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground italic">
+                              {ev.resId ? `ID: ${ev.resId}` : 'Não informado'}
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="size-7 text-muted-foreground hover:text-foreground"
+                              onClick={() => abrirEditarOcorrencia(ev)}
+                              title="Editar data, indicador ou residente"
+                            >
+                              <Edit className="size-3.5" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="size-7 text-rose-600 hover:text-rose-700 hover:bg-rose-500/10"
+                              onClick={() => setOcoParaExcluir(ev)}
+                              title="Excluir ocorrência"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+
+          <DialogFooter className="pt-2 border-t border-border/40">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDialogOcorrenciasOpen(false)}
+            >
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Nova / Editar Ocorrência Sanitária */}
+      <Dialog open={dialogOcoFormOpen} onOpenChange={setDialogOcoFormOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldAlert className="size-5 text-amber-600" />
+              {ocoEditando ? 'Editar Ocorrência Sanitária' : 'Nova Ocorrência Sanitária'}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Evento sentinela de notificação compulsória para os indicadores da Vigilância Sanitária (RDC 502/2021).
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2 text-xs">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Indicador / Tipo de Evento *</Label>
+              <Select
+                value={ocoTipo}
+                onValueChange={(val) => setOcoTipo(val as EventoTipo)}
+              >
+                <SelectTrigger className="text-xs">
+                  <SelectValue placeholder="Selecione o indicador" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="lpp">Prevalência de lesão por pressão (LPP)</SelectItem>
+                  <SelectItem value="escabiose">Incidência de escabiose</SelectItem>
+                  <SelectItem value="dda">Incidência de DDA (Doença Diarreica Aguda)</SelectItem>
+                  <SelectItem value="desidratacao">Incidência de desidratação</SelectItem>
+                  <SelectItem value="desnutricao">Prevalência de desnutrição</SelectItem>
+                  <SelectItem value="obito">Taxa de mortalidade (Óbito)</SelectItem>
+                  <SelectItem value="queda">Queda da própria altura / leito</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Residente Envolvido *</Label>
+              <Select
+                value={ocoResId}
+                onValueChange={(val) => setOcoResId(val)}
+              >
+                <SelectTrigger className="text-xs">
+                  <SelectValue placeholder="Selecione o residente" />
+                </SelectTrigger>
+                <SelectContent>
+                  {residentes.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>
+                      {r.nome} {r.quarto ? `(Quarto ${r.quarto})` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">Data da Ocorrência *</Label>
+              <Input
+                type="date"
+                value={ocoData}
+                onChange={(e) => setOcoData(e.target.value)}
+                className="text-xs"
+              />
+            </div>
+
+            {!ocoEditando && (
+              <div className="space-y-1.5">
+                <Label className="text-xs">Relato Circunstancial e Conduta (Opcional)</Label>
+                <textarea
+                  rows={2}
+                  value={ocoRelato}
+                  onChange={(e) => setOcoRelato(e.target.value)}
+                  placeholder="Se preenchido, será registrado também no prontuário de anotações do residente."
+                  className="w-full text-xs rounded-md border border-input bg-background p-2 focus-visible:outline-ring"
+                />
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDialogOcoFormOpen(false)}
+              disabled={salvandoOco}
+            >
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSalvarOcorrencia}
+              disabled={salvandoOco}
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+            >
+              {salvandoOco
+                ? 'Salvando...'
+                : ocoEditando
+                ? 'Atualizar Ocorrência'
+                : 'Registrar Ocorrência'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Confirmar Exclusão de Ocorrência */}
+      <Dialog
+        open={!!ocoParaExcluir}
+        onOpenChange={(open) => !open && setOcoParaExcluir(null)}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-rose-600 flex items-center gap-2">
+              <Trash2 className="size-4" /> Excluir Ocorrência Sanitária
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Deseja remover o registro de{' '}
+              <strong>
+                {ocoParaExcluir ? ROTULO_EVENTO[ocoParaExcluir.tipo] || ocoParaExcluir.tipo : ''}
+              </strong>{' '}
+              do dia {ocoParaExcluir ? fmt(ocoParaExcluir.data) : ''}? Os cálculos dos indicadores serão atualizados imediatamente.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setOcoParaExcluir(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleExcluirOcorrencia}
+            >
+              Excluir Registro
             </Button>
           </DialogFooter>
         </DialogContent>

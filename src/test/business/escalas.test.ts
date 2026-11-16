@@ -192,5 +192,15 @@ describe('Clinical Scales (Fugulin, Morse, Braden, Glasgow, MNA)', () => {
       const semAval: Residente = { ...mockResidente, aval: [] }
       expect(grau(semAval)).toBeNull()
     })
+
+    it('totalEsc não crasha com índices fora dos limites ou valores brutos de pontos', () => {
+      // Morse com valores de pontos brutos (25) em vez do índice (1)
+      const respBruta = [25, 15, 30, 20, 20, 15]
+      expect(() => totalEsc('morse', respBruta)).not.toThrow()
+      expect(totalEsc('morse', respBruta)).toBe(125)
+
+      // Índice completamente inexistente / inválido
+      expect(totalEsc('morse', [999, 999])).toBe(0)
+    })
   })
 })

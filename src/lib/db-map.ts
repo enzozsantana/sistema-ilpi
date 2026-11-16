@@ -22,7 +22,7 @@ import type {
   TipoPrescricao,
   Treinamento,
 } from '../types/ilpi'
-import { doseKey } from './business/medication'
+import { doseKey, detectControlado } from './business/medication'
 
 type DbTipoPresc = 'diario' | 'semanal' | 'intervalo' | 'sn'
 
@@ -102,8 +102,21 @@ export function mapPrescricao(row: {
   obs?: string | null
   prescritor_id?: string | null
   suspensa: boolean
+  controlado?: boolean | null
   assinatura: unknown
 }): Prescricao {
+  const sigRaw = (row.assinatura ?? {}) as Record<string, unknown>
+  let isCtrl: boolean | undefined = undefined
+  if (typeof row.controlado === 'boolean') {
+    isCtrl = row.controlado
+  } else if (typeof sigRaw.controlado === 'boolean') {
+    isCtrl = sigRaw.controlado
+  } else if (row.obs && /\[(CONTROLADO|PSICOTR[OÓ]PICO)\]/i.test(row.obs)) {
+    isCtrl = true
+  } else if (detectControlado(row.medicamento)) {
+    isCtrl = true
+  }
+
   return {
     id: row.id,
     med: row.medicamento,
@@ -120,6 +133,7 @@ export function mapPrescricao(row: {
     obs: row.obs ?? undefined,
     prescritor: row.prescritor_id ?? undefined,
     suspensa: row.suspensa,
+    controlado: isCtrl,
     sig: asSig(row.assinatura),
   }
 }

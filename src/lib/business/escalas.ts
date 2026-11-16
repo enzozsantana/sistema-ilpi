@@ -125,7 +125,22 @@ export const SCALES: Record<EscalaKey, DefinicaoEscala> = {
 }
 
 export function totalEsc(k: EscalaKey, resp: number[]): number {
-  return resp.reduce((s, ix, i) => s + SCALES[k].itens[i][1][ix][1], 0)
+  if (!SCALES[k] || !Array.isArray(resp)) return 0
+  return resp.reduce((s, ix, i) => {
+    const item = SCALES[k].itens[i]
+    if (!item) return s
+    const options = item[1]
+    if (!options) return s
+    if (options[ix] !== undefined) {
+      return s + options[ix][1]
+    }
+    // Fallback retrocompatível: caso o valor salvo tenha sido a pontuação bruta em vez do índice
+    const match = options.find(([, pt]) => pt === ix)
+    if (match) {
+      return s + match[1]
+    }
+    return s
+  }, 0)
 }
 
 export function classifEscala(k: EscalaKey, total: number): ClassifEscala {

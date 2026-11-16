@@ -123,10 +123,12 @@ describe('ANVISA RDC 502 Indicadores & Dimensionamento', () => {
       expect(res.den).toBe(3)
 
       const lppRow = res.rows.find((r) => r.n.includes('lesão por pressão'))
+      expect(lppRow?.tipo).toBe('lpp')
       expect(lppRow?.c).toBe(1)
       expect(lppRow?.taxa).toBeCloseTo((1 / 3) * 100, 1)
 
       const ddaRow = res.rows.find((r) => r.n.includes('diarreica'))
+      expect(ddaRow?.tipo).toBe('dda')
       expect(ddaRow?.c).toBe(0)
       expect(ddaRow?.taxa).toBe(0)
     })

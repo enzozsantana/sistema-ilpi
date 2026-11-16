@@ -11,7 +11,7 @@ import {
   primeiro,
   sigCurta,
 } from '../lib/business/dates'
-import { dosesDia, isDoseLate, regAdm } from '../lib/business/medication'
+import { dosesDia, isDoseLate, regAdm, isMedicamentoControlado } from '../lib/business/medication'
 import { flags } from '../lib/business/ssvv'
 import { ativos } from '../lib/business/indicadores'
 import { can } from '../lib/permissions'
@@ -399,9 +399,21 @@ export default function Plantao() {
               Q.{x.r.quarto}
             </span>
           </div>
-          <span className="text-xs text-foreground/90 font-medium truncate mt-0.5">
-            {x.presc.med}
-          </span>
+          <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+            <span className="text-xs text-foreground/90 font-medium truncate">
+              {x.presc.med}
+            </span>
+            {isMedicamentoControlado(x.presc) && (
+              <Badge
+                variant="outline"
+                className="text-[9px] px-1 py-0 h-3.5 bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/35 font-semibold gap-0.5 shrink-0"
+                title="Medicamento Controlado (Portaria 344/98)"
+              >
+                <ShieldAlert className="size-2 text-amber-600 dark:text-amber-400" />
+                Controlado
+              </Badge>
+            )}
+          </div>
           <span className="text-[11px] text-muted-foreground truncate">
             {x.presc.dose} · {x.presc.via}
           </span>
@@ -949,8 +961,17 @@ export default function Plantao() {
                   <div className="flex items-center gap-3">
                     <Avatar r={modalRes} size="lg" />
                     <div className="min-w-0">
-                      <DialogTitle className="text-lg font-bold font-heading truncate">
-                        {modal.presc.med}
+                      <DialogTitle className="text-lg font-bold font-heading truncate flex items-center gap-2 flex-wrap">
+                        <span>{modal.presc.med}</span>
+                        {isMedicamentoControlado(modal.presc) && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] px-1.5 py-0.5 bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/40 font-semibold gap-1 inline-flex items-center"
+                          >
+                            <ShieldAlert className="size-3 text-amber-600 dark:text-amber-400" />
+                            Controlado (Portaria 344)
+                          </Badge>
+                        )}
                       </DialogTitle>
                       <DialogDescription className="text-xs">
                         {modalRes.nome} · Quarto {modalRes.quarto} · Horário {modal.hora}
@@ -961,6 +982,15 @@ export default function Plantao() {
 
                 <div className="space-y-4 py-2">
                   <Allergy alergias={modalRes.alergias} />
+
+                  {isMedicamentoControlado(modal.presc) && (
+                    <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-xs">
+                      <ShieldAlert className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                      <span>
+                        <strong>Atenção:</strong> Medicamento sujeito a controle especial. Conferir receita, dosagem e registro de saída.
+                      </span>
+                    </div>
+                  )}
 
                   <div className="p-3 rounded-xl bg-muted/40 border border-border/50 text-xs space-y-1">
                     <div className="flex justify-between">
@@ -1126,7 +1156,7 @@ export default function Plantao() {
                   <option value="">Selecione o medicamento...</option>
                   {(data.getResidente(snResId)?.presc ?? []).map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.med} ({p.dose} - {p.via}) [{p.tipo.toUpperCase()}]
+                      {isMedicamentoControlado(p) ? '⚠️ [CONTROLADO] ' : ''}{p.med} ({p.dose} - {p.via}) [{p.tipo.toUpperCase()}]
                     </option>
                   ))}
                 </select>

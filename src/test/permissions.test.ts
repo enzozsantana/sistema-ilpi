@@ -118,12 +118,15 @@ describe('RBAC & Permission Matrix', () => {
       expect(canAval('multi', 'Nutrição', 'morse')).toBe(false)
     })
 
-    it('escalasVisiveis filtra corretamente as escalas para equipe multi', () => {
+    it('escalasVisiveis disponibiliza todas as escalas para consulta e visualização clínica', () => {
       const escalasFisio = escalasVisiveis('multi', 'Fisioterapia')
-      expect(escalasFisio).toEqual(['morse'])
+      expect(escalasFisio).toHaveLength(5)
+      expect(escalasFisio).toContain('morse')
+      expect(escalasFisio).toContain('braden')
+      expect(escalasFisio).toContain('fugulin')
 
       const escalasNutri = escalasVisiveis('multi', 'Nutrição')
-      expect(escalasNutri).toEqual(['mna'])
+      expect(escalasNutri).toHaveLength(5)
 
       const escalasEnf = escalasVisiveis('enf')
       expect(escalasEnf).toHaveLength(5)

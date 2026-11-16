@@ -72,6 +72,48 @@ describe('Database Entity Mappers', () => {
     expect(p.sig?.id).toBe('s1')
   })
 
+  it('mapPrescricao: identifica remédio controlado da coluna, da assinatura ou do nome', () => {
+    // Via coluna direta
+    const rowComColuna = {
+      id: 'pr2',
+      medicamento: 'Medicamento X',
+      tipo: 'diario' as const,
+      horarios: ['08:00'],
+      dias: [],
+      consumo: 1,
+      suspensa: false,
+      controlado: true,
+      assinatura: {},
+    }
+    expect(mapPrescricao(rowComColuna).controlado).toBe(true)
+
+    // Via assinatura jsonb (fallback quando banco ainda não tem a coluna)
+    const rowComAssinatura = {
+      id: 'pr3',
+      medicamento: 'Medicamento Y',
+      tipo: 'diario' as const,
+      horarios: ['08:00'],
+      dias: [],
+      consumo: 1,
+      suspensa: false,
+      assinatura: { id: 's1', controlado: true },
+    }
+    expect(mapPrescricao(rowComAssinatura).controlado).toBe(true)
+
+    // Via nome do fármaco (Portaria 344)
+    const rowClonazepam = {
+      id: 'pr4',
+      medicamento: 'Clonazepam 2,5 mg/mL gotas',
+      tipo: 'diario' as const,
+      horarios: ['20:00'],
+      dias: [],
+      consumo: 1,
+      suspensa: false,
+      assinatura: {},
+    }
+    expect(mapPrescricao(rowClonazepam).controlado).toBe(true)
+  })
+
   it('mapTemperatura: mapeia e converte temperaturas numéricas', () => {
     const row = {
       id: 'temp_1',

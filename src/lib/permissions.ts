@@ -76,10 +76,8 @@ export function canAval(cat: Categoria, area: string | undefined, escala: Escala
   return false
 }
 
-export function escalasVisiveis(cat: Categoria, area?: string): EscalaKey[] {
-  const todas: EscalaKey[] = ['fugulin', 'morse', 'braden', 'glasgow', 'mna']
-  if (cat !== 'multi') return todas
-  return todas.filter((k) => (ESCALA_AREA[k] ?? []).includes(area ?? ''))
+export function escalasVisiveis(_cat?: Categoria, _area?: string): EscalaKey[] {
+  return ['fugulin', 'morse', 'braden', 'glasgow', 'mna']
 }
 
 export function navVisivel(cat: Categoria): NavView[] {
