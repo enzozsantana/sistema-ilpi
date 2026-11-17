@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useIlpiData } from '../contexts/IlpiDataContext'
 import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
+import { NotificacoesMenu } from './NotificacoesMenu'
 import { SkeletonBlock } from './Ui'
 import { SenecurareLogo } from './SenecurareLogo'
 import type { NavView } from '../types/ilpi'
@@ -219,6 +220,7 @@ export function AppShell() {
               <span>Plantão ativo</span>
             </div>
 
+            <NotificacoesMenu />
             <ThemeToggle compact />
             <UserMenu profissional={profissional} />
           </div>

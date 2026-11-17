@@ -233,3 +233,68 @@
     display: none;
   }
 }
+
+/* ==============================================================================
+   ESTILOS DE IMPRESSÃO PROFISSIONAL (A4) — PEDIDOS MÉDICOS & PRONTUÁRIO
+   ============================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 14mm 12mm 14mm;
+  }
+
+  /* Oculta tudo que não faz parte do documento timbrado */
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .no-print,
+  nav,
+  header,
+  aside,
+  button,
+  .dialog-overlay,
+  [data-radix-portal] > div:first-child:not([role="dialog"]) {
+    display: none !important;
+  }
+
+  /* Exibe exclusivamente a folha do pedido médico/receituário */
+  .folha-impressao-a4,
+  .folha-impressao-a4 * {
+    visibility: visible !important;
+  }
+
+  .folha-impressao-a4 {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  .folha-impressao-a4 table {
+    page-break-inside: avoid;
+  }
+
+  .folha-impressao-a4 h1,
+  .folha-impressao-a4 h2,
+  .folha-impressao-a4 h3 {
+    page-break-after: avoid;
+  }
+}

@@ -17,7 +17,7 @@ import { ativos } from '../lib/business/indicadores'
 import { can } from '../lib/permissions'
 import { checarAdministracao, desfazerAdministracao } from '../lib/administracao-actions'
 import { supabase } from '../lib/supabase'
-import { mesKey } from '../lib/business/dates'
+import { fmt, mesKey } from '../lib/business/dates'
 import { useAuth } from '../contexts/AuthContext'
 import { useEstadoAlertas, useIlpiData } from '../contexts/IlpiDataContext'
 import { Allergy, Avatar, EmptyState, Section, StatusBadge } from '../components/Ui'
@@ -40,14 +40,33 @@ import {
   AlertCircle,
   AlertTriangle,
   ArrowRight,
+  Bandage,
+  Camera,
   CheckCircle2,
+  CheckSquare,
+  ClipboardList,
   Clock,
+  Droplets,
   HeartPulse,
+  Image as ImageIcon,
+  Megaphone,
   Pill,
+  RefreshCw,
   RotateCcw,
+  Send,
   ShieldAlert,
+  X,
   XCircle,
 } from 'lucide-react'
+import { processarEUploadFoto } from '../lib/image'
+import { classificarCuidado, isCuidadoLpp, extrairHorariosCuidado } from '../lib/business/cuidados'
+import {
+  MODELOS_PASSAGEM,
+  TURNOS_PLANTAO,
+  computarResumoPlantao,
+  extrairAlertasCriticosRT,
+} from '../lib/business/passagemAvisos'
+import type { PrioridadeAviso, TurnoPlantao } from '../types/ilpi'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -92,8 +111,32 @@ export default function Plantao() {
   const [ssvvPulso, setSsvvPulso] = useState('')
   const [ssvvTemp, setSsvvTemp] = useState('')
   const [ssvvSat, setSsvvSat] = useState('')
+  const [ssvvDextro, setSsvvDextro] = useState('')
   const [ssvvTexto, setSsvvTexto] = useState('')
   const [savingSsvv, setSavingSsvv] = useState(false)
+
+  // Modal Comprovação Fotográfica de Cuidado
+  const [modalFotoCuidado, setModalFotoCuidado] = useState<{ r: Residente; c: Cuidado; horario?: string } | null>(null)
+  const [fotoCuidado, setFotoCuidado] = useState('')
+  const [fotoCuidadoTexto, setFotoCuidadoTexto] = useState('')
+  const [processandoFotoCuidado, setProcessandoFotoCuidado] = useState(false)
+  const [salvandoFotoCuidado, setSalvandoFotoCuidado] = useState(false)
+
+  // Passagem de Plantão
+  const [modalPassagem, setModalPassagem] = useState(false)
+  const [modalHistoricoPassagens, setModalHistoricoPassagens] = useState(false)
+  const [passagemTurno, setPassagemTurno] = useState<TurnoPlantao>('manha')
+  const [passagemRecebidoPor, setPassagemRecebidoPor] = useState('')
+  const [passagemRelato, setPassagemRelato] = useState('')
+  const [passagemPendencias, setPassagemPendencias] = useState('')
+  const [salvandoPassagem, setSalvandoPassagem] = useState(false)
+
+  // Avisos & Comunicados da RT (Egle)
+  const [modalNovoAviso, setModalNovoAviso] = useState(false)
+  const [avisoTitulo, setAvisoTitulo] = useState('')
+  const [avisoMensagem, setAvisoMensagem] = useState('')
+  const [avisoPrioridade, setAvisoPrioridade] = useState<PrioridadeAviso>('geral')
+  const [salvandoAviso, setSalvandoAviso] = useState(false)
 
   const codigoHoje = useMemo(() => {
     if (!profissional) return ''
@@ -207,37 +250,113 @@ export default function Plantao() {
     await data.refresh()
   }
 
-  async function toggleCuidado(resId: string, cuidadoId: string) {
+  async function toggleCuidado(resId: string, cuidadoId: string, horario?: string, fotoUrl?: string) {
     if (!profissional) return
-    const key = `${resId}|${cuidadoId}`
+    const key = horario ? `${resId}|${cuidadoId}|${horario}` : `${resId}|${cuidadoId}`
     const atual = data.checagensCuidado[T]?.[key]
-    if (atual) {
-      const { error } = await supabase
-        .from('checagens_cuidado')
-        .delete()
-        .eq('data', T)
-        .eq('residente_id', resId)
-        .eq('cuidado_id', cuidadoId)
-      if (error) {
-        toast.error('Erro ao desmarcar cuidado: ' + error.message)
-        return
+
+    // Busca a linha atual no Supabase para saber o estado de 'assinatura'
+    const { data: linhas } = await supabase
+      .from('checagens_cuidado')
+      .select('*')
+      .eq('data', T)
+      .eq('residente_id', resId)
+      .eq('cuidado_id', cuidadoId)
+
+    const linhaExistente = linhas?.[0]
+    const sigAtual = (linhaExistente?.assinatura ?? {}) as {
+      id: string
+      d: string
+      h: string
+      horario?: string
+      foto?: string
+      checagens?: Record<string, { id: string; d: string; h: string; foto?: string }>
+    }
+
+    if (atual && !fotoUrl) {
+      // DESMARCAR
+      if (horario && sigAtual.checagens && sigAtual.checagens[horario]) {
+        const novoChecagens = { ...sigAtual.checagens }
+        delete novoChecagens[horario]
+        if (Object.keys(novoChecagens).length === 0) {
+          await supabase
+            .from('checagens_cuidado')
+            .delete()
+            .eq('data', T)
+            .eq('residente_id', resId)
+            .eq('cuidado_id', cuidadoId)
+        } else {
+          await supabase
+            .from('checagens_cuidado')
+            .update({
+              assinatura: {
+                ...sigAtual,
+                checagens: novoChecagens,
+              },
+            })
+            .eq('data', T)
+            .eq('residente_id', resId)
+            .eq('cuidado_id', cuidadoId)
+        }
+      } else {
+        await supabase
+          .from('checagens_cuidado')
+          .delete()
+          .eq('data', T)
+          .eq('residente_id', resId)
+          .eq('cuidado_id', cuidadoId)
       }
-      toast.success('Checagem desfeita.')
+
+      toast.success(horario ? `Horário ${horario} desmarcado.` : 'Checagem desfeita.')
       await data.refresh()
       return
     }
-    const sig = { id: profissional.id, d: T, h: agoraHM() }
-    const { error } = await supabase.from('checagens_cuidado').insert({
-      data: T,
-      residente_id: resId,
-      cuidado_id: cuidadoId,
-      assinatura: sig,
-    })
-    if (error) {
-      toast.error('Erro ao checar cuidado: ' + error.message)
-      return
+
+    // MARCAR
+    const novoCheckItem = {
+      id: profissional.id,
+      d: T,
+      h: agoraHM(),
+      ...(fotoUrl ? { foto: fotoUrl } : {}),
     }
-    toast.success('Cuidado checado.')
+
+    if (horario) {
+      const checagensMap = { ...(sigAtual.checagens || {}), [horario]: novoCheckItem }
+      const payloadAssinatura = {
+        id: profissional.id,
+        d: T,
+        h: agoraHM(),
+        horario,
+        ...(fotoUrl ? { foto: fotoUrl } : {}),
+        checagens: checagensMap,
+      }
+
+      if (linhaExistente) {
+        await supabase
+          .from('checagens_cuidado')
+          .update({ assinatura: payloadAssinatura })
+          .eq('data', T)
+          .eq('residente_id', resId)
+          .eq('cuidado_id', cuidadoId)
+      } else {
+        await supabase.from('checagens_cuidado').insert({
+          data: T,
+          residente_id: resId,
+          cuidado_id: cuidadoId,
+          assinatura: payloadAssinatura,
+        })
+      }
+      toast.success(`Horário ${horario} checado com sucesso!`)
+    } else {
+      const sig = { id: profissional.id, d: T, h: agoraHM(), ...(fotoUrl ? { foto: fotoUrl } : {}) }
+      await supabase.from('checagens_cuidado').insert({
+        data: T,
+        residente_id: resId,
+        cuidado_id: cuidadoId,
+        assinatura: sig,
+      })
+      toast.success('Cuidado checado.')
+    }
     await data.refresh()
   }
 
@@ -340,6 +459,7 @@ export default function Plantao() {
       pulso: ssvvPulso.trim() || null,
       temp: ssvvTemp.trim() || null,
       sat: ssvvSat.trim() || null,
+      dextro: ssvvDextro.trim() || null,
       texto: ssvvTexto.trim() || 'Aferição de rotina de sinais vitais no plantão.',
       assinatura: { id: profissional.id, d: T, h: agoraHM() },
     })
@@ -356,8 +476,166 @@ export default function Plantao() {
     setSsvvPulso('')
     setSsvvTemp('')
     setSsvvSat('')
+    setSsvvDextro('')
     setSsvvTexto('')
     await data.refresh()
+  }
+
+  async function handleFotoCuidadoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !modalFotoCuidado) return
+    setProcessandoFotoCuidado(true)
+    try {
+      const url = await processarEUploadFoto(file, `res_${modalFotoCuidado.r.id}/cuidados`)
+      setFotoCuidado(url)
+      toast.success('Foto carregada!')
+    } catch {
+      toast.error('Não foi possível processar a foto tirada.')
+    } finally {
+      setProcessandoFotoCuidado(false)
+      e.target.value = ''
+    }
+  }
+
+  async function handleSalvarFotoCuidado(e: React.FormEvent) {
+    e.preventDefault()
+    if (!modalFotoCuidado || !profissional) return
+    if (!fotoCuidado) {
+      toast.error('Tire uma foto ou selecione uma imagem para comprovação.')
+      return
+    }
+
+    setSalvandoFotoCuidado(true)
+    const id = 'a_' + Math.random().toString(36).substring(2, 9)
+    const horTxt = modalFotoCuidado.horario ? ` às ${modalFotoCuidado.horario}` : ''
+    const textoFinal =
+      fotoCuidadoTexto.trim() || `[COMPROVAÇÃO DE CUIDADO${horTxt}] ${modalFotoCuidado.c.texto}`
+
+    // 1. Salva foto em anotações do residente para constar no prontuário e histórico
+    const { error: erroAnot } = await supabase.from('anotacoes').insert({
+      id,
+      residente_id: modalFotoCuidado.r.id,
+      texto: textoFinal,
+      fotos: [fotoCuidado],
+      assinatura: { id: profissional.id, d: T, h: agoraHM() },
+    })
+
+    if (erroAnot) {
+      toast.error('Erro ao registrar comprovação: ' + erroAnot.message)
+      setSalvandoFotoCuidado(false)
+      return
+    }
+
+    // 2. Marca cuidado no horário e com foto anexada
+    await toggleCuidado(
+      modalFotoCuidado.r.id,
+      modalFotoCuidado.c.id,
+      modalFotoCuidado.horario,
+      fotoCuidado
+    )
+
+    setSalvandoFotoCuidado(false)
+    toast.success(
+      modalFotoCuidado.horario
+        ? `Foto comprovada e horário ${modalFotoCuidado.horario} checado!`
+        : 'Foto comprovada e cuidado checado!'
+    )
+    setModalFotoCuidado(null)
+    setFotoCuidado('')
+    setFotoCuidadoTexto('')
+  }
+
+  const isRTouEnf = profissional ? can(profissional.cat, 'gerir') : false
+
+  const avisosAtivos = useMemo(() => {
+    return data.avisosRT.filter((a) => a.ativo)
+  }, [data.avisosRT])
+
+  const ultimaPassagem = data.passagens[0]
+
+  const resumoPlantao = useMemo(() => {
+    return computarResumoPlantao({
+      residentes: data.residentes,
+      adm: data.adm,
+      checagensCuidado: data.checagensCuidado,
+      eventos: data.eventos,
+      hoje: T,
+    })
+  }, [data.residentes, data.adm, data.checagensCuidado, data.eventos])
+
+  const alertasCriticosRT = useMemo(() => {
+    return extrairAlertasCriticosRT({
+      residentes: data.residentes,
+      adm: data.adm,
+      checagensCuidado: data.checagensCuidado,
+      eventos: data.eventos,
+      temperaturas: data.temperaturas,
+      hoje: T,
+    })
+  }, [data.residentes, data.adm, data.checagensCuidado, data.eventos, data.temperaturas])
+
+  async function handleSalvarPassagem(e: React.FormEvent) {
+    e.preventDefault()
+    if (!profissional) return
+    if (!passagemRelato.trim()) {
+      toast.error('Informe o relato do plantão antes de salvar.')
+      return
+    }
+
+    setSalvandoPassagem(true)
+    const profRecebendo = passagemRecebidoPor ? data.profissionalPorId(passagemRecebidoPor) : null
+
+    await data.salvarPassagem({
+      data: T,
+      hora: agoraHM(),
+      turno: passagemTurno,
+      passadoPor: { id: profissional.id, nome: profissional.nome, cat: profissional.cat },
+      recebidoPor: profRecebendo
+        ? { id: profRecebendo.id, nome: profRecebendo.nome, cat: profRecebendo.cat }
+        : null,
+      relato: passagemRelato.trim(),
+      pendencias: passagemPendencias.trim() || null,
+      resumo: resumoPlantao,
+    })
+
+    setSalvandoPassagem(false)
+    setModalPassagem(false)
+    setPassagemRelato('')
+    setPassagemPendencias('')
+    toast.success('Passagem de plantão formalizada e assinada com sucesso!')
+  }
+
+  async function handleSalvarAviso(e: React.FormEvent) {
+    e.preventDefault()
+    if (!profissional) return
+    if (!avisoTitulo.trim() || !avisoMensagem.trim()) {
+      toast.error('Informe o título e a mensagem do comunicado.')
+      return
+    }
+
+    setSalvandoAviso(true)
+    await data.salvarAviso({
+      data: T,
+      hora: agoraHM(),
+      titulo: avisoTitulo.trim(),
+      mensagem: avisoMensagem.trim(),
+      prioridade: avisoPrioridade,
+      autor: { id: profissional.id, nome: profissional.nome, cat: profissional.cat },
+      ativo: true,
+    })
+
+    setSalvandoAviso(false)
+    setModalNovoAviso(false)
+    setAvisoTitulo('')
+    setAvisoMensagem('')
+    setAvisoPrioridade('geral')
+    toast.success('Comunicado da RT enviado com alerta para toda a equipe!')
+  }
+
+  async function handleConfirmarCiencia(avisoId: string) {
+    if (!profissional) return
+    await data.darCiencia(avisoId, profissional.id)
+    toast.success('Ciência confirmada no comunicado!')
   }
 
   const dataExt = cap(
@@ -509,11 +787,216 @@ export default function Plantao() {
                 <span>+ Intercorrência</span>
               </Button>
             )}
+
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setModalPassagem(true)}
+              className="gap-1.5 rounded-xl text-xs font-semibold bg-background/80 shadow-2xs hover:bg-[#123F4A] hover:text-white transition-colors"
+            >
+              <ClipboardList className="size-3.5 text-primary" />
+              <span>📋 Passar Plantão</span>
+            </Button>
+
+            {isRTouEnf && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setModalNovoAviso(true)}
+                className="gap-1.5 rounded-xl text-xs font-semibold bg-background/80 shadow-2xs hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 transition-colors"
+              >
+                <Megaphone className="size-3.5 text-amber-600 dark:text-amber-400" />
+                <span>+ Comunicado RT</span>
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Banner de Comunicados da RT para a Equipe */}
+        {avisosAtivos.length > 0 && (
+          <div className="space-y-2.5 mt-5 pt-5 border-t border-border/50">
+            {avisosAtivos.map((av) => {
+              const jaLeu = av.ciencias?.includes(profissional.id)
+              const isUrgente = av.prioridade === 'urgente'
+
+              return (
+                <div
+                  key={av.id}
+                  className={cn(
+                    'p-3.5 sm:p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs transition-all',
+                    isUrgente
+                      ? 'bg-rose-500/10 border-rose-500/35 text-rose-950 dark:text-rose-100 ring-1 ring-rose-500/20'
+                      : 'bg-amber-500/10 border-amber-500/30 text-amber-950 dark:text-amber-100'
+                  )}
+                >
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div
+                      className={cn(
+                        'size-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5',
+                        isUrgente
+                          ? 'bg-rose-600 text-white'
+                          : 'bg-amber-500/25 text-amber-800 dark:text-amber-200'
+                      )}
+                    >
+                      <Megaphone className="size-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-xs uppercase tracking-wide">
+                          Comunicado da RT ({av.autor.nome})
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            'text-[9px] uppercase font-bold py-0 h-4',
+                            isUrgente
+                              ? 'bg-rose-500/25 text-rose-700 dark:text-rose-200 border-rose-500/40'
+                              : 'bg-amber-500/25 text-amber-800 dark:text-amber-200 border-amber-500/40'
+                          )}
+                        >
+                          {av.prioridade}
+                        </Badge>
+                        <span className="text-[10px] text-muted-foreground">{av.hora}</span>
+                      </div>
+                      <h4 className="font-bold text-xs mt-0.5 text-foreground">{av.titulo}</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">
+                        {av.mensagem}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                    {jaLeu ? (
+                      <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="size-3.5" /> Você deu ciência
+                      </span>
+                    ) : (
+                      <Button
+                        size="xs"
+                        onClick={() => void handleConfirmarCiencia(av.id)}
+                        className="bg-[#123F4A] hover:bg-[#123F4A]/90 text-white font-semibold text-xs rounded-lg gap-1 cursor-pointer"
+                      >
+                        <CheckSquare className="size-3" />
+                        <span>Estou ciente</span>
+                      </Button>
+                    )}
+
+                    {isRTouEnf && (
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        onClick={() => void data.desativarAviso(av.id)}
+                        className="text-[10px] text-muted-foreground hover:text-destructive h-7 px-2 cursor-pointer"
+                        title="Encerrar comunicado"
+                      >
+                        Encerrar
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Alerta de Gravidade para a RT (Egle) e Supervisão */}
+        {isRTouEnf && alertasCriticosRT.length > 0 && (
+          <div className="p-3.5 sm:p-4 rounded-xl border border-rose-500/35 bg-rose-500/10 text-rose-950 dark:text-rose-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs mt-3">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="size-8 rounded-lg bg-rose-600 text-white flex items-center justify-center shrink-0 mt-0.5 animate-pulse">
+                <ShieldAlert className="size-4" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-xs font-bold uppercase tracking-wide text-rose-700 dark:text-rose-300 block">
+                  Supervisão RT — {alertasCriticosRT.length} pendências ou ocorrências críticas hoje
+                </span>
+                <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                  {alertasCriticosRT.slice(0, 3).map((c) => (
+                    <Badge
+                      key={c.id}
+                      variant="outline"
+                      className="text-[10px] bg-rose-500/20 text-rose-900 dark:text-rose-200 border-rose-500/35 font-medium"
+                    >
+                      {c.titulo}
+                    </Badge>
+                  ))}
+                  {alertasCriticosRT.length > 3 && (
+                    <span className="text-[10px] text-rose-600 dark:text-rose-400 font-semibold">
+                      +{alertasCriticosRT.length - 3} mais
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <Button
+              size="xs"
+              variant="outline"
+              onClick={() => navigate('/gestao')}
+              className="border-rose-500/40 text-rose-700 dark:text-rose-300 hover:bg-rose-500/20 shrink-0 self-end sm:self-center text-xs font-semibold cursor-pointer"
+            >
+              Ver Gestão & Indicadores →
+            </Button>
+          </div>
+        )}
+
+        {/* Card de Passagem de Plantão dos Cuidadores */}
+        <div className="p-3.5 sm:p-4 rounded-xl border border-border/80 bg-card/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
+              <ClipboardList className="size-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold text-foreground">
+                  Passagem de Plantão da Equipe
+                </span>
+                {ultimaPassagem ? (
+                  <Badge variant="secondary" className="text-[10px] uppercase font-semibold">
+                    Turno {ultimaPassagem.turno} ({ultimaPassagem.hora})
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                    Aguardando passagem de turno
+                  </Badge>
+                )}
+              </div>
+              {ultimaPassagem ? (
+                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                  Entregue por <strong>{ultimaPassagem.passadoPor.nome}</strong>: "{ultimaPassagem.relato}"
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Formalize a transferência de cuidados entre turnos com checagens automáticas de doses e cuidados.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+            {data.passagens.length > 0 && (
+              <Button
+                size="xs"
+                variant="ghost"
+                onClick={() => setModalHistoricoPassagens(true)}
+                className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                Histórico ({data.passagens.length})
+              </Button>
+            )}
+            <Button
+              size="xs"
+              onClick={() => setModalPassagem(true)}
+              className="bg-[#123F4A] hover:bg-[#123F4A]/90 text-white font-semibold text-xs rounded-lg gap-1.5 cursor-pointer"
+            >
+              <ClipboardList className="size-3.5" />
+              <span>Passar Plantão</span>
+            </Button>
           </div>
         </div>
 
         {/* 4 KPI Metrics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-6 pt-5 border-t border-border/50">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-5 pt-5 border-t border-border/50">
           <Card className="border border-border/60 bg-background/60 shadow-2xs">
             <CardContent className="p-3.5 flex items-center justify-between">
               <div>
@@ -741,65 +1224,193 @@ export default function Plantao() {
       {can(profissional.cat, 'cuid') && (
         <Section
           title="Plano de Cuidados (Prescrição de Enfermagem)"
-          meta={<span className="text-xs text-muted-foreground">Rotina de auxílio e procedimentos</span>}
+          meta={<span className="text-xs text-muted-foreground">Rotina por horários e procedimentos assistenciais</span>}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {ativos(data.residentes).map((r) => {
               const cs = r.cuidados.filter((c) => cuidadoVisivel(c, profissional.cat))
               if (!cs.length) return null
               const chk = data.checagensCuidado[T] ?? {}
-              const okCount = cs.filter((c) => chk[`${r.id}|${c.id}`]).length
+              const temLpp = cs.some((c) => isCuidadoLpp(c, r))
+
+              let totalHorariosDia = 0
+              let feitosHorariosDia = 0
+
+              cs.forEach((c) => {
+                const hors = extrairHorariosCuidado(c)
+                totalHorariosDia += hors.length
+                hors.forEach((h) => {
+                  if (chk[`${r.id}|${c.id}|${h}`] || chk[`${r.id}|${c.id}`]) {
+                    feitosHorariosDia++
+                  }
+                })
+              })
 
               return (
-                <Card key={r.id} className="border border-border/70 shadow-2xs">
+                <Card
+                  key={r.id}
+                  className={cn(
+                    'border shadow-2xs transition-all',
+                    temLpp ? 'border-amber-500/40 dark:border-amber-500/30 ring-1 ring-amber-500/15' : 'border-border/70'
+                  )}
+                >
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <Avatar r={r} size="sm" />
                         <div className="min-w-0">
-                          <h4 className="text-xs font-bold text-foreground truncate">{r.nome}</h4>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="text-xs font-bold text-foreground truncate">{r.nome}</h4>
+                            {temLpp && (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-900 dark:text-amber-200 border border-amber-500/40 flex items-center gap-1 shrink-0">
+                                <ShieldAlert className="size-2.5 text-amber-600 dark:text-amber-400" />
+                                Alerta LPP
+                              </span>
+                            )}
+                          </div>
                           <span className="text-[11px] text-muted-foreground">Quarto {r.quarto}</span>
                         </div>
                       </div>
-                      <StatusBadge tone={okCount === cs.length ? 'ok' : 'neutral'}>
-                        {okCount}/{cs.length}
+                      <StatusBadge tone={feitosHorariosDia === totalHorariosDia && totalHorariosDia > 0 ? 'ok' : 'neutral'}>
+                        {feitosHorariosDia}/{totalHorariosDia} horários
                       </StatusBadge>
                     </div>
 
-                    <div className="space-y-1.5 pt-1">
+                    <div className="space-y-2.5 pt-1">
                       {cs.map((c) => {
-                        const g = chk[`${r.id}|${c.id}`]
+                        const info = classificarCuidado(c, r)
+                        const isAmbar = info.corTema === 'amber'
+                        const isCurativo = info.tipo === 'curativo'
+                        const horarios = extrairHorariosCuidado(c)
+                        const checadosCount = horarios.filter((h) => chk[`${r.id}|${c.id}|${h}`] || chk[`${r.id}|${c.id}`]).length
+
                         return (
-                          <button
+                          <div
                             key={c.id}
-                            type="button"
-                            onClick={() => void toggleCuidado(r.id, c.id)}
                             className={cn(
-                              'flex items-center justify-between gap-2.5 w-full p-2.5 rounded-lg border text-left text-xs transition-colors cursor-pointer',
-                              g
-                                ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-800 dark:text-emerald-300'
-                                : 'bg-muted/30 border-border/60 hover:bg-muted text-foreground'
+                              'p-3 rounded-xl border text-xs space-y-2 transition-all',
+                              isAmbar
+                                ? 'bg-amber-500/10 border-amber-500/40 dark:border-amber-400/30 ring-1 ring-amber-500/15'
+                                : isCurativo
+                                ? 'bg-purple-500/10 border-purple-500/40 dark:border-purple-400/30 ring-1 ring-purple-500/15'
+                                : 'bg-muted/20 border-border/60'
                             )}
                           >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <div
-                                className={cn(
-                                  'size-4.5 rounded-md flex items-center justify-center border text-[11px] shrink-0 font-bold',
-                                  g
-                                    ? 'bg-emerald-500 border-emerald-600 text-white'
-                                    : 'border-border bg-background'
-                                )}
-                              >
-                                {g ? '✓' : ''}
+                            {/* Cabeçalho do cuidado */}
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex items-start gap-2 min-w-0">
+                                <div
+                                  className={cn(
+                                    'size-6 rounded-md flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold',
+                                    isAmbar
+                                      ? 'bg-amber-500/20 text-amber-800 dark:text-amber-300'
+                                      : isCurativo
+                                      ? 'bg-purple-500/20 text-purple-800 dark:text-purple-300'
+                                      : 'bg-primary/10 text-primary'
+                                  )}
+                                >
+                                  {isAmbar ? (
+                                    info.isDecubito ? <RefreshCw className="size-3" /> : <ShieldAlert className="size-3" />
+                                  ) : isCurativo ? (
+                                    <Bandage className="size-3" />
+                                  ) : (
+                                    <span>•</span>
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    {isAmbar && (
+                                      <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/25 text-amber-900 dark:text-amber-200 border border-amber-500/40">
+                                        LPP
+                                      </span>
+                                    )}
+                                    {isCurativo && !isAmbar && (
+                                      <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-500/25 text-purple-900 dark:text-purple-200 border border-purple-500/40">
+                                        CURATIVO
+                                      </span>
+                                    )}
+                                    <span className="font-bold text-foreground text-xs leading-snug">
+                                      {info.tituloPrincipal}
+                                    </span>
+                                  </div>
+                                  {info.instrucoes && (
+                                    <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
+                                      {info.instrucoes}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
-                              <span className="truncate">{c.texto}</span>
-                            </div>
-                            {g && (
-                              <span className="text-[10px] text-muted-foreground shrink-0">
-                                AT {sigCurta(g, data.profissionalPorId(g.id)?.nome)}
+
+                              <span className="text-[10px] text-muted-foreground font-semibold shrink-0">
+                                {checadosCount}/{horarios.length}
                               </span>
-                            )}
-                          </button>
+                            </div>
+
+                            {/* Fileira de Horários com Checagem e Foto */}
+                            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                              {horarios.map((hora) => {
+                                const checkKey = `${r.id}|${c.id}|${hora}`
+                                const check = chk[checkKey] || chk[`${r.id}|${c.id}`]
+                                const checado = Boolean(check)
+
+                                return (
+                                  <div
+                                    key={hora}
+                                    className={cn(
+                                      'inline-flex items-center rounded-lg border text-xs transition-all overflow-hidden',
+                                      checado
+                                        ? 'bg-emerald-500/15 border-emerald-500/35 text-emerald-800 dark:text-emerald-300 font-bold'
+                                        : 'bg-background/80 hover:bg-muted border-border/70 text-foreground'
+                                    )}
+                                  >
+                                    <button
+                                      type="button"
+                                      onClick={() => void toggleCuidado(r.id, c.id, hora)}
+                                      className="px-2 py-1 flex items-center gap-1 cursor-pointer hover:opacity-85 text-xs"
+                                      title={
+                                        checado
+                                          ? `Checado às ${check?.h} por ${primeiro(data.profissionalPorId(check?.id)?.nome)}. Clique para desmarcar.`
+                                          : `Clique para checar horário ${hora}`
+                                      }
+                                    >
+                                      <span>{hora}</span>
+                                      {checado ? (
+                                        <CheckCircle2 className="size-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                      ) : null}
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setModalFotoCuidado({ r, c, horario: hora })
+                                        setFotoCuidado('')
+                                        setFotoCuidadoTexto(
+                                          isAmbar
+                                            ? `Mudança de decúbito das ${hora} realizada (pele íntegra).`
+                                            : isCurativo
+                                            ? `Curativo e troca de cobertura das ${hora} realizados.`
+                                            : `Cuidado das ${hora} executado: ${info.tituloPrincipal}`
+                                        )
+                                      }}
+                                      className={cn(
+                                        'px-1.5 py-1 border-l border-border/40 hover:bg-muted/60 transition-colors flex items-center justify-center',
+                                        check?.foto
+                                          ? 'text-emerald-600 dark:text-emerald-400'
+                                          : 'text-muted-foreground hover:text-primary'
+                                      )}
+                                      title={
+                                        check?.foto
+                                          ? 'Foto de comprovação anexada neste horário. Clique para visualizar ou trocar.'
+                                          : `Tirar foto de comprovação das ${hora}`
+                                      }
+                                    >
+                                      <Camera className="size-3 shrink-0" />
+                                    </button>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
                         )
                       })}
                     </div>
@@ -852,6 +1463,7 @@ export default function Plantao() {
                           setSsvvPulso(a?.pulso != null ? String(a.pulso) : '')
                           setSsvvTemp(a?.temp != null ? String(a.temp) : '')
                           setSsvvSat(a?.sat != null ? String(a.sat) : '')
+                          setSsvvDextro(a?.dextro != null ? String(a.dextro) : '')
                         }}
                         className="rounded-lg text-[11px] gap-1 bg-[#123F4A] hover:bg-[#123F4A]/90 text-white font-semibold"
                       >
@@ -899,7 +1511,27 @@ export default function Plantao() {
                             T {a.temp} °C
                           </Badge>
                         )}
+                        {a.dextro && (
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              'text-[10px] px-1.5',
+                              f.dextro
+                                ? 'bg-rose-500/10 text-rose-600 border-rose-500/25'
+                                : 'bg-muted text-muted-foreground'
+                            )}
+                          >
+                            <Droplets className="size-2.5 mr-0.5 inline text-primary" />
+                            Dextro {a.dextro}
+                          </Badge>
+                        )}
                       </div>
+                      {a.fotos && a.fotos.length > 0 && (
+                        <div className="flex items-center gap-1 text-[10px] text-primary font-semibold">
+                          <Camera className="size-3" />
+                          <span>{a.fotos.length} foto(s) comprovada(s)</span>
+                        </div>
+                      )}
                       <p className="text-[11px] text-muted-foreground truncate">
                         {a.sig.h} · {primeiro(data.profissionalPorId(a.sig.id)?.nome)}
                       </p>
@@ -1330,6 +1962,19 @@ export default function Plantao() {
                 </div>
 
                 <div className="space-y-1">
+                  <Label className="text-[10px] text-primary font-semibold flex items-center gap-1">
+                    <Droplets className="size-2.5 text-primary" />
+                    Dextro / Glicemia Capilar (mg/dL) (opcional)
+                  </Label>
+                  <Input
+                    value={ssvvDextro}
+                    onChange={(e) => setSsvvDextro(e.target.value)}
+                    placeholder="Ex: 110 (opcional)"
+                    className="h-8 text-xs font-mono border-primary/30"
+                  />
+                </div>
+
+                <div className="space-y-1">
                   <Label className="text-[10px]">Observações / Queixas</Label>
                   <Input
                     value={ssvvTexto}
@@ -1355,6 +2000,431 @@ export default function Plantao() {
               </DialogFooter>
             </form>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Comprovação Fotográfica de Cuidados (Decúbito / Curativos) */}
+      <Dialog open={!!modalFotoCuidado} onOpenChange={(v) => !v && setModalFotoCuidado(null)}>
+        <DialogContent className="max-w-md">
+          {modalFotoCuidado && (
+            <form onSubmit={handleSalvarFotoCuidado}>
+              <DialogHeader>
+                <DialogTitle className="text-base font-bold flex items-center gap-2">
+                  <Camera className="size-4 text-[#123F4A]" />
+                  Comprovar Cuidado com Foto
+                </DialogTitle>
+                <DialogDescription className="text-xs">
+                  {modalFotoCuidado.r.nome} · Quarto {modalFotoCuidado.r.quarto}
+                  {modalFotoCuidado.horario ? ` · Horário: ${modalFotoCuidado.horario}` : ''}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3 py-3 text-xs">
+                <div className="p-2.5 rounded-lg bg-muted/40 border border-border/60 text-xs">
+                  <span className="text-[10px] text-muted-foreground font-semibold block uppercase">Cuidado a ser comprovado:</span>
+                  <span className="font-bold text-foreground mt-0.5 block">{modalFotoCuidado.c.texto}</span>
+                </div>
+
+                {/* Upload / Câmera */}
+                <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-foreground text-[11px] flex items-center gap-1">
+                      <Camera className="size-3 text-primary" />
+                      Captura da Evidência Fotográfica
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">Prova p/ família</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-primary/40 bg-background hover:bg-primary/10 text-primary text-xs font-semibold transition-colors">
+                      <Camera className="size-4" />
+                      <span>Tirar Foto (Câmera)</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        disabled={processandoFotoCuidado}
+                        onChange={handleFotoCuidadoChange}
+                        className="sr-only"
+                      />
+                    </label>
+
+                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border bg-background hover:bg-muted text-muted-foreground text-xs font-medium transition-colors">
+                      <ImageIcon className="size-4" />
+                      <span>Galeria</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={processandoFotoCuidado}
+                        onChange={handleFotoCuidadoChange}
+                        className="sr-only"
+                      />
+                    </label>
+
+                    {processandoFotoCuidado && (
+                      <span className="text-[11px] text-primary flex items-center gap-1 animate-pulse font-medium">
+                        <RefreshCw className="size-3 animate-spin" /> Carregando...
+                      </span>
+                    )}
+                  </div>
+
+                  {fotoCuidado && (
+                    <div className="relative rounded-lg overflow-hidden border border-border/80 mt-2 bg-black/5 flex items-center justify-center max-h-48">
+                      <img src={fotoCuidado} alt="Foto comprovante" className="max-h-48 w-auto object-contain" />
+                      <button
+                        type="button"
+                        onClick={() => setFotoCuidado('')}
+                        className="absolute top-1 right-1 size-6 rounded-full bg-rose-600 text-white flex items-center justify-center text-xs hover:bg-rose-700 shadow-sm cursor-pointer"
+                        title="Trocar foto"
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-semibold">Observações / Detalhes do Cuidado</Label>
+                  <Input
+                    value={fotoCuidadoTexto}
+                    onChange={(e) => setFotoCuidadoTexto(e.target.value)}
+                    placeholder="Ex: Mudança de decúbito lateral direito realizada, pele íntegra..."
+                    className="h-8 text-xs"
+                  />
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button type="button" variant="outline" size="sm" onClick={() => setModalFotoCuidado(null)}>
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  disabled={salvandoFotoCuidado || processandoFotoCuidado || !fotoCuidado}
+                  className="bg-[#123F4A] hover:bg-[#123F4A]/90 text-white font-semibold gap-1.5"
+                >
+                  {salvandoFotoCuidado ? (
+                    <>
+                      <RefreshCw className="size-3.5 animate-spin" /> Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="size-3.5" /> Salvar & Checar {modalFotoCuidado.horario ? `Horário ${modalFotoCuidado.horario}` : 'Cuidado'}
+                    </>
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Passagem de Plantão da Equipe */}
+      <Dialog open={modalPassagem} onOpenChange={setModalPassagem}>
+        <DialogContent className="max-w-xl max-h-[88vh] overflow-y-auto">
+          <form onSubmit={handleSalvarPassagem}>
+            <DialogHeader>
+              <DialogTitle className="text-base font-bold flex items-center gap-2">
+                <ClipboardList className="size-4 text-[#123F4A]" />
+                Passagem de Plantão da Equipe
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Transferência formal de responsabilidade entre cuidadores e enfermagem.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-3 text-xs">
+              {/* Resumo Automático Computado pelo Sistema */}
+              <div className="p-3 rounded-xl bg-muted/40 border border-border/60 space-y-2">
+                <span className="font-bold text-foreground text-[11px] block uppercase tracking-wide">
+                  Panorama Automático do Plantão Atual
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="p-2 rounded-lg bg-card border border-border/70 text-center">
+                    <span className="text-[10px] text-muted-foreground block">Medicações</span>
+                    <span className="font-bold text-xs text-foreground">
+                      {resumoPlantao.dosesChecadas}/{resumoPlantao.dosesTotal}
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-card border border-border/70 text-center">
+                    <span className="text-[10px] text-muted-foreground block">Cuidados / Decúbito</span>
+                    <span className="font-bold text-xs text-foreground">
+                      {resumoPlantao.cuidadosChecados}/{resumoPlantao.cuidadosTotal}
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-card border border-border/70 text-center">
+                    <span className="text-[10px] text-muted-foreground block">Intercorrências</span>
+                    <span
+                      className={cn(
+                        'font-bold text-xs',
+                        resumoPlantao.ocorrenciasHoje > 0 ? 'text-amber-600' : 'text-emerald-600'
+                      )}
+                    >
+                      {resumoPlantao.ocorrenciasHoje} hoje
+                    </span>
+                  </div>
+                  <div className="p-2 rounded-lg bg-card border border-border/70 text-center">
+                    <span className="text-[10px] text-muted-foreground block">Alertas Graves</span>
+                    <span
+                      className={cn(
+                        'font-bold text-xs',
+                        alertasCriticosRT.length > 0 ? 'text-rose-600' : 'text-emerald-600'
+                      )}
+                    >
+                      {alertasCriticosRT.length} pendentes
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Turno e Profissionais */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-semibold">Turno que está sendo entregue *</Label>
+                  <select
+                    value={passagemTurno}
+                    onChange={(e) => setPassagemTurno(e.target.value as TurnoPlantao)}
+                    className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
+                  >
+                    {TURNOS_PLANTAO.map((t) => (
+                      <option key={t.key} value={t.key}>
+                        {t.label} ({t.horario})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-[11px] font-semibold">Profissional / Equipe que assume</Label>
+                  <select
+                    value={passagemRecebidoPor}
+                    onChange={(e) => setPassagemRecebidoPor(e.target.value)}
+                    className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
+                  >
+                    <option value="">Equipe Geral do Próximo Turno</option>
+                    {data.equipe
+                      .filter((p) => p.id !== profissional?.id)
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.nome} ({p.funcao || p.cat})
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Modelos rápidos */}
+              <div className="space-y-1.5">
+                <span className="text-[10px] text-muted-foreground font-semibold block">
+                  Modelos de relato rápido (clique para acrescentar):
+                </span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {MODELOS_PASSAGEM.map((m, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() =>
+                        setPassagemRelato((prev) => (prev ? `${prev}\n${m}` : m))
+                      }
+                      className="px-2 py-1 rounded-md bg-muted/60 hover:bg-muted text-[10px] text-muted-foreground hover:text-foreground text-left max-w-xs truncate border border-border/40 cursor-pointer"
+                    >
+                      + {m}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Relato Principal */}
+              <div className="space-y-1">
+                <Label htmlFor="relatoPlantao" className="text-[11px] font-semibold">
+                  Relato Geral do Plantão *
+                </Label>
+                <textarea
+                  id="relatoPlantao"
+                  value={passagemRelato}
+                  onChange={(e) => setPassagemRelato(e.target.value)}
+                  rows={4}
+                  required
+                  placeholder="Descreva como foi o turno: alimentação, hidratação, sono/repouso, comportamento dos residentes, ocorrências e procedimentos..."
+                  className="w-full text-xs rounded-md border border-input bg-background p-2.5 focus-visible:outline-ring leading-relaxed"
+                />
+              </div>
+
+              {/* Pendências e Recomendações */}
+              <div className="space-y-1">
+                <Label htmlFor="pendenciasPlantao" className="text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+                  Pendências e Atenções para o Próximo Turno
+                </Label>
+                <textarea
+                  id="pendenciasPlantao"
+                  value={passagemPendencias}
+                  onChange={(e) => setPassagemPendencias(e.target.value)}
+                  rows={2}
+                  placeholder="Ex: Residente Iracema em observação de febre; lembrar de checar dextro às 20h; fraldas repostas no quarto 2..."
+                  className="w-full text-xs rounded-md border border-amber-500/40 bg-amber-500/5 p-2 focus-visible:outline-ring"
+                />
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-muted/30 border border-border/40 text-[10px] text-muted-foreground">
+                Assinatura formal eletrônica: <strong>{profissional?.nome}</strong> ({profissional?.funcao || 'Plantão'}) às {agoraHM()} do dia {T}.
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" size="sm" onClick={() => setModalPassagem(false)}>
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={salvandoPassagem}
+                className="bg-[#123F4A] hover:bg-[#123F4A]/90 text-white font-semibold gap-1.5"
+              >
+                <CheckCircle2 className="size-3.5" />
+                {salvandoPassagem ? 'Assinando...' : 'Assinar & Entregar Plantão'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Histórico de Passagens de Plantão */}
+      <Dialog open={modalHistoricoPassagens} onOpenChange={setModalHistoricoPassagens}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold flex items-center gap-2">
+              <Clock className="size-4 text-[#123F4A]" />
+              Histórico de Passagens de Plantão
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Registros e transferências de turno dos cuidadores e enfermagem.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-3 text-xs">
+            {data.passagens.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground border border-dashed rounded-xl">
+                Nenhuma passagem de plantão registrada até o momento.
+              </div>
+            ) : (
+              data.passagens.map((p) => (
+                <div key={p.id} className="p-3.5 rounded-xl border border-border/70 bg-card shadow-2xs space-y-2">
+                  <div className="flex items-center justify-between border-b border-border/40 pb-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-[10px] uppercase font-bold bg-primary/10 text-primary border-primary/25">
+                        Turno {p.turno}
+                      </Badge>
+                      <span className="font-bold text-foreground">
+                        {fmt(p.data)} às {p.hora}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-muted-foreground font-mono">
+                      Passado por: <strong>{p.passadoPor.nome}</strong>
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-foreground leading-relaxed whitespace-pre-line bg-muted/20 p-2.5 rounded-lg border border-border/40">
+                    {p.relato}
+                  </p>
+
+                  {p.pendencias && (
+                    <div className="text-[11px] text-amber-800 dark:text-amber-200 bg-amber-500/10 p-2 rounded-lg border border-amber-500/30">
+                      <strong>Pendências / Alertas:</strong> {p.pendencias}
+                    </div>
+                  )}
+
+                  {p.resumo && (
+                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground pt-1 flex-wrap">
+                      <span>Doses: {p.resumo.dosesChecadas}/{p.resumo.dosesTotal}</span>
+                      <span>·</span>
+                      <span>Cuidados: {p.resumo.cuidadosChecados}/{p.resumo.cuidadosTotal}</span>
+                      <span>·</span>
+                      <span>Ocorrências: {p.resumo.ocorrenciasHoje}</span>
+                      {p.recebidoPor && (
+                        <>
+                          <span>·</span>
+                          <span>Assumiu: <strong>{p.recebidoPor.nome}</strong></span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Novo Comunicado da RT (Egle) para a Equipe */}
+      <Dialog open={modalNovoAviso} onOpenChange={setModalNovoAviso}>
+        <DialogContent className="max-w-md">
+          <form onSubmit={handleSalvarAviso}>
+            <DialogHeader>
+              <DialogTitle className="text-base font-bold flex items-center gap-2">
+                <Megaphone className="size-4 text-amber-600" />
+                Novo Comunicado da RT para a Equipe
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Dispare um alerta ou instrução técnica imediata para todos os cuidadores e enfermagem.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 py-3 text-xs">
+              <div className="space-y-1">
+                <Label htmlFor="avisoTitulo" className="text-[11px] font-semibold">Título do Comunicado *</Label>
+                <Input
+                  id="avisoTitulo"
+                  value={avisoTitulo}
+                  onChange={(e) => setAvisoTitulo(e.target.value)}
+                  required
+                  placeholder="Ex: Atenção ao protocolo de decúbito / Alerta de hidratação..."
+                  className="h-8 text-xs"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-[11px] font-semibold">Prioridade do Comunicado</Label>
+                <select
+                  value={avisoPrioridade}
+                  onChange={(e) => setAvisoPrioridade(e.target.value as PrioridadeAviso)}
+                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
+                >
+                  <option value="geral">Geral (Aviso informativo)</option>
+                  <option value="importante">Importante (Atenção redobrada)</option>
+                  <option value="urgente">Urgente (Alerta crítico com prioridade alta)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="avisoMsg" className="text-[11px] font-semibold">Mensagem Completa *</Label>
+                <textarea
+                  id="avisoMsg"
+                  value={avisoMensagem}
+                  onChange={(e) => setAvisoMensagem(e.target.value)}
+                  rows={4}
+                  required
+                  placeholder="Descreva a instrução técnica ou aviso que toda a equipe deve cumprir..."
+                  className="w-full text-xs rounded-md border border-input bg-background p-2.5 focus-visible:outline-ring leading-relaxed"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" size="sm" onClick={() => setModalNovoAviso(false)}>
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={salvandoAviso}
+                className="bg-amber-600 hover:bg-amber-700 text-white font-semibold gap-1.5"
+              >
+                <Send className="size-3.5" />
+                {salvandoAviso ? 'Enviando...' : 'Disparar para a Equipe'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

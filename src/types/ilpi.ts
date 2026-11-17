@@ -48,7 +48,55 @@ export type NivelBadge = 'ok' | 'warn' | 'danger'
 
 export type StatusAdm = 'dado' | 'recusado' | 'nao'
 
-export type EscalaKey = 'fugulin' | 'morse' | 'braden' | 'glasgow' | 'mna'
+export type EscalaKeyPadrao =
+  | 'fugulin'
+  | 'katz'
+  | 'lawton'
+  | 'morse'
+  | 'braden'
+  | 'glasgow'
+  | 'mna'
+  | 'gds15'
+  | 'meem'
+  | 'cdr'
+  | 'ohat'
+
+export type EscalaKey = EscalaKeyPadrao | (string & {})
+
+export type EscalaCategoria =
+  | 'dependencia'
+  | 'risco'
+  | 'cognicao'
+  | 'humor'
+  | 'nutricao'
+  | 'odontologia'
+  | 'personalizada'
+
+export interface FaixaClassificacaoCustom {
+  min: number
+  max: number
+  txt: string
+  nivel: NivelBadge
+  grau?: number
+}
+
+export interface EscalaCustomizada {
+  id: string
+  nome: string
+  desc: string
+  categoria: EscalaCategoria
+  area?: string
+  itens: [string, [string, number][]][]
+  faixas: FaixaClassificacaoCustom[]
+  criadaEm: string
+  criadaPor?: string
+}
+
+export interface ConfiguracaoEscalas {
+  escalasAtivas: string[]
+  escalaDependenciaPadrao: 'fugulin' | 'katz'
+  escalasCustomizadas: EscalaCustomizada[]
+}
 
 export type EventoTipo =
   | 'obito'
@@ -129,12 +177,25 @@ export interface AvaliacaoEscala {
   sig: Assinatura
 }
 
+export type PiaResultadoMeta = 'alcancado' | 'parcial' | 'nao_alcancado' | 'ajuste'
+
+export interface PiaItemNanda {
+  id: string
+  diagnostico: string
+  meta: string
+  intervencoes: string
+  resultado?: PiaResultadoMeta | string
+}
+
 export interface Pia {
   id: string
   periodo?: string
   inicio: string
   reav?: string
   necessidades?: string[]
+  itensNanda?: PiaItemNanda[]
+  metas?: Record<string, string>
+  intervencoes?: Record<string, string>
   obs?: string
   resultado?: string
   encaminhamentos?: string
@@ -145,6 +206,7 @@ export interface Cuidado {
   id: string
   texto: string
   quem: 'todos' | 'enfermagem' | 'cuidador'
+  horarios?: string[]
 }
 
 export interface Anotacao {
@@ -154,9 +216,11 @@ export interface Anotacao {
   resp?: string | number
   temp?: string | number
   sat?: string | number
+  dextro?: string | number
   evac?: string
   diurese?: string
   texto: string
+  fotos?: string[]
   sig: Assinatura
 }
 
@@ -282,12 +346,62 @@ export interface Alerta {
   go: string
 }
 
+export type TurnoPlantao = 'manha' | 'tarde' | 'noite' | 'diurno' | 'noturno'
+
+export interface PassagemPlantao {
+  id: string
+  data: string
+  hora: string
+  turno: TurnoPlantao
+  passadoPor: { id: string; nome: string; cat?: string }
+  recebidoPor?: { id: string; nome: string; cat?: string } | null
+  relato: string
+  pendencias?: string | null
+  resumo: {
+    dosesChecadas: number
+    dosesTotal: number
+    cuidadosChecados: number
+    cuidadosTotal: number
+    ocorrenciasHoje: number
+    alertasCriticos?: string[]
+  }
+  createdAt?: string
+}
+
+export type PrioridadeAviso = 'geral' | 'importante' | 'urgente'
+
+export interface AvisoRT {
+  id: string
+  data: string
+  hora: string
+  titulo: string
+  mensagem: string
+  prioridade: PrioridadeAviso
+  autor: { id: string; nome: string; cat: string }
+  ativo: boolean
+  ciencias?: string[]
+  createdAt?: string
+}
+
+export interface AlertaCriticoRT {
+  id: string
+  tipo: 'dose_atrasada' | 'intercorrencia' | 'ssvv_critico' | 'cuidado_pendente' | 'geladeira_fora'
+  gravidade: 'alta' | 'critica'
+  titulo: string
+  descricao: string
+  residenteId?: string
+  residenteNome?: string
+  horario?: string
+  link?: string
+}
+
 export interface FlagsSsvv {
   pa?: string
   pulso?: string
   resp?: string
   temp?: string
   sat?: string
+  dextro?: string
 }
 
 export interface ClassifEscala {

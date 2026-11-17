@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { fmt, idade } from '../lib/business/dates'
-import { ultAval, totalEsc, SCALES } from '../lib/business/escalas'
-import { canTab } from '../lib/permissions'
+import { grau as calcGrau } from '../lib/business/escalas'
+import { carregarConfigEscalas } from '../lib/business/escalasConfig'
 import { useAuth } from '../contexts/AuthContext'
 import { useIlpiData } from '../contexts/IlpiDataContext'
 import { Allergy, Avatar, StatusBadge } from '../components/Ui'
@@ -73,11 +73,10 @@ export default function ResidentePasta() {
 
   const tabs = tabsVisiveis(profissional.cat, profissional.area)
   let cur: AbaResidente = (tab as AbaResidente) || 'pasta'
-  if (!tabs.includes(cur) && cur !== 'tudo') cur = 'pasta'
-  if (cur === 'tudo' && !canTab(profissional.cat, 'tudo')) cur = 'pasta'
+  if (!tabs.includes(cur)) cur = 'pasta'
 
-  const fug = ultAval(r, 'fugulin')
-  const g = fug ? SCALES.fugulin.classif(totalEsc('fugulin', fug.resp)).grau : 0
+  const cfg = carregarConfigEscalas()
+  const g = calcGrau(r, cfg.escalaDependenciaPadrao, cfg.escalasCustomizadas) ?? 0
 
   const ctx = {
     r,
@@ -191,22 +190,6 @@ export default function ResidentePasta() {
               </Button>
             )
           })}
-          {canTab(profissional.cat, 'tudo') && (
-            <Button
-              variant={cur === 'tudo' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => navigate(`/residentes/${id}/tudo`)}
-              className={cn(
-                'gap-1.5 h-9 px-3 rounded-xl text-xs font-semibold transition-all',
-                cur === 'tudo'
-                  ? 'shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
-              )}
-            >
-              <FileText className="size-3.5" />
-              <span>{RTABS.tudo}</span>
-            </Button>
-          )}
         </div>
       </div>
 

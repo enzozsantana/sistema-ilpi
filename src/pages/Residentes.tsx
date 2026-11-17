@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { consumoDia, nivelEst } from '../lib/business/estoque'
-import { ultAval, totalEsc, SCALES } from '../lib/business/escalas'
+import { grau as calcGrau } from '../lib/business/escalas'
+import { carregarConfigEscalas } from '../lib/business/escalasConfig'
 import { docsPend } from '../lib/business/indicadores'
 import { iso } from '../lib/business/dates'
 import { can } from '../lib/permissions'
@@ -48,10 +49,8 @@ import { cn } from '@/lib/utils'
 const T = iso(new Date())
 
 function grau(r: ReturnType<typeof useIlpiData>['residentes'][0]) {
-  const a = ultAval(r, 'fugulin')
-  if (!a) return 0
-  const t = totalEsc('fugulin', a.resp)
-  return SCALES.fugulin.classif(t).grau ?? 0
+  const cfg = carregarConfigEscalas()
+  return calcGrau(r, cfg.escalaDependenciaPadrao, cfg.escalasCustomizadas) ?? 0
 }
 
 export default function Residentes() {

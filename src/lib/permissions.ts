@@ -9,8 +9,8 @@ import type {
 
 /** Matriz de ações (can no protótipo). */
 export const CAN: Record<AcaoPermissao, Categoria[]> = {
-  adm: [...NURSE],
-  anot: [...NURSE],
+  adm: [...NURSE, 'cuid'],
+  anot: [...NURSE, 'cuid'],
   cuid: [...NURSE, 'cuid'],
   gerir: ['rt', 'enf'],
   presc: ['med', 'rt', 'enf'],
@@ -36,8 +36,8 @@ export const TAB_ACESSO: Record<AbaResidente, '*' | Categoria[]> = {
   aval: ['rt', 'enf', 'tec', 'estag', 'med', 'multi'],
   pia: [...NURSE, 'med'],
   cuidados: [...NURSE, 'cuid'],
-  presc: [...NURSE, 'med'],
-  anot: [...NURSE, 'med'],
+  presc: [...NURSE, 'med', 'cuid'],
+  anot: [...NURSE, 'med', 'cuid'],
   evol: ['rt', 'enf', 'med', 'multi'],
   arquivos: ['rt', 'enf', 'tec', 'med', 'multi'],
   estoque: ['rt', 'enf', 'tec'],
@@ -45,12 +45,18 @@ export const TAB_ACESSO: Record<AbaResidente, '*' | Categoria[]> = {
 }
 
 /** Áreas multiprofissionais por escala clínica (ESCALA_AREA). */
-export const ESCALA_AREA: Record<EscalaKey, string[]> = {
-  morse: ['Fisioterapia'],
+export const ESCALA_AREA: Record<string, string[]> = {
+  morse: ['Fisioterapia', 'Enfermagem'],
   mna: ['Nutrição'],
-  braden: [],
-  glasgow: [],
-  fugulin: [],
+  braden: ['Enfermagem'],
+  glasgow: ['Enfermagem', 'Médico'],
+  fugulin: ['Enfermagem'],
+  katz: ['Fisioterapia', 'Terapia Ocupacional', 'Enfermagem'],
+  lawton: ['Terapia Ocupacional', 'Psicologia', 'Serviço Social', 'Enfermagem'],
+  gds15: ['Psicologia', 'Médico', 'Enfermagem'],
+  meem: ['Médico', 'Psicologia', 'Terapia Ocupacional', 'Enfermagem'],
+  cdr: ['Médico', 'Psicologia', 'Enfermagem'],
+  ohat: ['Odontologia'],
 }
 
 function pode(mapa: Record<string, '*' | Categoria[]>, chave: string, cat: Categoria): boolean {
@@ -70,11 +76,35 @@ export function canTab(cat: Categoria, tab: AbaResidente): boolean {
   return pode(TAB_ACESSO, tab, cat)
 }
 
-export function canAval(cat: Categoria, area: string | undefined, escala: EscalaKey): boolean {
-  if (['rt', 'enf'].includes(cat)) return true
-  if (cat === 'multi') return (ESCALA_AREA[escala] ?? []).includes(area ?? '')
+export function canAval(
+  cat: Categoria,
+  area: string | undefined,
+  escala: string,
+  customArea?: string,
+): boolean {
+  if (['rt', 'enf', 'med'].includes(cat)) return true
+  if (cat === 'multi') {
+    if (customArea) {
+      return customArea === 'Geral' || customArea === (area ?? '')
+    }
+    return (ESCALA_AREA[escala] ?? []).includes(area ?? '')
+  }
   return false
 }
+
+export const ESCALAS_PADRAO_KEYS: EscalaKey[] = [
+  'fugulin',
+  'katz',
+  'lawton',
+  'morse',
+  'braden',
+  'glasgow',
+  'mna',
+  'gds15',
+  'meem',
+  'cdr',
+  'ohat',
+]
 
 export function escalasVisiveis(_cat?: Categoria, _area?: string): EscalaKey[] {
   return ['fugulin', 'morse', 'braden', 'glasgow', 'mna']

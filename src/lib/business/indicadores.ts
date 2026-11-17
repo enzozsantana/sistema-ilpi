@@ -75,8 +75,8 @@ export interface LinhaDependencia {
 
 export function tabelaFugulin(residentes: Residente[]): LinhaDependencia[] {
   return ativos(residentes).map((r) => {
-    const a = ultAval(r, 'fugulin')
-    const t = a ? totalEsc('fugulin', a.resp) : null
+    const a = ultAval(r, 'fugulin') ?? ultAval(r, 'katz')
+    const t = a ? totalEsc(a.esc, a.resp) : null
     return { r, total: t, grau: grau(r) }
   })
 }

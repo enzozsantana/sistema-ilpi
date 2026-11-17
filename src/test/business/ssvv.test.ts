@@ -65,6 +65,15 @@ describe('SSVV (Sinais Vitais) Clinical Flags', () => {
       expect(flags({ sat: 95 }).sat).toBeUndefined()
     })
 
+    it('identifica dextro / glicemia capilar (Hipoglicemia < 70 e Hiperglicemia > 180)', () => {
+      expect(flags({ dextro: 55 }).dextro).toBe('Hipoglicemia')
+      expect(flags({ dextro: '65' }).dextro).toBe('Hipoglicemia')
+      expect(flags({ dextro: 220 }).dextro).toBe('Hiperglicemia')
+      expect(flags({ dextro: '200' }).dextro).toBe('Hiperglicemia')
+      expect(flags({ dextro: 110 }).dextro).toBeUndefined()
+      expect(flags({ dextro: '' }).dextro).toBeUndefined()
+    })
+
     it('retorna múltiplas flags simultâneas quando o paciente está instável', () => {
       const critico = {
         pa: '160/100',
@@ -72,6 +81,7 @@ describe('SSVV (Sinais Vitais) Clinical Flags', () => {
         resp: 30,
         temp: 39.1,
         sat: 88,
+        dextro: 250,
       }
       const f = flags(critico)
       expect(f.pa).toBe('PA elevada')
@@ -79,9 +89,10 @@ describe('SSVV (Sinais Vitais) Clinical Flags', () => {
       expect(f.resp).toBe('Taquipneia')
       expect(f.temp).toBe('Febre')
       expect(f.sat).toBe('Saturação baixa')
+      expect(f.dextro).toBe('Hiperglicemia')
 
       const vals = flagsValues(critico)
-      expect(vals).toHaveLength(5)
+      expect(vals).toHaveLength(6)
     })
   })
 })

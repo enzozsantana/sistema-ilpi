@@ -198,11 +198,12 @@ export function alertas(ctx: ContextoAlertas): Alerta[] {
   })
 
   residentesAtivos.forEach((r) => {
-    const f = ultAval(r, 'fugulin')
+    const f = ultAval(r, 'fugulin') ?? ultAval(r, 'katz')
     if (!f || diffDays(hoje, f.d) > 90) {
+      const nomeEscala = f?.esc === 'katz' ? 'Katz' : 'Fugulin'
       a.push({
         n: 'warn',
-        t: `Reavaliar Fugulin de ${primeiro(r.nome)}`,
+        t: `Reavaliar ${nomeEscala} de ${primeiro(r.nome)}`,
         s: f ? `Última em ${fmt(f.d)}` : 'Sem avaliação',
         go: `res:${r.id}:aval`,
       })

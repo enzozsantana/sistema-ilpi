@@ -12,6 +12,7 @@ import type {
   Evolucao,
   ItemEstoque,
   Pia,
+  PiaItemNanda,
   PopDocumento,
   Prescricao,
   Profissional,
@@ -154,23 +155,64 @@ export function mapAvaliacao(row: {
   }
 }
 
+import { PROCESSO_ENFERMAGEM_PADRAO } from './constants/processoEnfermagem'
+
 export function mapPia(row: {
   id: string
   periodo?: string | null
   inicio?: string | null
   reavaliacao?: string | null
   necessidades: unknown
+  itens_nanda?: unknown
+  metas?: unknown
+  intervencoes?: unknown
   obs?: string | null
   resultado?: string | null
   encaminhamentos?: string | null
   assinatura: unknown
 }): Pia {
+  let itensNanda: PiaItemNanda[] = []
+
+  if (Array.isArray(row.itens_nanda) && row.itens_nanda.length > 0) {
+    itensNanda = row.itens_nanda as PiaItemNanda[]
+  } else if (Array.isArray(row.necessidades) && row.necessidades.length > 0) {
+    if (typeof row.necessidades[0] === 'object' && row.necessidades[0] !== null) {
+      itensNanda = row.necessidades as PiaItemNanda[]
+    } else {
+      const nomes = row.necessidades as string[]
+      const metasObj = (row.metas as Record<string, string>) || {}
+      const interObj = (row.intervencoes as Record<string, string>) || {}
+
+      itensNanda = nomes.map((nome) => {
+        const padrao = PROCESSO_ENFERMAGEM_PADRAO.find(
+          (p) => p.diagnostico.toLowerCase() === nome.toLowerCase() || p.id === nome
+        )
+        return {
+          id: padrao ? padrao.id : `diag_${nome}`,
+          diagnostico: padrao ? padrao.diagnostico : nome,
+          meta: metasObj[nome] || padrao?.meta || '',
+          intervencoes: interObj[nome] || padrao?.intervencoes || '',
+          resultado: row.resultado ?? undefined,
+        }
+      })
+    }
+  }
+
+  const nomesNecessidades = Array.isArray(row.necessidades)
+    ? typeof row.necessidades[0] === 'string'
+      ? (row.necessidades as string[])
+      : itensNanda.map((it) => it.diagnostico)
+    : []
+
   return {
     id: row.id,
     periodo: row.periodo ?? undefined,
     inicio: row.inicio ?? '',
     reav: row.reavaliacao ?? undefined,
-    necessidades: (row.necessidades as string[]) ?? [],
+    necessidades: nomesNecessidades,
+    itensNanda,
+    metas: (row.metas as Record<string, string>) ?? undefined,
+    intervencoes: (row.intervencoes as Record<string, string>) ?? undefined,
     obs: row.obs ?? undefined,
     resultado: row.resultado ?? undefined,
     encaminhamentos: row.encaminhamentos ?? undefined,
@@ -193,11 +235,29 @@ export function mapAnotacao(row: {
   resp?: string | null
   temp?: string | null
   sat?: string | null
+  dextro?: string | null
   evac?: string | null
   diurese?: string | null
   texto?: string | null
+  fotos?: string[] | string | null
   assinatura: unknown
 }): Anotacao {
+  let fotos: string[] | undefined
+  if (Array.isArray(row.fotos)) {
+    fotos = row.fotos.filter((f): f is string => typeof f === 'string' && f.trim().length > 0)
+  } else if (typeof row.fotos === 'string' && row.fotos.trim()) {
+    try {
+      const parsed = JSON.parse(row.fotos)
+      if (Array.isArray(parsed)) {
+        fotos = parsed.filter((f): f is string => typeof f === 'string' && f.trim().length > 0)
+      } else {
+        fotos = [row.fotos.trim()]
+      }
+    } catch {
+      fotos = [row.fotos.trim()]
+    }
+  }
+
   return {
     id: row.id,
     pa: row.pa ?? undefined,
@@ -205,9 +265,11 @@ export function mapAnotacao(row: {
     resp: row.resp ?? undefined,
     temp: row.temp ?? undefined,
     sat: row.sat ?? undefined,
+    dextro: row.dextro ?? undefined,
     evac: row.evac ?? undefined,
     diurese: row.diurese ?? undefined,
     texto: row.texto ?? '',
+    fotos: fotos && fotos.length > 0 ? fotos : undefined,
     sig: asSig(row.assinatura),
   }
 }

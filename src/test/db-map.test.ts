@@ -6,6 +6,8 @@ import {
   mapTemperatura,
   buildAdmMap,
   mapResidenteBase,
+  mapPia,
+  mapAnotacao,
 } from '../lib/db-map'
 
 describe('Database Entity Mappers', () => {
@@ -184,5 +186,63 @@ describe('Database Entity Mappers', () => {
     expect(r.aval).toEqual([])
     expect(r.presc).toEqual([])
     expect(r.estoque).toEqual([])
+  })
+
+  it('mapPia: mapeia Processo de Enfermagem NANDA, NOC e NIC estruturado', () => {
+    const row = {
+      id: 'pia_01',
+      periodo: 'Nov-Dez 2026',
+      inicio: '2026-11-01',
+      reavaliacao: '2026-12-31',
+      necessidades: ['Prevenção de quedas', 'Integridade da pele'],
+      itens_nanda: [
+        {
+          id: 'nanda_1',
+          diagnostico: 'Prevenção de quedas',
+          meta: 'Manter a mobilidade com segurança e reduzir o risco de quedas.',
+          intervencoes: 'Avaliar histórico de quedas, marcha, equilíbrio...',
+          resultado: 'parcial',
+        },
+      ],
+      obs: 'Residente lúcido',
+      resultado: 'Parcialmente alcançado',
+      encaminhamentos: 'Fisio motora',
+      assinatura: { id: 's1', d: '2026-11-01', h: '10:00' },
+    }
+
+    const pia = mapPia(row)
+    expect(pia.id).toBe('pia_01')
+    expect(pia.periodo).toBe('Nov-Dez 2026')
+    expect(pia.itensNanda).toHaveLength(1)
+    expect(pia.itensNanda?.[0].diagnostico).toBe('Prevenção de quedas')
+    expect(pia.itensNanda?.[0].meta).toContain('mobilidade com segurança')
+    expect(pia.necessidades).toContain('Prevenção de quedas')
+    expect(pia.resultado).toBe('Parcialmente alcançado')
+  })
+
+  it('mapAnotacao: mapeia anotação com SSVV, dextro opcional e fotos comprobatórias', () => {
+    const row = {
+      id: 'a_100',
+      pa: '120x80',
+      pulso: '78',
+      resp: '18',
+      temp: '36.4',
+      sat: '98',
+      dextro: '115',
+      diurese: 'Presente',
+      evac: 'Presente',
+      texto: 'Mudança de decúbito realizada em decúbito lateral direito.',
+      fotos: ['data:image/jpeg;base64,sample1', 'https://storage/sample2.jpg'],
+      assinatura: { id: 's2', d: '2026-11-17', h: '14:30' },
+    }
+
+    const anot = mapAnotacao(row)
+    expect(anot.id).toBe('a_100')
+    expect(anot.pa).toBe('120x80')
+    expect(anot.dextro).toBe('115')
+    expect(anot.texto).toContain('Mudança de decúbito')
+    expect(anot.fotos).toHaveLength(2)
+    expect(anot.fotos?.[0]).toContain('sample1')
+    expect(anot.sig.id).toBe('s2')
   })
 })

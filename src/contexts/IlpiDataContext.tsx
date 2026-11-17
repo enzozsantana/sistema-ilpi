@@ -7,11 +7,15 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { salvarConfigEscalas } from '../lib/business/escalasConfig'
 import type {
+  AvisoRT,
+  ConfiguracaoEscalas,
   DocumentoInstituicao,
   EscalaMes,
   EventoVigilancia,
   ItemEstoque,
+  PassagemPlantao,
   PopDocumento,
   Profissional,
   RegistroAdm,
@@ -19,6 +23,12 @@ import type {
   TemperaturaGeladeira,
   Treinamento,
 } from '../types/ilpi'
+import {
+  getAvisosLocais,
+  getPassagensLocais,
+  setAvisosLocais,
+  setPassagensLocais,
+} from '../lib/business/passagemAvisos'
 import {
   buildAdmMap,
   mapArquivo,
@@ -72,8 +82,14 @@ type IlpiData = {
   escalaMes: Record<string, EscalaMes>
   tarefas: TarefaRotina[]
   tarefasFeitas: Record<string, string[]>
-  checagensCuidado: Record<string, Record<string, { id: string; d: string; h: string }>>
+  checagensCuidado: Record<string, Record<string, { id: string; d: string; h: string; horario?: string; foto?: string }>>
   sn: SnRegistro[]
+  passagens: PassagemPlantao[]
+  avisosRT: AvisoRT[]
+  salvarPassagem: (p: Omit<PassagemPlantao, 'id' | 'createdAt'>) => Promise<PassagemPlantao>
+  salvarAviso: (a: Omit<AvisoRT, 'id' | 'createdAt' | 'ciencias'>) => Promise<AvisoRT>
+  darCiencia: (avisoId: string, profId: string) => Promise<void>
+  desativarAviso: (avisoId: string) => Promise<void>
   refresh: () => Promise<void>
   profissionalPorId: (id: string) => Profissional | undefined
   getResidente: (id: string) => Residente | undefined
@@ -99,9 +115,11 @@ export function IlpiDataProvider({ children }: { children: ReactNode }) {
   const [tarefas, setTarefas] = useState<TarefaRotina[]>([])
   const [tarefasFeitas, setTarefasFeitas] = useState<Record<string, string[]>>({})
   const [checagensCuidado, setChecagensCuidado] = useState<
-    Record<string, Record<string, { id: string; d: string; h: string }>>
+    Record<string, Record<string, { id: string; d: string; h: string; horario?: string; foto?: string }>>
   >({})
   const [sn, setSn] = useState<SnRegistro[]>([])
+  const [passagens, setPassagens] = useState<PassagemPlantao[]>(getPassagensLocais)
+  const [avisosRT, setAvisosRT] = useState<AvisoRT[]>(getAvisosLocais)
 
   const load = useCallback(async () => {
     if (!session) return
@@ -133,7 +151,7 @@ export function IlpiDataProvider({ children }: { children: ReactNode }) {
         popR,
         treR,
       ] = await Promise.all([
-        supabase.from('instituicao').select('nome').limit(1).maybeSingle(),
+        supabase.from('instituicao').select('*').limit(1).maybeSingle(),
         supabase.from('profissionais').select('*').eq('ativo', true),
         supabase.from('residentes').select('*'),
         supabase.from('avaliacoes').select('*'),
@@ -185,7 +203,11 @@ export function IlpiDataProvider({ children }: { children: ReactNode }) {
       ].find((r) => r.error)
       if (fail?.error) throw fail.error
 
-      setInst((instR.data as { nome?: string } | null)?.nome ?? 'Instituição')
+      const instData = instR.data as { nome?: string; escalas_config?: ConfiguracaoEscalas } | null
+      setInst(instData?.nome ?? 'Instituição')
+      if (instData?.escalas_config && Array.isArray(instData.escalas_config.escalasAtivas)) {
+        salvarConfigEscalas(instData.escalas_config, false)
+      }
       setEquipe((profR.data ?? []).map((row) => mapProfissional(row as Parameters<typeof mapProfissional>[0])))
 
       const byRes = new Map<string, Residente>()
@@ -231,9 +253,24 @@ export function IlpiDataProvider({ children }: { children: ReactNode }) {
 
       const chkMap: typeof checagensCuidado = {}
       for (const row of chkR.data ?? []) {
-        const sig = (row.assinatura ?? {}) as { id: string; d: string; h: string }
+        const sig = (row.assinatura ?? {}) as {
+          id: string
+          d: string
+          h: string
+          horario?: string
+          foto?: string
+          checagens?: Record<string, { id: string; d: string; h: string; foto?: string }>
+        }
         if (!chkMap[row.data]) chkMap[row.data] = {}
         chkMap[row.data][`${row.residente_id}|${row.cuidado_id}`] = sig
+        if (sig.horario) {
+          chkMap[row.data][`${row.residente_id}|${row.cuidado_id}|${sig.horario}`] = sig
+        }
+        if (sig.checagens && typeof sig.checagens === 'object') {
+          for (const [hor, itemSig] of Object.entries(sig.checagens)) {
+            chkMap[row.data][`${row.residente_id}|${row.cuidado_id}|${hor}`] = itemSig
+          }
+        }
       }
       setChecagensCuidado(chkMap)
 
@@ -275,12 +312,175 @@ export function IlpiDataProvider({ children }: { children: ReactNode }) {
         feitas[row.data].push(row.tarefa_id)
       }
       setTarefasFeitas(feitas)
+
+      // Carregamento resiliente de Passagens de Plantão e Avisos da RT
+      try {
+        const [pRes, aRes] = await Promise.all([
+          Promise.resolve(
+            supabase
+              .from('passagens_plantao')
+              .select('*')
+              .order('created_at', { ascending: false })
+              .limit(30),
+          )
+            .then((r) => (r.error ? null : r.data))
+            .catch(() => null),
+          Promise.resolve(
+            supabase
+              .from('avisos_rt')
+              .select('*')
+              .order('created_at', { ascending: false })
+              .limit(20),
+          )
+            .then((r) => (r.error ? null : r.data))
+            .catch(() => null),
+        ])
+        if (pRes && pRes.length > 0) {
+          const list: PassagemPlantao[] = (pRes as Record<string, any>[]).map((row) => ({
+            id: row.id,
+            data: row.data,
+            hora: row.hora,
+            turno: row.turno,
+            passadoPor: row.passado_por,
+            recebidoPor: row.recebido_por,
+            relato: row.relato,
+            pendencias: row.pendencias,
+            resumo: row.resumo ?? {
+              dosesChecadas: 0,
+              dosesTotal: 0,
+              cuidadosChecados: 0,
+              cuidadosTotal: 0,
+              ocorrenciasHoje: 0,
+            },
+            createdAt: row.created_at,
+          }))
+          setPassagens(list)
+          setPassagensLocais(list)
+        }
+        if (aRes && aRes.length > 0) {
+          const list: AvisoRT[] = (aRes as Record<string, any>[]).map((row) => ({
+            id: row.id,
+            data: row.data,
+            hora: row.hora,
+            titulo: row.titulo,
+            mensagem: row.mensagem,
+            prioridade: row.prioridade,
+            autor: row.autor,
+            ativo: row.ativo,
+            ciencias: Array.isArray(row.ciencias) ? row.ciencias : [],
+            createdAt: row.created_at,
+          }))
+          setAvisosRT(list)
+          setAvisosLocais(list)
+        }
+      } catch {
+        // Fallback silencioso: usa cache local já carregado
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro ao carregar dados')
     } finally {
       setLoading(false)
     }
   }, [session])
+
+  const salvarPassagem = useCallback(
+    async (p: Omit<PassagemPlantao, 'id' | 'createdAt'>): Promise<PassagemPlantao> => {
+      const nova: PassagemPlantao = {
+        ...p,
+        id: `pp_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        createdAt: new Date().toISOString(),
+      }
+      setPassagens((prev) => {
+        const next = [nova, ...prev]
+        setPassagensLocais(next)
+        return next
+      })
+      try {
+        await supabase.from('passagens_plantao').insert({
+          id: nova.id,
+          data: nova.data,
+          hora: nova.hora,
+          turno: nova.turno,
+          passado_por: nova.passadoPor,
+          recebido_por: nova.recebidoPor ?? null,
+          relato: nova.relato,
+          pendencias: nova.pendencias ?? null,
+          resumo: nova.resumo,
+        })
+      } catch {
+        // Fallback local já salvo
+      }
+      return nova
+    },
+    [],
+  )
+
+  const salvarAviso = useCallback(
+    async (a: Omit<AvisoRT, 'id' | 'createdAt' | 'ciencias'>): Promise<AvisoRT> => {
+      const novo: AvisoRT = {
+        ...a,
+        id: `av_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        ciencias: [],
+        createdAt: new Date().toISOString(),
+      }
+      setAvisosRT((prev) => {
+        const next = [novo, ...prev]
+        setAvisosLocais(next)
+        return next
+      })
+      try {
+        await supabase.from('avisos_rt').insert({
+          id: novo.id,
+          data: novo.data,
+          hora: novo.hora,
+          titulo: novo.titulo,
+          mensagem: novo.mensagem,
+          prioridade: novo.prioridade,
+          autor: novo.autor,
+          ativo: novo.ativo,
+          ciencias: [],
+        })
+      } catch {
+        // Fallback local já salvo
+      }
+      return novo
+    },
+    [],
+  )
+
+  const darCiencia = useCallback(async (avisoId: string, profId: string) => {
+    setAvisosRT((prev) => {
+      const next = prev.map((av) => {
+        if (av.id === avisoId && !av.ciencias?.includes(profId)) {
+          return { ...av, ciencias: [...(av.ciencias ?? []), profId] }
+        }
+        return av
+      })
+      setAvisosLocais(next)
+      return next
+    })
+    try {
+      const { data } = await supabase.from('avisos_rt').select('ciencias').eq('id', avisoId).maybeSingle()
+      const atuais = Array.isArray(data?.ciencias) ? (data.ciencias as string[]) : []
+      const novasCiencias = Array.from(new Set([...atuais, profId]))
+      await supabase.from('avisos_rt').update({ ciencias: novasCiencias }).eq('id', avisoId)
+    } catch {
+      // Fallback
+    }
+  }, [])
+
+  const desativarAviso = useCallback(async (avisoId: string) => {
+    setAvisosRT((prev) => {
+      const next = prev.map((av) => (av.id === avisoId ? { ...av, ativo: false } : av))
+      setAvisosLocais(next)
+      return next
+    })
+    try {
+      await supabase.from('avisos_rt').update({ ativo: false }).eq('id', avisoId)
+    } catch {
+      // Fallback
+    }
+  }, [])
 
   useEffect(() => {
     if (session) void load()
@@ -308,6 +508,12 @@ export function IlpiDataProvider({ children }: { children: ReactNode }) {
       tarefasFeitas,
       checagensCuidado,
       sn,
+      passagens,
+      avisosRT,
+      salvarPassagem,
+      salvarAviso,
+      darCiencia,
+      desativarAviso,
       refresh: load,
       profissionalPorId: (id) => profMap.get(id),
       getResidente: (id) => residentes.find((r) => r.id === id),
@@ -330,6 +536,12 @@ export function IlpiDataProvider({ children }: { children: ReactNode }) {
       tarefasFeitas,
       checagensCuidado,
       sn,
+      passagens,
+      avisosRT,
+      salvarPassagem,
+      salvarAviso,
+      darCiencia,
+      desativarAviso,
       load,
       profMap,
     ],

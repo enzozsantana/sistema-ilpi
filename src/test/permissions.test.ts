@@ -19,12 +19,12 @@ describe('RBAC & Permission Matrix', () => {
       expect(can('apoio', 'gerir')).toBe(false)
     })
 
-    it('adm: enfermagem pode administrar medicamentos (RT, Enf, Téc, Estagiário)', () => {
+    it('adm: enfermagem e cuidadores podem checar e administrar medicações', () => {
       expect(can('rt', 'adm')).toBe(true)
       expect(can('enf', 'adm')).toBe(true)
       expect(can('tec', 'adm')).toBe(true)
       expect(can('estag', 'adm')).toBe(true)
-      expect(can('cuid', 'adm')).toBe(false)
+      expect(can('cuid', 'adm')).toBe(true)
       expect(can('apoio', 'adm')).toBe(false)
     })
 
@@ -90,10 +90,12 @@ describe('RBAC & Permission Matrix', () => {
       expect(canTab('cuid', 'ficha')).toBe(true)
     })
 
-    it('presc e anot exigem perfil de enfermagem ou médico', () => {
+    it('presc é visível para enfermagem, médico e cuidadores (para checagem), enquanto anot e cuidados são acessíveis a cuidadores', () => {
       expect(canTab('enf', 'presc')).toBe(true)
       expect(canTab('med', 'presc')).toBe(true)
-      expect(canTab('cuid', 'presc')).toBe(false)
+      expect(canTab('cuid', 'presc')).toBe(true)
+      expect(canTab('cuid', 'anot')).toBe(true)
+      expect(can('cuid', 'anot')).toBe(true)
     })
 
     it('cuidados é acessível para cuidadores', () => {

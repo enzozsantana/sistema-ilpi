@@ -15,6 +15,7 @@ export const NURSE: Categoria[] = ['rt', 'enf', 'tec', 'estag']
 
 export const CATS_ARQ = [
   'Exame',
+  'Pedido Médico',
   'Laudo',
   'Receita',
   'Documento pessoal',
@@ -137,12 +138,15 @@ export const TIPOS_DOC = ['POP', 'Protocolo', 'Manual', 'Fluxograma'] as const
 
 export const MODELOS_ANOT = [
   'Residente calmo(a), comunicativo(a), orientado(a).',
+  'Mudança de decúbito realizada conforme protocolo (pele íntegra).',
+  'Curativo realizado conforme prescrição de enfermagem.',
+  'Higiene e troca de fralda realizadas sem intercorrências.',
   'Deambula sem auxílio.',
   'Deambula com auxílio.',
   'Aceitou medicações VO conforme prescrição médica.',
   'Aceitou refeições VO.',
   'Sem queixas álgicas.',
-  'SSVV aferidos.',
+  'SSVV e dextro aferidos dentro dos padrões.',
   'Segue aos cuidados de enfermagem.',
   'Em repouso no leito.',
   'Recusou atividade em grupo.',
