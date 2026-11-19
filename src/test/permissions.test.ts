@@ -66,11 +66,15 @@ describe('RBAC & Permission Matrix', () => {
       expect(canNav('apoio', 'gestao')).toBe(false)
     })
 
-    it('estoque é restrito a enfermagem (RT, Enf, Téc)', () => {
+    it('estoque é restrito exclusivamente ao Responsável Técnico (RT)', () => {
       expect(canNav('rt', 'estoque')).toBe(true)
-      expect(canNav('tec', 'estoque')).toBe(true)
+      expect(canNav('enf', 'estoque')).toBe(false)
+      expect(canNav('tec', 'estoque')).toBe(false)
       expect(canNav('cuid', 'estoque')).toBe(false)
       expect(canNav('apoio', 'estoque')).toBe(false)
+      expect(can('rt', 'estoque')).toBe(true)
+      expect(can('enf', 'estoque')).toBe(false)
+      expect(can('tec', 'estoque')).toBe(false)
     })
 
     it('navVisivel lista todas as telas permitidas para a categoria', () => {

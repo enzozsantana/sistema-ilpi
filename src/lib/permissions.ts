@@ -14,7 +14,7 @@ export const CAN: Record<AcaoPermissao, Categoria[]> = {
   cuid: [...NURSE, 'cuid'],
   gerir: ['rt', 'enf'],
   presc: ['med', 'rt', 'enf'],
-  estoque: ['rt', 'enf', 'tec'],
+  estoque: ['rt'],
   aval: ['rt', 'enf'],
   evol: ['rt', 'enf', 'med', 'multi'],
 }
@@ -23,7 +23,7 @@ export const CAN: Record<AcaoPermissao, Categoria[]> = {
 export const NAV_ACESSO: Record<NavView, '*' | Categoria[]> = {
   plantao: '*',
   residentes: [...NURSE, 'cuid', 'med', 'multi'],
-  estoque: ['rt', 'enf', 'tec'],
+  estoque: ['rt'],
   rotinas: [...NURSE, 'cuid', 'apoio'],
   equipe: [...NURSE, 'cuid'],
   gestao: ['rt', 'enf'],
@@ -40,7 +40,7 @@ export const TAB_ACESSO: Record<AbaResidente, '*' | Categoria[]> = {
   anot: [...NURSE, 'med', 'cuid'],
   evol: ['rt', 'enf', 'med', 'multi'],
   arquivos: ['rt', 'enf', 'tec', 'med', 'multi'],
-  estoque: ['rt', 'enf', 'tec'],
+  estoque: ['rt'],
   tudo: ['rt', 'enf', 'med'],
 }
 

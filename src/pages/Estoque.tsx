@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react'
-import { agoraHM, fmt, iso, num, primeiro } from '../lib/business/dates'
+import type { Residente } from '../types/ilpi'
+import { agoraHM, fmt, iso, num } from '../lib/business/dates'
 import { consumoDia, diasRest, nivelEst, qtdPedir } from '../lib/business/estoque'
 import { can } from '../lib/permissions'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useIlpiData } from '../contexts/IlpiDataContext'
 import { Avatar, EmptyState, PageHeader, StatusBadge } from '../components/Ui'
+import { ModalPedidoEstoque } from '../components/ModalPedidoEstoque'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
@@ -34,7 +36,6 @@ import {
   Package,
   Plus,
   Search,
-  Share2,
   ShoppingCart,
   SlidersHorizontal,
   Users,
@@ -85,6 +86,27 @@ export default function Estoque() {
   const [ajusteQtd, setAjusteQtd] = useState('')
   const [ajusteMotivo, setAjusteMotivo] = useState('')
 
+  // Pedido & Seleção de Itens (Farmácia, Farmácia Popular, Família)
+  const [modalPedidoRes, setModalPedidoRes] = useState<Residente | null>(null)
+  const [itensSelecionadosPorRes, setItensSelecionadosPorRes] = useState<Record<string, string[]>>({})
+
+  function toggleItemTabela(resId: string, itemId: string, checked: boolean) {
+    setItensSelecionadosPorRes((prev) => {
+      const atuais = prev[resId] || []
+      const novos = checked ? [...atuais, itemId] : atuais.filter((id) => id !== itemId)
+      return { ...prev, [resId]: novos }
+    })
+  }
+
+  function toggleTodosTabela(r: Residente, checked: boolean) {
+    setItensSelecionadosPorRes((prev) => {
+      return {
+        ...prev,
+        [r.id]: checked ? r.estoque.map((it) => it.id) : [],
+      }
+    })
+  }
+
   const residentesAtivos = useMemo(() => {
     return residentes.filter((r) => r.status !== 'obito')
   }, [residentes])
@@ -128,28 +150,6 @@ export default function Estoque() {
       return matchRes || matchItem
     })
   }, [residentesAtivos, busca, apenasEmFalta])
-
-  async function copiarWhatsFamilia(resId: string) {
-    const r = residentes.find((x) => x.id === resId)
-    if (!r) return
-    const linhas = r.estoque
-      .map((it) => {
-        const c = consumoDia(r, it, T)
-        const q = qtdPedir(c, it)
-        if (q <= 0) return null
-        return `• ${it.nome}: pedir ${num(q)} ${it.unid}`
-      })
-      .filter(Boolean)
-
-    if (!linhas.length) {
-      toast.info(`O estoque individual de ${primeiro(r.nome)} está em dia. Nenhum pedido necessário.`)
-      return
-    }
-
-    const t = `Olá! Notificação da equipe de enfermagem — ${primeiro(r.nome)} (Quarto ${r.quarto}):\n\nSolicitamos a reposição dos seguintes itens de uso individual:\n${linhas.join('\n')}\n\nFavor entregar na instituição aos cuidados da enfermagem. Muito obrigado!`
-    await navigator.clipboard.writeText(t)
-    toast.success('Mensagem de reposição copiada para o WhatsApp!')
-  }
 
   async function copiarListaReposicaoGeral() {
     const blocos: string[] = []
@@ -493,12 +493,16 @@ export default function Estoque() {
                   <Button
                     size="xs"
                     variant="outline"
-                    onClick={() => void copiarWhatsFamilia(r.id)}
-                    className="rounded-lg text-xs gap-1.5 font-semibold bg-background"
-                    title="Copiar mensagem para o WhatsApp do responsável"
+                    onClick={() => setModalPedidoRes(r)}
+                    className="rounded-lg text-xs gap-1.5 font-semibold bg-background hover:bg-muted"
+                    title="Gerar pedido de reposição (Farmácia comercial, Farmácia Popular ou WhatsApp da família)"
                   >
-                    <Share2 className="size-3 text-emerald-600" />
-                    <span>Pedir à família</span>
+                    <ShoppingCart className="size-3 text-[#123F4A] dark:text-[#52B4BF]" />
+                    <span>
+                      {(itensSelecionadosPorRes[r.id]?.length ?? 0) > 0
+                        ? `Pedir Itens (${itensSelecionadosPorRes[r.id]?.length})`
+                        : 'Pedir à família / Farmácia'}
+                    </span>
                   </Button>
                 </div>
               </CardHeader>
@@ -506,6 +510,18 @@ export default function Estoque() {
                 <Table>
                   <TableHeader className="bg-muted/10">
                     <TableRow>
+                      <TableHead className="w-8 px-3">
+                        <input
+                          type="checkbox"
+                          title="Selecionar todos os itens deste residente"
+                          checked={
+                            r.estoque.length > 0 &&
+                            (itensSelecionadosPorRes[r.id]?.length ?? 0) === r.estoque.length
+                          }
+                          onChange={(e) => toggleTodosTabela(r, e.target.checked)}
+                          className="rounded border-border text-primary focus:ring-primary size-3.5 cursor-pointer align-middle"
+                        />
+                      </TableHead>
                       <TableHead className="text-xs font-semibold">Material / Medicamento</TableHead>
                       <TableHead className="text-xs font-semibold">Saldo Atual</TableHead>
                       <TableHead className="text-xs font-semibold">Estoque Mínimo</TableHead>
@@ -519,9 +535,18 @@ export default function Estoque() {
                       const c = consumoDia(r, it, T)
                       const n = nivelEst(c, it)
                       const d = diasRest(c, it.qtd)
+                      const isSelected = (itensSelecionadosPorRes[r.id] || []).includes(it.id)
 
                       return (
-                        <TableRow key={it.id}>
+                        <TableRow key={it.id} className={isSelected ? 'bg-primary/5 dark:bg-primary/10' : undefined}>
+                          <TableCell className="w-8 px-3">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={(e) => toggleItemTabela(r.id, it.id, e.target.checked)}
+                              className="rounded border-border text-primary focus:ring-primary size-3.5 cursor-pointer align-middle"
+                            />
+                          </TableCell>
                           <TableCell className="font-bold text-xs text-foreground">
                             {it.nome}
                           </TableCell>
@@ -578,7 +603,7 @@ export default function Estoque() {
                     })}
                     {!r.estoque.length && (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-4 text-xs text-muted-foreground italic">
+                        <TableCell colSpan={7} className="text-center py-4 text-xs text-muted-foreground italic">
                           Nenhum material ou medicamento cadastrado para este residente.
                         </TableCell>
                       </TableRow>
@@ -882,6 +907,16 @@ export default function Estoque() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Modal: Gerar Pedido / Reposição de Estoque com seleção de itens e canais */}
+      <ModalPedidoEstoque
+        open={!!modalPedidoRes}
+        onOpenChange={(aberto) => !aberto && setModalPedidoRes(null)}
+        residente={modalPedidoRes}
+        itensIniciaisIds={modalPedidoRes ? itensSelecionadosPorRes[modalPedidoRes.id] : []}
+        usuarioNome={profissional?.nome || 'Responsável Técnica (RT)'}
+        instituicaoNome={data.inst || 'ILPI - Residencial para Idosos'}
+      />
     </div>
   )
 }
