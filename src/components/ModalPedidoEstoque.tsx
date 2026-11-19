@@ -6,7 +6,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from './ui/dialog'
@@ -22,6 +21,8 @@ import {
   Copy,
   ExternalLink,
   FileText,
+  Minus,
+  Plus,
   Printer,
   Search,
   ShoppingCart,
@@ -116,14 +117,18 @@ export function ModalPedidoEstoque({
     }))
   }
 
-  function handleAlterarQtd(id: string, novaQtd: number) {
-    setSelecao((prev) => ({
-      ...prev,
-      [id]: {
-        check: prev[id]?.check ?? true,
-        qtd: Math.max(1, novaQtd),
-      },
-    }))
+  function handleAlterarQtd(id: string, deltaOuValor: number, isDelta = false) {
+    setSelecao((prev) => {
+      const atual = prev[id]?.qtd || 1
+      const novaQtd = isDelta ? Math.max(1, atual + deltaOuValor) : Math.max(1, deltaOuValor)
+      return {
+        ...prev,
+        [id]: {
+          check: prev[id]?.check ?? true,
+          qtd: novaQtd,
+        },
+      }
+    })
   }
 
   function selecionarTodos(marcar: boolean) {
@@ -162,7 +167,7 @@ export function ModalPedidoEstoque({
     )
 
     if (linhas.length === 0) {
-      return 'Nenhum item selecionado para este pedido. Selecione um ou mais itens acima.'
+      return 'Nenhum item selecionado para este pedido. Selecione um ou mais itens à esquerda.'
     }
 
     const obsTexto = obsExtra.trim() ? `\nObservação: ${obsExtra.trim()}` : ''
@@ -230,7 +235,7 @@ export function ModalPedidoEstoque({
     await navigator.clipboard.writeText(textoGerado)
     setCopiado(true)
     setTimeout(() => setCopiado(false), 2500)
-    toast.success('Texto do pedido copiado para a área de transferência!')
+    toast.success('Texto do pedido copiado com sucesso!')
   }
 
   function abrirWhatsApp() {
@@ -334,299 +339,377 @@ export function ModalPedidoEstoque({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="p-4 sm:p-5 border-b border-border/40 bg-muted/20">
-          <div className="flex items-start justify-between gap-3">
+      <DialogContent className="sm:max-w-4xl lg:max-w-5xl w-[95vw] max-h-[92vh] flex flex-col p-0 overflow-hidden border-border/80 shadow-2xl">
+        {/* Cabeçalho Limpo e Espaçoso */}
+        <DialogHeader className="p-4 sm:px-6 sm:py-4.5 border-b border-border/60 bg-muted/20">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <DialogTitle className="text-base font-bold flex items-center gap-2">
-                <ShoppingCart className="size-4.5 text-[#123F4A] dark:text-[#52B4BF]" />
-                Gerar Pedido & Reposição de Estoque
+              <DialogTitle className="text-base sm:text-lg font-bold flex items-center gap-2.5 text-foreground">
+                <div className="size-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <ShoppingCart className="size-4.5 text-[#123F4A] dark:text-[#52B4BF]" />
+                </div>
+                <span>Gerar Pedido & Reposição de Estoque</span>
               </DialogTitle>
-              <DialogDescription className="text-xs mt-1">
+              <DialogDescription className="text-xs text-muted-foreground mt-1">
                 Residente: <strong className="text-foreground">{residente.nome}</strong> (Quarto {residente.quarto})
                 {residente.responsavel?.nome && (
-                  <span className="text-muted-foreground ml-2">
-                    · Resp: {residente.responsavel.nome} {residente.responsavel.tel ? `(${residente.responsavel.tel})` : ''}
+                  <span className="ml-2 inline-flex items-center gap-1 text-muted-foreground">
+                    · Resp: <strong className="text-foreground/90 font-medium">{residente.responsavel.nome}</strong>
+                    {residente.responsavel.tel && <span>({residente.responsavel.tel})</span>}
                   </span>
                 )}
               </DialogDescription>
             </div>
-            <Badge variant="outline" className="text-xs shrink-0">
+
+            <Badge
+              variant="outline"
+              className={cn(
+                'self-start sm:self-auto text-xs px-2.5 py-1 font-semibold rounded-lg shrink-0',
+                itensSelecionadosList.length > 0
+                  ? 'bg-primary/10 border-primary/30 text-primary'
+                  : 'bg-muted border-border/60 text-muted-foreground'
+              )}
+            >
               {itensSelecionadosList.length} de {residente.estoque.length} selecionado(s)
             </Badge>
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 text-xs">
-          {/* Seletor de Destino / Canal */}
-          <div>
-            <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
-              Destino do Pedido / Onde será adquirido:
-            </Label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <button
-                type="button"
-                onClick={() => setCanal('familia')}
-                className={cn(
-                  'flex flex-col items-center justify-center text-center p-2.5 rounded-xl border transition-all text-xs gap-1',
-                  canal === 'familia'
-                    ? 'border-emerald-600 bg-emerald-50 text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-500 font-bold shadow-xs'
-                    : 'border-border/60 hover:bg-muted/60 text-muted-foreground hover:text-foreground'
-                )}
-              >
-                <Users className="size-4 text-emerald-600 shrink-0" />
-                <span>Pedir à Família</span>
-                <span className="text-[10px] font-normal opacity-80">(WhatsApp)</span>
-              </button>
+        {/* Corpo Dividido em Duas Colunas (Desktop) */}
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 min-h-0 overflow-hidden divide-y lg:divide-y-0 lg:divide-x divide-border/60">
+          {/* COLUNA ESQUERDA: Destino + Seleção de Itens (7 colunas) */}
+          <div className="lg:col-span-7 flex flex-col min-h-0 p-4 sm:p-5 overflow-y-auto space-y-4">
+            {/* Destino do Pedido */}
+            <div>
+              <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
+                1. Onde será adquirido / Destino do Pedido:
+              </Label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCanal('familia')}
+                  className={cn(
+                    'flex flex-col items-center justify-center text-center p-2.5 rounded-xl border transition-all text-xs gap-1',
+                    canal === 'familia'
+                      ? 'border-emerald-600 bg-emerald-50 text-emerald-950 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-500 font-bold shadow-xs ring-1 ring-emerald-500/30'
+                      : 'border-border/60 hover:bg-muted/60 text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <Users className="size-4 text-emerald-600 shrink-0" />
+                  <span className="font-semibold text-xs">Pedir à Família</span>
+                  <span className="text-[10px] opacity-75 font-normal">WhatsApp</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setCanal('popular')}
-                className={cn(
-                  'flex flex-col items-center justify-center text-center p-2.5 rounded-xl border transition-all text-xs gap-1',
-                  canal === 'popular'
-                    ? 'border-blue-600 bg-blue-50 text-blue-950 dark:bg-blue-950/40 dark:text-blue-200 dark:border-blue-500 font-bold shadow-xs'
-                    : 'border-border/60 hover:bg-muted/60 text-muted-foreground hover:text-foreground'
-                )}
-              >
-                <Building2 className="size-4 text-blue-600 shrink-0" />
-                <span>Farmácia Popular</span>
-                <span className="text-[10px] font-normal opacity-80">(SUS / Retirada)</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setCanal('popular')}
+                  className={cn(
+                    'flex flex-col items-center justify-center text-center p-2.5 rounded-xl border transition-all text-xs gap-1',
+                    canal === 'popular'
+                      ? 'border-blue-600 bg-blue-50 text-blue-950 dark:bg-blue-950/40 dark:text-blue-200 dark:border-blue-500 font-bold shadow-xs ring-1 ring-blue-500/30'
+                      : 'border-border/60 hover:bg-muted/60 text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <Building2 className="size-4 text-blue-600 shrink-0" />
+                  <span className="font-semibold text-xs">Farmácia Popular</span>
+                  <span className="text-[10px] opacity-75 font-normal">Retirada SUS</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setCanal('comercial')}
-                className={cn(
-                  'flex flex-col items-center justify-center text-center p-2.5 rounded-xl border transition-all text-xs gap-1',
-                  canal === 'comercial'
-                    ? 'border-amber-600 bg-amber-50 text-amber-950 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-500 font-bold shadow-xs'
-                    : 'border-border/60 hover:bg-muted/60 text-muted-foreground hover:text-foreground'
-                )}
-              >
-                <ShoppingCart className="size-4 text-amber-600 shrink-0" />
-                <span>Farmácia Comercial</span>
-                <span className="text-[10px] font-normal opacity-80">(Compra / Cotação)</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setCanal('comercial')}
+                  className={cn(
+                    'flex flex-col items-center justify-center text-center p-2.5 rounded-xl border transition-all text-xs gap-1',
+                    canal === 'comercial'
+                      ? 'border-amber-600 bg-amber-50 text-amber-950 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-500 font-bold shadow-xs ring-1 ring-amber-500/30'
+                      : 'border-border/60 hover:bg-muted/60 text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <ShoppingCart className="size-4 text-amber-600 shrink-0" />
+                  <span className="font-semibold text-xs">Farmácia Comercial</span>
+                  <span className="text-[10px] opacity-75 font-normal">Cotação / Compra</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setCanal('geral')}
-                className={cn(
-                  'flex flex-col items-center justify-center text-center p-2.5 rounded-xl border transition-all text-xs gap-1',
-                  canal === 'geral'
-                    ? 'border-slate-600 bg-slate-100 text-slate-950 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-500 font-bold shadow-xs'
-                    : 'border-border/60 hover:bg-muted/60 text-muted-foreground hover:text-foreground'
-                )}
-              >
-                <FileText className="size-4 text-slate-600 shrink-0" />
-                <span>Lista Geral</span>
-                <span className="text-[10px] font-normal opacity-80">(Texto simples)</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setCanal('geral')}
+                  className={cn(
+                    'flex flex-col items-center justify-center text-center p-2.5 rounded-xl border transition-all text-xs gap-1',
+                    canal === 'geral'
+                      ? 'border-slate-600 bg-slate-100 text-slate-950 dark:bg-slate-800 dark:text-slate-100 dark:border-slate-500 font-bold shadow-xs'
+                      : 'border-border/60 hover:bg-muted/60 text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <FileText className="size-4 text-slate-600 shrink-0" />
+                  <span className="font-semibold text-xs">Lista Geral</span>
+                  <span className="text-[10px] opacity-75 font-normal">Conferência</span>
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* Seleção de Itens */}
-          <div className="space-y-2">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <Button
-                  type="button"
-                  size="xs"
-                  variant="outline"
-                  onClick={() => selecionarTodos(true)}
-                  className="h-6 text-[11px] rounded-lg"
-                >
-                  Selecionar Todos
-                </Button>
-                <Button
-                  type="button"
-                  size="xs"
-                  variant="outline"
-                  onClick={selecionarApenasBaixos}
-                  className="h-6 text-[11px] rounded-lg text-rose-700 dark:text-rose-300"
-                >
-                  Apenas em Falta
-                </Button>
-                <Button
-                  type="button"
-                  size="xs"
-                  variant="ghost"
-                  onClick={() => selecionarTodos(false)}
-                  className="h-6 text-[11px] rounded-lg text-muted-foreground"
-                >
-                  Limpar Seleção
-                </Button>
+            {/* Seleção de Medicamentos e Materiais */}
+            <div className="space-y-2 flex-1 flex flex-col min-h-0">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  2. Selecione os itens a incluir:
+                </Label>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="outline"
+                    onClick={() => selecionarTodos(true)}
+                    className="h-6 text-[11px] rounded-lg"
+                  >
+                    Marcar Todos
+                  </Button>
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="outline"
+                    onClick={selecionarApenasBaixos}
+                    className="h-6 text-[11px] rounded-lg text-rose-700 dark:text-rose-300 font-medium"
+                  >
+                    Apenas em Falta
+                  </Button>
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="ghost"
+                    onClick={() => selecionarTodos(false)}
+                    className="h-6 text-[11px] rounded-lg text-muted-foreground"
+                  >
+                    Limpar
+                  </Button>
+                </div>
               </div>
 
-              <div className="relative w-full sm:w-48">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-muted-foreground" />
+              {/* Filtro de Busca */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
                 <Input
                   type="search"
-                  placeholder="Filtrar item..."
+                  placeholder="Filtrar medicamento ou material..."
                   value={buscaItem}
                   onChange={(e) => setBuscaItem(e.target.value)}
-                  className="h-6 pl-7 text-[11px] rounded-lg"
+                  className="h-8 pl-8 text-xs rounded-xl"
                 />
+              </div>
+
+              {/* Lista dos Itens com Checkbox, Status e Ajuste de Quantidade */}
+              <div className="border border-border/70 rounded-xl divide-y divide-border/40 max-h-64 sm:max-h-72 overflow-y-auto bg-card shadow-2xs">
+                {itensFiltrados.map((it) => {
+                  const c = consumoDia(residente, it, T)
+                  const n = nivelEst(c, it)
+                  const isSelected = !!selecao[it.id]?.check
+                  const qtdAtual = selecao[it.id]?.qtd || 1
+
+                  return (
+                    <div
+                      key={it.id}
+                      className={cn(
+                        'p-2.5 sm:px-3 flex items-center justify-between gap-3 transition-colors',
+                        isSelected ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-muted/30'
+                      )}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <input
+                          type="checkbox"
+                          id={`chk_${it.id}`}
+                          checked={isSelected}
+                          onChange={(e) => handleToggleItem(it.id, e.target.checked)}
+                          className="rounded border-border text-primary focus:ring-primary size-4 cursor-pointer shrink-0"
+                        />
+                        <label htmlFor={`chk_${it.id}`} className="cursor-pointer min-w-0">
+                          <span className="font-semibold text-xs sm:text-sm text-foreground block truncate">
+                            {it.nome}
+                          </span>
+                          <span className="text-[11px] text-muted-foreground flex items-center gap-2 flex-wrap">
+                            <span>Saldo: <strong>{it.qtd} {it.unid}</strong></span>
+                            <span>· Mín: {it.min} {it.unid}</span>
+                            <StatusBadge tone={n === 'ok' ? 'ok' : n === 'warn' ? 'warn' : 'danger'}>
+                              {n === 'ok' ? 'Estoque OK' : n === 'warn' ? 'Alerta' : 'Crítico'}
+                            </StatusBadge>
+                          </span>
+                        </label>
+                      </div>
+
+                      {/* Controle de Quantidade */}
+                      <div className="flex items-center gap-1 shrink-0 bg-background/80 border border-border/60 rounded-lg p-0.5 shadow-2xs">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          disabled={!isSelected || qtdAtual <= 1}
+                          onClick={() => handleAlterarQtd(it.id, -1, true)}
+                          className="size-6 rounded text-muted-foreground hover:text-foreground"
+                          title="Diminuir quantidade"
+                        >
+                          <Minus className="size-3" />
+                        </Button>
+                        <Input
+                          id={`qtd_${it.id}`}
+                          type="number"
+                          min="1"
+                          step="any"
+                          value={qtdAtual}
+                          onChange={(e) => handleAlterarQtd(it.id, Number(e.target.value))}
+                          disabled={!isSelected}
+                          className="w-12 h-6 text-xs text-center font-bold font-mono p-0 border-0 bg-transparent focus-visible:ring-0"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          disabled={!isSelected}
+                          onClick={() => handleAlterarQtd(it.id, 1, true)}
+                          className="size-6 rounded text-muted-foreground hover:text-foreground"
+                          title="Aumentar quantidade"
+                        >
+                          <Plus className="size-3" />
+                        </Button>
+                        <span className="text-[10px] text-muted-foreground pr-1.5 font-medium">{it.unid}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {!itensFiltrados.length && (
+                  <div className="p-6 text-center text-xs text-muted-foreground italic">
+                    Nenhum item corresponde à busca.
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Lista dos Itens com Checkbox e Quantidade */}
-            <div className="border border-border/70 rounded-xl overflow-hidden divide-y divide-border/40 max-h-56 overflow-y-auto bg-card">
-              {itensFiltrados.map((it) => {
-                const c = consumoDia(residente, it, T)
-                const n = nivelEst(c, it)
-                const isSelected = !!selecao[it.id]?.check
-                const qtdAtual = selecao[it.id]?.qtd || 1
-
-                return (
-                  <div
-                    key={it.id}
-                    className={cn(
-                      'p-2.5 flex items-center justify-between gap-2 transition-colors',
-                      isSelected ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-muted/30'
-                    )}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <input
-                        type="checkbox"
-                        id={`chk_${it.id}`}
-                        checked={isSelected}
-                        onChange={(e) => handleToggleItem(it.id, e.target.checked)}
-                        className="rounded border-border text-primary focus:ring-primary size-4 cursor-pointer shrink-0"
-                      />
-                      <label htmlFor={`chk_${it.id}`} className="cursor-pointer min-w-0">
-                        <span className="font-semibold text-xs text-foreground block truncate">
-                          {it.nome}
-                        </span>
-                        <span className="text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap">
-                          <span>Saldo: <strong>{it.qtd} {it.unid}</strong></span>
-                          <span>· Mín: {it.min} {it.unid}</span>
-                          <StatusBadge tone={n === 'ok' ? 'ok' : n === 'warn' ? 'warn' : 'danger'}>
-                            {n === 'ok' ? 'OK' : n === 'warn' ? 'Alerta' : 'Crítico'}
-                          </StatusBadge>
-                        </span>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <Label htmlFor={`qtd_${it.id}`} className="text-[11px] text-muted-foreground">
-                        Qtd:
-                      </Label>
-                      <Input
-                        id={`qtd_${it.id}`}
-                        type="number"
-                        min="1"
-                        step="any"
-                        value={qtdAtual}
-                        onChange={(e) => handleAlterarQtd(it.id, Number(e.target.value))}
-                        disabled={!isSelected}
-                        className="w-16 h-7 text-xs text-center font-bold font-mono rounded-lg"
-                      />
-                      <span className="text-[11px] text-muted-foreground w-6">{it.unid}</span>
-                    </div>
-                  </div>
-                )
-              })}
-
-              {!itensFiltrados.length && (
-                <div className="p-4 text-center text-xs text-muted-foreground italic">
-                  Nenhum item corresponde à busca.
-                </div>
-              )}
+            {/* Observação / Recado */}
+            <div className="space-y-1 pt-1">
+              <Label htmlFor="obsExtra" className="text-[11px] font-semibold text-muted-foreground">
+                Observação adicional no pedido (opcional):
+              </Label>
+              <Input
+                id="obsExtra"
+                placeholder="Ex: Favor providenciar até sexta-feira / Entregar com nota fiscal..."
+                value={obsExtra}
+                onChange={(e) => setObsExtra(e.target.value)}
+                className="h-8 text-xs rounded-xl"
+              />
             </div>
           </div>
 
-          {/* Observação Adicional */}
-          <div className="space-y-1">
-            <Label htmlFor="obsExtra" className="text-[11px] font-semibold text-muted-foreground">
-              Observação adicional ou recado (opcional):
-            </Label>
-            <Input
-              id="obsExtra"
-              placeholder="Ex: Favor providenciar até sexta-feira / Receita médica já anexada na recepção..."
-              value={obsExtra}
-              onChange={(e) => setObsExtra(e.target.value)}
-              className="h-8 text-xs rounded-lg"
-            />
-          </div>
-
-          {/* Prévia da Mensagem Formatada */}
-          <div className="space-y-1">
+          {/* COLUNA DIREITA: Prévia da Mensagem & Ações de Envio (5 colunas) */}
+          <div className="lg:col-span-5 flex flex-col min-h-0 p-4 sm:p-5 bg-muted/30 space-y-4">
             <div className="flex items-center justify-between">
-              <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Prévia da Mensagem / Pedido ({itensSelecionadosList.length} itens)
-              </Label>
+              <div>
+                <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+                  3. Prévia do Pedido
+                </Label>
+                <span className="text-[11px] text-muted-foreground">
+                  {canal === 'familia'
+                    ? 'Mensagem WhatsApp'
+                    : canal === 'popular'
+                    ? 'Guia Farmácia Popular'
+                    : canal === 'comercial'
+                    ? 'Cotação / Farmácia'
+                    : 'Lista Geral'}
+                </span>
+              </div>
               <Button
                 type="button"
                 size="xs"
                 variant="ghost"
                 onClick={copiarTexto}
-                className="h-6 text-[11px] gap-1 font-semibold text-primary"
+                disabled={!itensSelecionadosList.length}
+                className="h-6 text-[11px] gap-1 font-semibold text-primary hover:text-primary/90"
               >
                 {copiado ? <Check className="size-3 text-emerald-600" /> : <Copy className="size-3" />}
                 <span>{copiado ? 'Copiado!' : 'Copiar'}</span>
               </Button>
             </div>
-            <textarea
-              readOnly
-              data-testid="preview-texto"
-              value={textoGerado}
-              className="w-full h-28 text-[11px] font-mono bg-muted/30 border border-border/60 rounded-xl p-2.5 resize-none leading-relaxed text-foreground focus:outline-none"
-            />
+
+            {/* Caixa de Texto da Mensagem */}
+            <div className="flex-1 flex flex-col min-h-[180px] sm:min-h-[220px]">
+              <textarea
+                readOnly
+                data-testid="preview-texto"
+                value={textoGerado}
+                className="w-full flex-1 p-3 text-xs font-mono bg-background border border-border/70 rounded-xl resize-none leading-relaxed text-foreground shadow-2xs focus:outline-none"
+              />
+            </div>
+
+            {/* Botões de Ação na Coluna Direita */}
+            <div className="space-y-2 pt-1">
+              {canal === 'familia' ? (
+                <Button
+                  type="button"
+                  size="default"
+                  onClick={abrirWhatsApp}
+                  disabled={!itensSelecionadosList.length}
+                  className="w-full rounded-xl text-xs sm:text-sm font-bold gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm h-10"
+                >
+                  <ExternalLink className="size-4" />
+                  <span>Enviar no WhatsApp</span>
+                  {residente.responsavel?.nome && (
+                    <span className="text-[11px] font-normal opacity-90 truncate max-w-[140px]">
+                      ({primeiro(residente.responsavel.nome)})
+                    </span>
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  size="default"
+                  onClick={copiarTexto}
+                  disabled={!itensSelecionadosList.length}
+                  className="w-full rounded-xl text-xs sm:text-sm font-bold gap-2 bg-[#123F4A] hover:bg-[#123F4A]/90 text-white shadow-sm h-10"
+                >
+                  {copiado ? <CheckCircle2 className="size-4 text-emerald-400" /> : <Copy className="size-4" />}
+                  <span>{copiado ? 'Texto Copiado com Sucesso!' : 'Copiar Lista do Pedido'}</span>
+                </Button>
+              )}
+
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={imprimirPedido}
+                  disabled={!itensSelecionadosList.length}
+                  className="rounded-xl text-xs gap-1.5 font-semibold bg-background"
+                >
+                  <Printer className="size-3.5" />
+                  <span>Imprimir Guia</span>
+                </Button>
+
+                {canal === 'familia' && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={copiarTexto}
+                    disabled={!itensSelecionadosList.length}
+                    className="rounded-xl text-xs gap-1.5 font-semibold bg-background"
+                  >
+                    <Copy className="size-3.5" />
+                    <span>Copiar Texto</span>
+                  </Button>
+                )}
+
+                {canal !== 'familia' && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onOpenChange(false)}
+                    className="rounded-xl text-xs font-semibold bg-background"
+                  >
+                    Fechar
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
-
-        <DialogFooter className="p-4 sm:p-5 border-t border-border/40 bg-muted/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => onOpenChange(false)}
-            className="rounded-xl text-xs"
-          >
-            Fechar
-          </Button>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={imprimirPedido}
-              disabled={!itensSelecionadosList.length}
-              className="rounded-xl text-xs gap-1.5 font-semibold"
-            >
-              <Printer className="size-3.5" />
-              <span>Imprimir</span>
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={copiarTexto}
-              disabled={!itensSelecionadosList.length}
-              className="rounded-xl text-xs gap-1.5 font-semibold"
-            >
-              {copiado ? <CheckCircle2 className="size-3.5 text-emerald-600" /> : <Copy className="size-3.5" />}
-              <span>{copiado ? 'Texto Copiado!' : 'Copiar Mensagem'}</span>
-            </Button>
-
-            {canal === 'familia' && (
-              <Button
-                type="button"
-                size="sm"
-                onClick={abrirWhatsApp}
-                disabled={!itensSelecionadosList.length}
-                className="rounded-xl text-xs gap-1.5 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
-              >
-                <ExternalLink className="size-3.5" />
-                <span>Abrir WhatsApp</span>
-              </Button>
-            )}
-          </div>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   )
