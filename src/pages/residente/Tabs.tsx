@@ -64,6 +64,7 @@ import {
   Search,
   Settings,
   ShieldAlert,
+  ShoppingCart,
   Sparkles,
   Star,
   Stethoscope,
@@ -86,6 +87,7 @@ import {
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { ModalPedidoMedico } from '../../components/ModalPedidoMedico'
+import { ModalPedidoEstoque } from '../../components/ModalPedidoEstoque'
 import {
   getPedidosLocais,
   removerPedidoLocal,
@@ -4223,24 +4225,56 @@ export function TabArquivos({ r }: Ctx) {
 /* ==========================================================================
    TAB 10: ESTOQUE DO RESIDENTE
    ========================================================================== */
-export function TabEstoque({ r }: Ctx) {
+export function TabEstoque({ r, profNome }: Ctx) {
+  const data = useIlpiData()
+  const { profissional } = useAuth()
+  const [modalPedido, setModalPedido] = useState(false)
+  const [itensSelecionados, setItensSelecionados] = useState<string[]>([])
+
+  const todosMarcados = r.estoque.length > 0 && itensSelecionados.length === r.estoque.length
+
   return (
     <Card className="border border-border/70 shadow-2xs overflow-hidden">
       <CardHeader className="pb-3 border-b border-border/40 bg-muted/20">
-        <CardTitle className="text-sm font-bold flex items-center justify-between">
-          <span className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <CardTitle className="text-sm font-bold flex items-center gap-2">
             <Package className="size-4 text-primary" />
-            Estoque Individual (Medicamentos & Materiais de Higiene)
-          </span>
-          <Badge variant="secondary" className="text-xs">
-            {r.estoque.length} itens
-          </Badge>
-        </CardTitle>
+            <span>Estoque Individual (Medicamentos & Materiais de Higiene)</span>
+            <Badge variant="secondary" className="text-xs ml-1">
+              {r.estoque.length} itens
+            </Badge>
+          </CardTitle>
+
+          <Button
+            size="xs"
+            onClick={() => setModalPedido(true)}
+            className="rounded-xl text-xs gap-1.5 font-semibold bg-[#123F4A] hover:bg-[#123F4A]/90 text-white shadow-xs"
+            title="Gerar pedido de reposição (Farmácia comercial, Farmácia Popular ou WhatsApp da família)"
+          >
+            <ShoppingCart className="size-3.5" />
+            <span>
+              {itensSelecionados.length > 0
+                ? `Gerar Pedido (${itensSelecionados.length} selecionado${itensSelecionados.length > 1 ? 's' : ''})`
+                : 'Gerar Pedido / Reposição'}
+            </span>
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         <Table>
           <TableHeader className="bg-muted/30">
             <TableRow>
+              <TableHead className="w-8 px-3">
+                <input
+                  type="checkbox"
+                  title="Selecionar / Desmarcar todos"
+                  checked={todosMarcados}
+                  onChange={(e) =>
+                    setItensSelecionados(e.target.checked ? r.estoque.map((it) => it.id) : [])
+                  }
+                  className="rounded border-border text-primary focus:ring-primary size-3.5 cursor-pointer align-middle"
+                />
+              </TableHead>
               <TableHead className="text-xs font-semibold">Material / Insumo / Medicamento</TableHead>
               <TableHead className="text-xs font-semibold">Saldo Atual</TableHead>
               <TableHead className="text-xs font-semibold">Consumo Diário</TableHead>
@@ -4252,9 +4286,22 @@ export function TabEstoque({ r }: Ctx) {
               const c = consumoDia(r, it, T)
               const n = nivelEst(c, it)
               const dias = diasRest(c, it.qtd)
+              const isSelected = itensSelecionados.includes(it.id)
 
               return (
-                <TableRow key={it.id}>
+                <TableRow key={it.id} className={isSelected ? 'bg-primary/5 dark:bg-primary/10' : undefined}>
+                  <TableCell className="w-8 px-3">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={(e) => {
+                        setItensSelecionados((prev) =>
+                          e.target.checked ? [...prev, it.id] : prev.filter((id) => id !== it.id)
+                        )
+                      }}
+                      className="rounded border-border text-primary focus:ring-primary size-3.5 cursor-pointer align-middle"
+                    />
+                  </TableCell>
                   <TableCell className="font-bold text-foreground text-xs">{it.nome}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {it.qtd} {it.unid} (mín. {it.min})
@@ -4268,9 +4315,25 @@ export function TabEstoque({ r }: Ctx) {
                 </TableRow>
               )
             })}
+            {!r.estoque.length && (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-4 text-xs text-muted-foreground italic">
+                  Nenhum item cadastrado no estoque individual deste residente.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </CardContent>
+
+      <ModalPedidoEstoque
+        open={modalPedido}
+        onOpenChange={setModalPedido}
+        residente={r}
+        itensIniciaisIds={itensSelecionados}
+        usuarioNome={profNome ? profNome(profissional?.id) : 'Responsável Técnica (RT)'}
+        instituicaoNome={data.inst || 'ILPI - Residencial para Idosos'}
+      />
     </Card>
   )
 }
