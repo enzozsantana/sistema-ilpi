@@ -96,186 +96,212 @@ export function ModalCadastroEspecialista({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6 rounded-2xl">
-        <DialogHeader>
-          <div className="flex items-center gap-2.5">
-            <div className="size-10 rounded-xl bg-teal-500/10 text-teal-700 dark:text-teal-400 flex items-center justify-center">
-              <Stethoscope className="size-5" />
+      <DialogContent className="w-[95vw] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[92vh] overflow-y-auto p-6 sm:p-8 rounded-2xl sm:rounded-3xl shadow-2xl border border-border/80">
+        <DialogHeader className="space-y-3 pb-2 border-b border-border/40">
+          <div className="flex items-center gap-3.5">
+            <div className="size-12 sm:size-14 rounded-2xl bg-teal-500/10 text-teal-700 dark:text-teal-400 flex items-center justify-center shrink-0 shadow-2xs">
+              <Stethoscope className="size-6 sm:size-7" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-bold font-heading">
+              <DialogTitle className="text-2xl sm:text-3xl font-bold font-heading tracking-tight text-foreground">
                 Cadastro de Especialista Independente
               </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                Atenda idosos e residentes de ILPIs parceiras ou consultas particulares por telemedicina.
+              <DialogDescription className="text-xs sm:text-sm text-muted-foreground mt-1">
+                Atenda idosos e residentes de ILPIs parceiras ou realize teleconsultas particulares integradas ao prontuário.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+        <form onSubmit={handleSubmit} className="space-y-6 pt-2">
           {erro && (
-            <Alert variant="destructive" className="py-2.5 rounded-xl">
-              <AlertCircle className="size-4" />
-              <AlertDescription className="text-xs font-medium ml-2">{erro}</AlertDescription>
+            <Alert variant="destructive" className="py-3 rounded-2xl">
+              <AlertCircle className="size-5" />
+              <AlertDescription className="text-xs sm:text-sm font-medium ml-2">{erro}</AlertDescription>
             </Alert>
           )}
 
           {/* Destaque de Acesso Exclusivo e Split */}
-          <div className="p-3.5 rounded-xl border border-teal-500/30 bg-teal-500/5 space-y-1.5 text-xs">
-            <div className="flex items-center gap-1.5 font-semibold text-teal-800 dark:text-teal-300">
-              <Sparkles className="size-4 text-[#D9694F]" />
-              <span>Acesso Direto ao Módulo de Teleconsulta & Consultório</span>
+          <div className="p-4 sm:p-5 rounded-2xl border border-teal-500/30 bg-teal-500/5 space-y-2">
+            <div className="flex items-center gap-2 font-bold text-teal-900 dark:text-teal-200 text-xs sm:text-sm">
+              <Sparkles className="size-4.5 text-[#D9694F]" />
+              <span>Acesso Direto ao Módulo de Teleconsulta & Consultório Virtual</span>
             </div>
-            <p className="text-muted-foreground text-[11px] leading-relaxed">
-              Como especialista credenciado independente, você tem acesso dedicado para realizar teleconsultas por vídeo, emitir receitas, registrar evoluções e receber honorários diretamente na sua conta do Mercado Pago via split automático.
+            <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed">
+              Como especialista credenciado independente, você terá acesso dedicado para realizar teleconsultas por vídeo em alta definição, prescrever receitas, solicitar exames, registrar evoluções no prontuário e receber honorários diretamente na sua conta do <strong>Mercado Pago</strong> via split automático com comissão retida na fonte.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Nome Completo *</Label>
-              <Input
-                placeholder="ex: Dr. Gabriel Antunes"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                required
-                className="h-9.5 text-xs rounded-xl"
-              />
-            </div>
+          {/* SEÇÃO 1: Identificação e Acesso */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+              <span className="size-5 rounded-full bg-muted flex items-center justify-center text-[10px] text-foreground font-extrabold">1</span>
+              <span>Identificação & Acesso à Plataforma</span>
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-semibold">Nome Completo *</Label>
+                <Input
+                  placeholder="ex: Dr. Gabriel Antunes"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  required
+                  className="h-10.5 text-xs sm:text-sm rounded-xl px-3.5"
+                />
+              </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">E-mail de Acesso *</Label>
-              <Input
-                type="email"
-                placeholder="ex: gabriel@clinica.med.br"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="h-9.5 text-xs rounded-xl"
-              />
-            </div>
-          </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-semibold">E-mail de Acesso *</Label>
+                <Input
+                  type="email"
+                  placeholder="ex: gabriel@clinica.med.br"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="h-10.5 text-xs sm:text-sm rounded-xl px-3.5"
+                />
+              </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Senha de Acesso *</Label>
-              <Input
-                type="password"
-                placeholder="Mínimo 6 caracteres"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                required
-                className="h-9.5 text-xs rounded-xl"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Especialidade Principal *</Label>
-              <select
-                value={especialidade}
-                onChange={(e) => setEspecialidade(e.target.value as EspecialidadeVirtual)}
-                className="w-full h-9.5 px-3 rounded-xl border border-input bg-background text-xs font-medium focus:ring-2 focus:ring-ring"
-              >
-                <option value="medica">Medicina Geriátrica</option>
-                <option value="estomaterapia">Estomaterapia & Feridas (Enfermagem)</option>
-                <option value="nutricao">Nutrição Clínica Geriátrica</option>
-                <option value="psicologia">Psicologia & Demências</option>
-                <option value="fisioterapia">Fisioterapia Geriátrica</option>
-              </select>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label className="text-xs sm:text-sm font-semibold">Senha de Acesso *</Label>
+                <Input
+                  type="password"
+                  placeholder="Mínimo 6 caracteres"
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  required
+                  className="h-10.5 text-xs sm:text-sm rounded-xl px-3.5"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Conselho & Registro Profissional *</Label>
-              <Input
-                placeholder="ex: CRM-SP 189432 / COREN-SP 24512"
-                value={registro}
-                onChange={(e) => setRegistro(e.target.value)}
-                required
-                className="h-9.5 text-xs rounded-xl"
-              />
-            </div>
+          {/* SEÇÃO 2: Registro e Especialidade */}
+          <div className="space-y-3 pt-1 border-t border-border/40">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 pt-2">
+              <span className="size-5 rounded-full bg-muted flex items-center justify-center text-[10px] text-foreground font-extrabold">2</span>
+              <span>Especialidade & Registro Profissional</span>
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-semibold">Especialidade Principal *</Label>
+                <select
+                  value={especialidade}
+                  onChange={(e) => setEspecialidade(e.target.value as EspecialidadeVirtual)}
+                  className="w-full h-10.5 px-3 rounded-xl border border-input bg-background text-xs sm:text-sm font-medium focus:ring-2 focus:ring-ring"
+                >
+                  <option value="medica">Medicina Geriátrica</option>
+                  <option value="estomaterapia">Estomaterapia & Feridas (Enfermagem)</option>
+                  <option value="nutricao">Nutrição Clínica Geriátrica</option>
+                  <option value="psicologia">Psicologia & Demências</option>
+                  <option value="fisioterapia">Fisioterapia Geriátrica</option>
+                </select>
+              </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Título / Titulação</Label>
-              <Input
-                placeholder="ex: Geriatra Titulado SBGG / Mestre USP"
-                value={titulo}
-                onChange={(e) => setTitulo(e.target.value)}
-                className="h-9.5 text-xs rounded-xl"
-              />
-            </div>
-          </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-semibold">Conselho & Registro *</Label>
+                <Input
+                  placeholder="ex: CRM-SP 189432 / COREN-SP 24512"
+                  value={registro}
+                  onChange={(e) => setRegistro(e.target.value)}
+                  required
+                  className="h-10.5 text-xs sm:text-sm rounded-xl px-3.5"
+                />
+              </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Nome do Consultório / Clínica</Label>
-              <Input
-                placeholder="ex: Consultório Virtual Dr. Gabriel"
-                value={consultorio}
-                onChange={(e) => setConsultorio(e.target.value)}
-                className="h-9.5 text-xs rounded-xl"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Valor da Consulta (R$) *</Label>
-              <Input
-                type="number"
-                min="0"
-                step="5"
-                placeholder="200"
-                value={preco}
-                onChange={(e) => setPreco(e.target.value)}
-                required
-                className="h-9.5 text-xs rounded-xl"
-              />
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-semibold">Título / Qualificação</Label>
+                <Input
+                  placeholder="ex: Geriatra Titulado SBGG / Mestre USP"
+                  value={titulo}
+                  onChange={(e) => setTitulo(e.target.value)}
+                  className="h-10.5 text-xs sm:text-sm rounded-xl px-3.5"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">Apresentação / Minibiografia</Label>
-            <textarea
-              placeholder="Descreva sua experiência, áreas de atuação e abordagem com idosos e suporte a ILPIs..."
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              rows={3}
-              className="w-full text-xs rounded-xl border border-input bg-background p-2.5 focus-visible:outline-ring resize-none leading-relaxed"
-            />
+          {/* SEÇÃO 3: Consultório e Honorários */}
+          <div className="space-y-3 pt-1 border-t border-border/40">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 pt-2">
+              <span className="size-5 rounded-full bg-muted flex items-center justify-center text-[10px] text-foreground font-extrabold">3</span>
+              <span>Consultório Virtual & Honorários</span>
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-semibold">Nome do Consultório / Clínica</Label>
+                <Input
+                  placeholder="ex: Consultório Virtual Dr. Gabriel Antunes"
+                  value={consultorio}
+                  onChange={(e) => setConsultorio(e.target.value)}
+                  className="h-10.5 text-xs sm:text-sm rounded-xl px-3.5"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-semibold">Valor da Consulta (R$) *</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="5"
+                  placeholder="200"
+                  value={preco}
+                  onChange={(e) => setPreco(e.target.value)}
+                  required
+                  className="h-10.5 text-xs sm:text-sm rounded-xl px-3.5"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* SEÇÃO 4: Biografia e Apresentação */}
+          <div className="space-y-3 pt-1 border-t border-border/40">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 pt-2">
+              <span className="size-5 rounded-full bg-muted flex items-center justify-center text-[10px] text-foreground font-extrabold">4</span>
+              <span>Apresentação & Biografia Clínica</span>
+            </h3>
+            <div className="space-y-1.5">
+              <Label className="text-xs sm:text-sm font-semibold">Mini-biografia para os Acolhidos e ILPIs</Label>
+              <textarea
+                placeholder="Descreva sua experiência, áreas de atuação e abordagem com idosos e suporte especializado para ILPIs..."
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                rows={4}
+                className="w-full text-xs sm:text-sm rounded-xl border border-input bg-background p-3 focus-visible:outline-ring resize-none leading-relaxed"
+              />
+            </div>
           </div>
 
           {/* Chamada para Split Mercado Pago */}
-          <div className="flex items-center gap-2 p-3 rounded-xl bg-muted/40 border border-border/60 text-[11px] text-muted-foreground">
-            <ArrowRightLeft className="size-4 text-[#009EE3] shrink-0" />
+          <div className="flex items-center gap-3 p-4 rounded-2xl bg-muted/40 border border-border/60 text-xs sm:text-sm text-muted-foreground">
+            <ArrowRightLeft className="size-5 text-[#009EE3] shrink-0" />
             <span>
-              Ao concluir o cadastro, você poderá conectar sua conta do <strong>Mercado Pago</strong> com 1 clique para receber os repasses das teleconsultas com divisão automática.
+              Ao concluir o cadastro, você poderá conectar sua conta do <strong>Mercado Pago</strong> com 1 clique para receber os repasses das teleconsultas com divisão automática de comissão.
             </span>
           </div>
 
-          <div className="pt-2 flex items-center justify-end gap-2.5">
+          <div className="pt-2 flex items-center justify-end gap-3 border-t border-border/40">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="h-9.5 text-xs rounded-xl"
+              className="h-10.5 px-5 text-xs sm:text-sm rounded-xl font-medium"
             >
               Cancelar
             </Button>
             <Button
               type="submit"
               disabled={busy}
-              className="h-9.5 text-xs rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold gap-1.5"
+              className="h-10.5 px-6 text-xs sm:text-sm rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold gap-2 shadow-xs transition-all"
             >
               {busy ? (
                 <>
-                  <Loader2 className="size-3.5 animate-spin" />
+                  <Loader2 className="size-4 animate-spin" />
                   Cadastrando...
                 </>
               ) : (
                 <>
-                  <CheckCircle2 className="size-3.5" />
+                  <CheckCircle2 className="size-4" />
                   Concluir Cadastro & Abrir Consultório
                 </>
               )}
