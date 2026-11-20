@@ -994,7 +994,7 @@ export default function Teleconsulta() {
                     <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center space-y-2">
                       <div className="inline-flex items-center gap-2 text-amber-800 dark:text-amber-200 font-bold text-xs uppercase tracking-wide">
                         <span className="size-2 rounded-full bg-amber-500 animate-ping" />
-                        <span>Sala de Espera Virtual (PT-BR)</span>
+                        <span>Sala de Espera Virtual</span>
                       </div>
                       <p className="text-xs text-foreground/90 leading-relaxed font-medium">
                         Olá! Você está na sala de espera para a consulta de <strong>{salaAberta.residenteNome}</strong>.

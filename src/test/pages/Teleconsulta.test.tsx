@@ -120,7 +120,7 @@ describe('Teleconsulta Page', () => {
     fireEvent.click(botaoEntrar)
 
     // Verifica que exibe a Sala de Espera Virtual humanizada em PT-BR e controle do moderador
-    expect(screen.getByText(/Sala de Espera Virtual \(PT-BR\)/i)).toBeInTheDocument()
+    expect(screen.getByText(/Sala de Espera Virtual/i)).toBeInTheDocument()
     expect(screen.getByText(/Controle do Prestador \/ Moderador/i)).toBeInTheDocument()
     expect(screen.getByText(/Identificado como:/i)).toBeInTheDocument()
     expect(screen.getByText(/Helena Prado/i)).toBeInTheDocument()
