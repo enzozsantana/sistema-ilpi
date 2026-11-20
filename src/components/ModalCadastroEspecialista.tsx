@@ -11,20 +11,33 @@ import {
 import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { Button } from './ui/button'
+import { Badge } from './ui/badge'
 import { Alert, AlertDescription } from './ui/alert'
 import {
   AlertCircle,
   ArrowRightLeft,
+  Check,
   CheckCircle2,
   Loader2,
+  Plus,
   Sparkles,
   Stethoscope,
+  X,
 } from 'lucide-react'
 import { PasswordInput } from './ui/password-input'
 import { CurrencyInput } from './ui/currency-input'
 import { parseMoeda } from '../lib/currency'
 import { mascaraConselho } from '../lib/masks'
+import { cn } from '../lib/utils'
 import { toast } from 'sonner'
+
+const OPCOES_ESPECIALIDADES: { id: EspecialidadeVirtual; label: string }[] = [
+  { id: 'estomaterapia', label: 'Estomaterapia & Feridas (Enfermagem)' },
+  { id: 'fisioterapia', label: 'Fisioterapia Geriátrica' },
+  { id: 'medica', label: 'Medicina Geriátrica' },
+  { id: 'nutricao', label: 'Nutrição Clínica Geriátrica' },
+  { id: 'psicologia', label: 'Psicologia & Demências' },
+]
 
 interface ModalCadastroEspecialistaProps {
   open: boolean
@@ -41,12 +54,44 @@ export function ModalCadastroEspecialista({
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [confirmaSenha, setConfirmaSenha] = useState('')
-  const [especialidade, setEspecialidade] = useState<EspecialidadeVirtual>('estomaterapia')
+  const [especialidades, setEspecialidades] = useState<EspecialidadeVirtual[]>(['estomaterapia'])
   const [registro, setRegistro] = useState('')
-  const [titulo, setTitulo] = useState('')
+  const [titulos, setTitulos] = useState<string[]>(['Especialista em Telemedicina'])
+  const [novoTitulo, setNovoTitulo] = useState('')
   const [consultorio, setConsultorio] = useState('')
   const [preco, setPreco] = useState('200')
   const [bio, setBio] = useState('')
+
+  function toggleEspecialidade(id: EspecialidadeVirtual) {
+    if (especialidades.includes(id)) {
+      if (especialidades.length === 1) {
+        toast.error('Selecione pelo menos 1 especialidade.')
+        return
+      }
+      setEspecialidades(especialidades.filter((e) => e !== id))
+    } else {
+      setEspecialidades([...especialidades, id])
+    }
+  }
+
+  function adicionarTitulo() {
+    const limpo = novoTitulo.trim()
+    if (!limpo) return
+    if (titulos.includes(limpo)) {
+      toast.error('Este título já foi adicionado.')
+      return
+    }
+    setTitulos([...titulos, limpo])
+    setNovoTitulo('')
+  }
+
+  function removerTitulo(index: number) {
+    if (titulos.length === 1) {
+      toast.error('Mantenha ao menos 1 qualificação principal.')
+      return
+    }
+    setTitulos(titulos.filter((_, i) => i !== index))
+  }
 
   const [busy, setBusy] = useState(false)
   const [erro, setErro] = useState('')
@@ -67,6 +112,10 @@ export function ModalCadastroEspecialista({
       setErro('As senhas não coincidem. Digite a mesma senha nos dois campos.')
       return
     }
+    if (especialidades.length === 0) {
+      setErro('Selecione pelo menos uma especialidade de atuação.')
+      return
+    }
     if (!registro.trim()) {
       setErro('Informe o seu registro profissional (CRM, COREN, CRN, CRP ou CREFITO).')
       return
@@ -78,9 +127,14 @@ export function ModalCadastroEspecialista({
         nome: nome.trim(),
         email: email.trim(),
         senha: senha.trim(),
-        especialidade,
+        especialidade: especialidades[0],
+        especialidades,
+        especialidadesLabels: especialidades.map(
+          (id) => OPCOES_ESPECIALIDADES.find((o) => o.id === id)?.label || id
+        ),
+        titulo: titulos.join(' • '),
+        titulos: titulos.length > 0 ? titulos : ['Especialista em Telemedicina'],
         registro: registro.trim(),
-        titulo: titulo.trim() || 'Especialista em Telemedicina',
         consultorio: consultorio.trim() || 'Consultório Virtual',
         preco: parseMoeda(preco) || 180,
         bio: bio.trim(),
@@ -201,28 +255,60 @@ export function ModalCadastroEspecialista({
             </div>
           </div>
 
-          {/* SEÇÃO 2: Registro e Especialidade */}
-          <div className="space-y-3 pt-1 border-t border-border/40">
+          {/* SEÇÃO 2: Registro e Especialidades Múltiplas */}
+          <div className="space-y-4 pt-1 border-t border-border/40">
             <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 pt-2">
               <span className="size-5 rounded-full bg-muted flex items-center justify-center text-[10px] text-foreground font-extrabold">2</span>
-              <span>Especialidade & Registro Profissional</span>
+              <span>Especialidades & Registro Profissional</span>
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs sm:text-sm font-semibold">Especialidade Principal *</Label>
-                <select
-                  value={especialidade}
-                  onChange={(e) => setEspecialidade(e.target.value as EspecialidadeVirtual)}
-                  className="w-full h-10.5 px-3 rounded-xl border border-input bg-background text-xs sm:text-sm font-medium focus:ring-2 focus:ring-ring"
-                >
-                  <option value="estomaterapia">Estomaterapia & Feridas (Enfermagem)</option>
-                  <option value="fisioterapia">Fisioterapia Geriátrica</option>
-                  <option value="medica">Medicina Geriátrica</option>
-                  <option value="nutricao">Nutrição Clínica Geriátrica</option>
-                  <option value="psicologia">Psicologia & Demências</option>
-                </select>
-              </div>
 
+            {/* SELEÇÃO MÚLTIPLA DE ESPECIALIDADES */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs sm:text-sm font-semibold">
+                  Especialidades de Atuação *
+                </Label>
+                <span className="text-[11px] text-teal-700 dark:text-teal-400 font-medium">
+                  {especialidades.length} {especialidades.length === 1 ? 'selecionada' : 'selecionadas'}
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Selecione todas as especialidades em que você presta atendimento virtual:
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 pt-1">
+                {OPCOES_ESPECIALIDADES.map((op) => {
+                  const selecionada = especialidades.includes(op.id)
+                  return (
+                    <button
+                      key={op.id}
+                      type="button"
+                      onClick={() => toggleEspecialidade(op.id)}
+                      className={cn(
+                        'flex items-center justify-between p-3 rounded-xl border text-left text-xs font-medium transition-all cursor-pointer',
+                        selecionada
+                          ? 'border-teal-600 bg-teal-50 dark:bg-teal-950/40 text-teal-950 dark:text-teal-200 shadow-2xs ring-1 ring-teal-600'
+                          : 'border-border/70 hover:bg-muted/40 text-foreground'
+                      )}
+                    >
+                      <span>{op.label}</span>
+                      <div
+                        className={cn(
+                          'size-4.5 rounded-md flex items-center justify-center border transition-colors shrink-0 ml-2',
+                          selecionada
+                            ? 'bg-teal-600 border-teal-600 text-white'
+                            : 'border-muted-foreground/30'
+                        )}
+                      >
+                        {selecionada && <Check className="size-3 stroke-[3]" />}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* REGISTRO PROFISSIONAL E TÍTULOS MÚLTIPLOS */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
               <div className="space-y-1.5">
                 <Label className="text-xs sm:text-sm font-semibold">Conselho & Registro *</Label>
                 <Input
@@ -232,18 +318,69 @@ export function ModalCadastroEspecialista({
                   required
                   className="h-10.5 text-xs sm:text-sm rounded-xl px-3.5"
                 />
+                <span className="text-[10px] text-muted-foreground block">
+                  CRM, COREN, CRN, CRP, CREFITO ou outro conselho oficial
+                </span>
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs sm:text-sm font-semibold">Título / Qualificação</Label>
-                <Input
-                  placeholder="ex: Geriatra Titulado SBGG / Mestre USP"
-                  value={titulo}
-                  onChange={(e) => setTitulo(e.target.value)}
-                  className="h-10.5 text-xs sm:text-sm rounded-xl px-3.5"
-                />
+                <Label className="text-xs sm:text-sm font-semibold">Títulos & Qualificações ({titulos.length})</Label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Adicionar qualificação (ex: Mestre USP, SBGG...)"
+                    value={novoTitulo}
+                    onChange={(e) => setNovoTitulo(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        adicionarTitulo()
+                      }
+                    }}
+                    className="h-10.5 text-xs sm:text-sm rounded-xl px-3.5 flex-1"
+                  />
+                  <Button
+                    type="button"
+                    onClick={adicionarTitulo}
+                    variant="outline"
+                    className="h-10.5 px-3.5 rounded-xl text-xs font-semibold shrink-0 gap-1"
+                  >
+                    <Plus className="size-3.5" />
+                    <span>Adicionar</span>
+                  </Button>
+                </div>
+                <span className="text-[10px] text-muted-foreground block">
+                  Pressione Enter ou clique em Adicionar para incluir cada qualificação
+                </span>
               </div>
             </div>
+
+            {/* Badges de Títulos Adicionados */}
+            {titulos.length > 0 && (
+              <div className="p-3 rounded-xl bg-muted/20 border border-border/50 space-y-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                  Títulos incluídos no seu perfil:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {titulos.map((t, idx) => (
+                    <Badge
+                      key={idx}
+                      variant="secondary"
+                      className="text-xs py-1 px-2.5 rounded-lg flex items-center gap-1.5 bg-background border border-border shadow-2xs"
+                    >
+                      <span>{t}</span>
+                      <button
+                        type="button"
+                        onClick={() => removerTitulo(idx)}
+                        className="hover:text-destructive transition-colors ml-0.5 cursor-pointer"
+                        title="Remover título"
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* SEÇÃO 3: Consultório e Honorários */}

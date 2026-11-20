@@ -107,4 +107,56 @@ describe('ModalCadastroEspecialista Component', () => {
       )
     })
   })
+
+  it('permite selecionar múltiplas especialidades e adicionar múltiplos títulos', async () => {
+    mockCadastrar.mockResolvedValueOnce({ sucesso: true })
+    render(<ModalCadastroEspecialista open={true} onOpenChange={() => {}} />)
+
+    // Seleciona também Medicina Geriátrica (além de Estomaterapia já marcada)
+    const btnMedicina = screen.getByRole('button', { name: /Medicina Geriátrica/i })
+    fireEvent.click(btnMedicina)
+
+    // Adiciona novo título
+    const inputTitulo = screen.getByPlaceholderText(/Adicionar qualificação/i)
+    fireEvent.change(inputTitulo, { target: { value: 'Mestre em Gerontologia pela USP' } })
+    const btnAddTitulo = screen.getByRole('button', { name: /Adicionar/i })
+    fireEvent.click(btnAddTitulo)
+
+    // Verifica que o novo título foi adicionado aos badges
+    expect(screen.getByText('Mestre em Gerontologia pela USP')).toBeInTheDocument()
+    expect(screen.getByText('Especialista em Telemedicina')).toBeInTheDocument()
+
+    // Preenche campos obrigatórios
+    fireEvent.change(screen.getByPlaceholderText('ex: Dr. Gabriel Antunes'), {
+      target: { value: 'Dr. Lucas Silveira' },
+    })
+    fireEvent.change(screen.getByPlaceholderText(/gabriel@clinica\.med\.br/i), {
+      target: { value: 'lucas@clinica.com' },
+    })
+    fireEvent.change(screen.getByPlaceholderText(/CRM-SP 189432/i), {
+      target: { value: 'CRM-SP 654321' },
+    })
+
+    const inputSenha = screen.getByPlaceholderText(/Mínimo 6 caracteres/i)
+    const inputConfirma = screen.getByPlaceholderText(/Repita a senha de acesso/i)
+
+    fireEvent.change(inputSenha, { target: { value: 'senhaForte123' } })
+    fireEvent.change(inputConfirma, { target: { value: 'senhaForte123' } })
+
+    const btnCadastrar = screen.getByRole('button', { name: /Concluir Cadastro & Abrir Consultório/i })
+    fireEvent.click(btnCadastrar)
+
+    await waitFor(() => {
+      expect(mockCadastrar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          nome: 'Dr. Lucas Silveira',
+          especialidades: expect.arrayContaining(['estomaterapia', 'medica']),
+          titulos: expect.arrayContaining([
+            'Especialista em Telemedicina',
+            'Mestre em Gerontologia pela USP',
+          ]),
+        })
+      )
+    })
+  })
 })

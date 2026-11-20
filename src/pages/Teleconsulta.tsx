@@ -349,7 +349,12 @@ export default function Teleconsulta() {
   // Filtro de profissionais
   const profissionaisFiltrados = useMemo(() => {
     return profissionais.filter((p) => {
-      if (filtroEsp !== 'todas' && p.especialidade !== filtroEsp) return false
+      if (filtroEsp !== 'todas') {
+        const atendeEsp =
+          p.especialidade === filtroEsp ||
+          (p.especialidades && p.especialidades.includes(filtroEsp))
+        if (!atendeEsp) return false
+      }
       if (busca.trim()) {
         const q = busca.toLowerCase()
         const matchNome = p.nome.toLowerCase().includes(q)

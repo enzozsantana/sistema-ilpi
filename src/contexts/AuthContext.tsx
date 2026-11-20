@@ -9,7 +9,7 @@ import {
 } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import type { Profissional } from '../types/ilpi'
-import type { CadastroEspecialistaInput, ProfissionalVirtual } from '../types/teleconsulta'
+import type { CadastroEspecialistaInput, ProfissionalVirtual, EspecialidadeVirtual } from '../types/teleconsulta'
 import { salvarProfissionalVirtual } from '../lib/teleconsultaStorage'
 import { mensagemAuth, mensagemSenha } from '../lib/auth-errors'
 import { mapProfissional } from '../lib/db-map'
@@ -178,20 +178,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userId = `user_esp_${Date.now()}`
 
       const labels: Record<string, string> = {
-        medica: 'Medicina Geriátrica',
-        estomaterapia: 'Estomaterapia & Feridas',
-        nutricao: 'Nutrição Clínica',
-        psicologia: 'Psicologia & Demências',
+        estomaterapia: 'Estomaterapia & Feridas (Enfermagem)',
         fisioterapia: 'Fisioterapia Geriátrica',
+        medica: 'Medicina Geriátrica',
+        nutricao: 'Nutrição Clínica Geriátrica',
+        psicologia: 'Psicologia & Demências',
       }
-      const label = labels[dados.especialidade] || 'Especialista Virtual'
+
+      const listaEspecialidades: EspecialidadeVirtual[] =
+        dados.especialidades && dados.especialidades.length > 0
+          ? dados.especialidades
+          : dados.especialidade
+            ? [dados.especialidade]
+            : ['estomaterapia']
+
+      const espPrincipal = listaEspecialidades[0]
+      const especialidadesLabels =
+        dados.especialidadesLabels && dados.especialidadesLabels.length > 0
+          ? dados.especialidadesLabels
+          : listaEspecialidades.map((e) => labels[e] || e)
+      const label = especialidadesLabels.join(' • ')
+
+      const listaTitulos: string[] =
+        dados.titulos && dados.titulos.length > 0
+          ? dados.titulos
+          : dados.titulo?.trim()
+            ? [dados.titulo.trim()]
+            : [label]
+      const tituloStr = listaTitulos.join(' • ')
 
       const novoVirtual: ProfissionalVirtual = {
         id: idProf,
         nome: dados.nome.trim(),
-        titulo: dados.titulo.trim() || label,
-        especialidade: dados.especialidade,
+        titulo: tituloStr,
+        titulos: listaTitulos,
+        especialidade: espPrincipal,
+        especialidades: listaEspecialidades,
         especialidadeLabel: label,
+        especialidadesLabels,
         registro: dados.registro.trim(),
         clinica: dados.consultorio?.trim() || dados.clinica?.trim() || 'Consultório Virtual Independente',
         preco: Number(dados.preco) || 180,
@@ -214,7 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         funcao: label,
         conselho: dados.registro.trim(),
         setor: dados.consultorio?.trim() || dados.clinica?.trim() || 'Consultório Virtual',
-        area: dados.titulo.trim() || label,
+        area: tituloStr || label,
         carga: 'Horário Flexível',
         horario: 'Telemedicina',
         ativo: true,

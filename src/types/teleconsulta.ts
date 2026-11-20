@@ -9,8 +9,11 @@ export interface ProfissionalVirtual {
   id: string
   nome: string
   titulo: string
+  titulos?: string[]
   especialidade: EspecialidadeVirtual
+  especialidades?: EspecialidadeVirtual[]
   especialidadeLabel: string
+  especialidadesLabels?: string[]
   registro: string
   clinica: string
   foto: string
@@ -28,9 +31,12 @@ export interface CadastroEspecialistaInput {
   email: string
   senha?: string
   password?: string
-  especialidade: EspecialidadeVirtual
+  especialidade?: EspecialidadeVirtual
+  especialidades?: EspecialidadeVirtual[]
   especialidadeLabel?: string
-  titulo: string
+  especialidadesLabels?: string[]
+  titulo?: string
+  titulos?: string[]
   registro: string
   conselho?: string
   consultorio?: string
