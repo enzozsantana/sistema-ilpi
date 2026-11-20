@@ -33,8 +33,11 @@ import {
   DialogTitle,
 } from '../components/ui/dialog'
 import { ModalPedidoMedico } from '../components/ModalPedidoMedico'
+import { ModalConectarMercadoPago } from '../components/ModalConectarMercadoPago'
 import { salvarRascunho, obterRascunho, limparRascunho, temRascunho } from '../lib/draftStorage'
+import { calcularSplit, processarPagamentoSplit, gerarPixCopiaECola } from '../lib/mercadopagoService'
 import {
+  ArrowRightLeft,
   Building2,
   Calendar,
   CalendarCheck,
@@ -109,6 +112,9 @@ export default function Teleconsulta() {
 
   // Consulta recém-criada
   const [consultaCriada, setConsultaCriada] = useState<ConsultaVirtual | null>(null)
+
+  // Modal Mercado Pago Marketplace & Split
+  const [modalMercadoPagoOpen, setModalMercadoPagoOpen] = useState(false)
 
   // Sala de Teleconsulta ao Vivo (Jitsi Meet gratuito)
   const [salaAberta, setSalaAberta] = useState<ConsultaVirtual | null>(null)
@@ -377,12 +383,22 @@ export default function Teleconsulta() {
 
     setProcessandoPagamento(true)
 
-    // Simula validação segura de pagamento (PIX ou Cartão)
-    await new Promise((resolve) => setTimeout(resolve, 1200))
-
     const res = residentes.find((r) => r.id === residenteId)
     const id = `cv_${Date.now()}`
     const codigoSala = `senecurare-${profSelecionado.especialidade}-${Date.now().toString(36)}`
+
+    // Processa o split de pagamento pelo Mercado Pago Marketplace
+    await processarPagamentoSplit({
+      profissionalId: profSelecionado.id,
+      residenteId,
+      residenteNome: res?.nome || 'Residente da ILPI',
+      consultaId: id,
+      especialidade: profSelecionado.especialidadeLabel,
+      valorTotal: profSelecionado.preco,
+      metodoPagamento,
+      pagadorNome: 'ILPI / Familiar',
+      pagadorEmail: 'financeiro@ilpi.com.br',
+    })
 
     const novaConsulta: ConsultaVirtual = {
       id,
@@ -410,13 +426,18 @@ export default function Teleconsulta() {
     setConsultaCriada(novaConsulta)
     setProcessandoPagamento(false)
     setPassoAgendamento('sucesso')
-    toast.success('Pagamento confirmado e consulta agendada!')
+    toast.success('Pagamento confirmado e consulta agendada com Split no Mercado Pago!')
   }
 
   function copiarChavePix() {
-    const chave = `00020126580014br.gov.bcb.pix0136senecurare-telemedicina-${Date.now()}5204000053039865405${profSelecionado?.preco || 200}.005802BR5919SENECURARE ILPI6009SAO PAULO62070503***6304`
+    const res = residentes.find((r) => r.id === residenteId)
+    const chave = gerarPixCopiaECola(
+      `mp_${Date.now()}`,
+      profSelecionado?.preco || 200,
+      `ILPI ${res?.nome || 'SENECURARE'}`
+    )
     navigator.clipboard.writeText(chave)
-    toast.success('Código PIX Copia e Cola copiado para a área de transferência!')
+    toast.success('Código PIX Copia e Cola do Mercado Pago copiado!')
   }
 
   function copiarLinkConsulta(linkOuConsulta: string | ConsultaVirtual) {
@@ -496,35 +517,49 @@ export default function Teleconsulta() {
           </div>
         </div>
 
-        {/* Seletor de Abas */}
-        <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-xl border border-border/60 self-start sm:self-auto shadow-2xs">
-          <button
-            type="button"
-            onClick={() => setAbaAtiva('especialistas')}
-            className={cn(
-              'px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all',
-              abaAtiva === 'especialistas'
-                ? 'bg-background text-foreground shadow-2xs'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
+        {/* Ações e Seletor de Abas */}
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          {/* Botão de Gestão Mercado Pago Marketplace */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setModalMercadoPagoOpen(true)}
+            className="rounded-xl text-xs gap-1.5 border-[#009EE3]/40 text-[#009EE3] hover:bg-[#009EE3]/10"
           >
-            Especialistas Disponíveis
-          </button>
-          <button
-            type="button"
-            onClick={() => setAbaAtiva('consultas')}
-            className={cn(
-              'px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5',
-              abaAtiva === 'consultas'
-                ? 'bg-background text-foreground shadow-2xs'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
-          >
-            <span>Consultas Agendadas</span>
-            <Badge variant="secondary" className="text-[10px] h-4.5 px-1.5 font-bold">
-              {consultas.length}
-            </Badge>
-          </button>
+            <ArrowRightLeft className="size-3.5" />
+            <span>Mercado Pago & Split</span>
+          </Button>
+
+          {/* Seletor de Abas */}
+          <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-xl border border-border/60 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => setAbaAtiva('especialistas')}
+              className={cn(
+                'px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all',
+                abaAtiva === 'especialistas'
+                  ? 'bg-background text-foreground shadow-2xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              Especialistas Disponíveis
+            </button>
+            <button
+              type="button"
+              onClick={() => setAbaAtiva('consultas')}
+              className={cn(
+                'px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5',
+                abaAtiva === 'consultas'
+                  ? 'bg-background text-foreground shadow-2xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <span>Consultas Agendadas</span>
+              <Badge variant="secondary" className="text-[10px] h-4.5 px-1.5 font-bold">
+                {consultas.length}
+              </Badge>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -851,6 +886,47 @@ export default function Teleconsulta() {
                       Valor total: <strong>R$ {profSelecionado.preco.toFixed(2).replace('.', ',')}</strong> · Atendimento em {diaSelecionado} às {horarioSelecionado}
                     </DialogDescription>
                   </DialogHeader>
+
+                  {/* Banner Mercado Pago Marketplace & Split Automático */}
+                  <div className="p-3 rounded-xl bg-[#009EE3]/10 border border-[#009EE3]/30 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="size-6 rounded-md bg-[#009EE3] text-white flex items-center justify-center font-extrabold text-[10px]">
+                          MP
+                        </div>
+                        <span className="font-bold text-[11px] text-foreground">
+                          Mercado Pago Marketplace · Split Automático
+                        </span>
+                      </div>
+                      <Badge className="bg-emerald-600/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-[10px]">
+                        Split Ativo
+                      </Badge>
+                    </div>
+
+                    {(() => {
+                      const split = calcularSplit(profSelecionado.preco)
+                      return (
+                        <div className="grid grid-cols-2 gap-2 text-[10.5px] p-2 rounded-lg bg-background/80 border border-border/50">
+                          <div>
+                            <span className="text-[10px] text-muted-foreground block">
+                              Repasse Direto ao Especialista ({100 - split.taxaComissaoPercentual}%):
+                            </span>
+                            <strong className="text-teal-700 dark:text-teal-300 font-bold">
+                              R$ {split.valorLiquidoProfissional.toFixed(2).replace('.', ',')}
+                            </strong>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-muted-foreground block">
+                              Comissão da Plataforma SaaS ({split.taxaComissaoPercentual}%):
+                            </span>
+                            <strong className="text-primary font-bold">
+                              R$ {split.valorComissaoSaaS.toFixed(2).replace('.', ',')}
+                            </strong>
+                          </div>
+                        </div>
+                      )
+                    })()}
+                  </div>
 
                   {/* Abas PIX vs Cartão */}
                   <div className="grid grid-cols-2 gap-2 p-1 bg-muted/40 rounded-xl border border-border/60 text-xs font-bold">
@@ -1624,6 +1700,12 @@ export default function Teleconsulta() {
           }}
         />
       )}
+      {/* MODAL DE CONEXÃO MERCADO PAGO MARKETPLACE & SPLIT */}
+      <ModalConectarMercadoPago
+        open={modalMercadoPagoOpen}
+        onOpenChange={setModalMercadoPagoOpen}
+        profissionais={PROFISSIONAIS_VIRTUAIS}
+      />
     </div>
   )
 }
