@@ -5,6 +5,7 @@ import { can } from '../lib/permissions'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useIlpiData } from '../contexts/IlpiDataContext'
+import { salvarRascunho, obterRascunho, limparRascunho, temRascunho } from '../lib/draftStorage'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
 import { Badge } from './ui/badge'
@@ -253,15 +254,35 @@ export function SecaoPops({ className, mostrarApenasConsulta = false }: SecaoPop
 
   function abrirNovoPop() {
     setPopEditando(null)
-    setPopTitulo('')
-    setPopTipo('POP')
-    setPopRevisao(T)
+    const draft = obterRascunho<{ titulo: string; tipo: string; revisao: string }>('pop_novo_draft')
+    if (draft?.dados) {
+      setPopTitulo(draft.dados.titulo || '')
+      setPopTipo(draft.dados.tipo || 'POP')
+      setPopRevisao(draft.dados.revisao || T)
+    } else {
+      setPopTitulo('')
+      setPopTipo('POP')
+      setPopRevisao(T)
+    }
     setArquivoSelecionado(null)
     setAnexoAtual(null)
     setRemoverAnexoExistente(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
     setDialogPopOpen(true)
   }
+
+  // Auto-save de novo POP para evitar perda de dados caso a máquina desligue ou caia a conexão
+  useEffect(() => {
+    if (!dialogPopOpen || popEditando) return
+    const timer = setTimeout(() => {
+      if (popTitulo.trim()) {
+        salvarRascunho('pop_novo_draft', { titulo: popTitulo, tipo: popTipo, revisao: popRevisao })
+      } else {
+        limparRascunho('pop_novo_draft')
+      }
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [dialogPopOpen, popEditando, popTitulo, popTipo, popRevisao])
 
   function abrirEditarPop(p: PopDocumento) {
     setPopEditando(p)
@@ -377,6 +398,7 @@ export function SecaoPops({ className, mostrarApenasConsulta = false }: SecaoPop
       toast.success('Novo POP cadastrado com sucesso!')
     }
 
+    limparRascunho('pop_novo_draft')
     setDialogPopOpen(false)
     await refresh()
   }
@@ -971,8 +993,13 @@ export function SecaoPops({ className, mostrarApenasConsulta = false }: SecaoPop
       <Dialog open={dialogPopOpen} onOpenChange={setDialogPopOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-base font-bold">
-              {popEditando ? 'Editar Procedimento Padrão' : 'Novo POP / Protocolo'}
+            <DialogTitle className="text-base font-bold flex items-center justify-between flex-wrap gap-2">
+              <span>{popEditando ? 'Editar Procedimento Padrão' : 'Novo POP / Protocolo'}</span>
+              {!popEditando && temRascunho('pop_novo_draft') && popTitulo.trim() && (
+                <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-full">
+                  ✓ Rascunho salvo
+                </span>
+              )}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               Cadastre ou atualize a vigência do documento técnico da instituição.

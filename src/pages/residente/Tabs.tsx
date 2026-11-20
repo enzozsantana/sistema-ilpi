@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AREAS, CATS_ARQ, DOCS, MODELOS_ANOT, NURSE, TIPOS_PRESC } from '../../lib/constants'
 import { agoraHM, fmt, idade, iso } from '../../lib/business/dates'
 import { consumoDia, diasRest, nivelEst } from '../../lib/business/estoque'
@@ -96,6 +96,7 @@ import {
   removerPedidoLocal,
   type PedidoMedicoData,
 } from '../../lib/business/pedidosMedicos'
+import { salvarRascunho, obterRascunho, limparRascunho, temRascunho } from '../../lib/draftStorage'
 
 const T = iso(new Date())
 
@@ -3420,6 +3421,46 @@ export function TabAnot({ r, cat }: Ctx) {
   const [fotos, setFotos] = useState<string[]>([])
   const [processandoFoto, setProcessandoFoto] = useState(false)
 
+  const chaveRascunhoAnot = `residente_anotacao_draft_${r.id}`
+
+  // Restaura rascunho salvo ao abrir modal de anotação
+  useEffect(() => {
+    if (!modalNova) return
+    const rascunho = obterRascunho<{
+      pa: string
+      pulso: string
+      temp: string
+      sat: string
+      dextro: string
+      diurese: string
+      evac: string
+      texto: string
+    }>(chaveRascunhoAnot)
+    if (rascunho?.dados) {
+      if (rascunho.dados.pa) setPa(rascunho.dados.pa)
+      if (rascunho.dados.pulso) setPulso(rascunho.dados.pulso)
+      if (rascunho.dados.temp) setTemp(rascunho.dados.temp)
+      if (rascunho.dados.sat) setSat(rascunho.dados.sat)
+      if (rascunho.dados.dextro) setDextro(rascunho.dados.dextro)
+      if (rascunho.dados.diurese) setDiurese(rascunho.dados.diurese)
+      if (rascunho.dados.evac) setEvac(rascunho.dados.evac)
+      if (rascunho.dados.texto) setTexto(rascunho.dados.texto)
+    }
+  }, [modalNova, chaveRascunhoAnot])
+
+  // Salva rascunho automaticamente enquanto digita
+  useEffect(() => {
+    if (!modalNova) return
+    const timer = setTimeout(() => {
+      if (pa.trim() || pulso.trim() || temp.trim() || sat.trim() || dextro.trim() || texto.trim()) {
+        salvarRascunho(chaveRascunhoAnot, { pa, pulso, temp, sat, dextro, diurese, evac, texto })
+      } else {
+        limparRascunho(chaveRascunhoAnot)
+      }
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [modalNova, pa, pulso, temp, sat, dextro, diurese, evac, texto, chaveRascunhoAnot])
+
   // Visualização de foto expandida (Lightbox)
   const [fotoExpandida, setFotoExpandida] = useState<{
     url: string
@@ -3492,6 +3533,7 @@ export function TabAnot({ r, cat }: Ctx) {
     }
 
     toast.success('Anotação e comprovação registradas no prontuário!')
+    limparRascunho(chaveRascunhoAnot)
     setModalNova(false)
     setPa('')
     setPulso('')
@@ -3633,9 +3675,16 @@ export function TabAnot({ r, cat }: Ctx) {
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <form onSubmit={handleSalvarAnotacao}>
             <DialogHeader>
-              <DialogTitle className="text-base font-bold flex items-center gap-2">
-                <HeartPulse className="size-4 text-[#123F4A]" />
-                Registrar Anotação, SSVV & Fotos
+              <DialogTitle className="text-base font-bold flex items-center justify-between flex-wrap gap-2">
+                <span className="flex items-center gap-2">
+                  <HeartPulse className="size-4 text-[#123F4A]" />
+                  Registrar Anotação, SSVV & Fotos
+                </span>
+                {temRascunho(chaveRascunhoAnot) && (pa.trim() || pulso.trim() || temp.trim() || sat.trim() || dextro.trim() || texto.trim()) && (
+                  <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-full">
+                    ✓ Rascunho salvo
+                  </span>
+                )}
               </DialogTitle>
               <DialogDescription className="text-xs">
                 Anotações clínicas e comprovações de cuidados (decúbito, curativos, etc.) com respaldo técnico.
@@ -3871,6 +3920,32 @@ export function TabEvol({ r, cat, area }: Ctx) {
   const [peso, setPeso] = useState('')
   const [texto, setTexto] = useState('')
 
+  const chaveRascunhoEvol = `residente_evolucao_draft_${r.id}`
+
+  // Restaura rascunho salvo ao abrir modal de evolução
+  useEffect(() => {
+    if (!modalNova) return
+    const rascunho = obterRascunho<{ texto: string; peso: string; areaEscolhida?: string }>(chaveRascunhoEvol)
+    if (rascunho?.dados) {
+      if (rascunho.dados.texto) setTexto(rascunho.dados.texto)
+      if (rascunho.dados.peso) setPeso(rascunho.dados.peso)
+      if (rascunho.dados.areaEscolhida) setAreaEscolhida(rascunho.dados.areaEscolhida)
+    }
+  }, [modalNova, chaveRascunhoEvol])
+
+  // Salva rascunho automaticamente enquanto digita
+  useEffect(() => {
+    if (!modalNova) return
+    const timer = setTimeout(() => {
+      if (texto.trim() || peso.trim()) {
+        salvarRascunho(chaveRascunhoEvol, { texto, peso, areaEscolhida })
+      } else {
+        limparRascunho(chaveRascunhoEvol)
+      }
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [modalNova, texto, peso, areaEscolhida, chaveRascunhoEvol])
+
   async function handleSalvarEvolucao(e: React.FormEvent) {
     e.preventDefault()
     if (!texto.trim() || !profissional) return
@@ -3895,6 +3970,7 @@ export function TabEvol({ r, cat, area }: Ctx) {
     }
 
     toast.success('Evolução multiprofissional registrada no Supabase!')
+    limparRascunho(chaveRascunhoEvol)
     setModalNova(false)
     setTexto('')
     setPeso('')
@@ -3953,7 +4029,14 @@ export function TabEvol({ r, cat, area }: Ctx) {
         <DialogContent className="max-w-md">
           <form onSubmit={handleSalvarEvolucao}>
             <DialogHeader>
-              <DialogTitle className="text-base font-bold">Registrar Evolução Clínica</DialogTitle>
+              <DialogTitle className="text-base font-bold flex items-center justify-between flex-wrap gap-2">
+                <span>Registrar Evolução Clínica</span>
+                {temRascunho(chaveRascunhoEvol) && (texto.trim() || peso.trim()) && (
+                  <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-full">
+                    ✓ Rascunho salvo
+                  </span>
+                )}
+              </DialogTitle>
               <DialogDescription className="text-xs">
                 Conduta técnica multidisciplinar registrada no prontuário.
               </DialogDescription>

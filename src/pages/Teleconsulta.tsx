@@ -33,6 +33,7 @@ import {
   DialogTitle,
 } from '../components/ui/dialog'
 import { ModalPedidoMedico } from '../components/ModalPedidoMedico'
+import { salvarRascunho, obterRascunho, limparRascunho, temRascunho } from '../lib/draftStorage'
 import {
   Building2,
   Calendar,
@@ -126,6 +127,28 @@ export default function Teleconsulta() {
   // Evolução clínica durante a consulta
   const [textoEvolucao, setTextoEvolucao] = useState('')
   const [salvandoEvolucao, setSalvandoEvolucao] = useState(false)
+
+  // Restauração de rascunho de evolução clínica caso haja queda de conexão ou desligamento
+  useEffect(() => {
+    if (!salaAberta) return
+    const chave = `teleconsulta_evolucao_${salaAberta.id}`
+    const rascunho = obterRascunho<string>(chave)
+    if (rascunho?.dados) {
+      setTextoEvolucao(rascunho.dados)
+    } else {
+      setTextoEvolucao('')
+    }
+  }, [salaAberta?.id])
+
+  // Auto-save debounced da evolução da consulta
+  useEffect(() => {
+    if (!salaAberta) return
+    const chave = `teleconsulta_evolucao_${salaAberta.id}`
+    const timer = setTimeout(() => {
+      salvarRascunho(chave, textoEvolucao)
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [textoEvolucao, salaAberta?.id])
 
   // Modal de Prescrição / Pedido Médico
   const [modalReceitaOpen, setModalReceitaOpen] = useState(false)
@@ -442,6 +465,9 @@ export default function Teleconsulta() {
 
     marcarEvolucaoConsulta(salaAberta.id)
     setConsultas(obterConsultasVirtuais())
+    if (salaAberta) {
+      limparRascunho(`teleconsulta_evolucao_${salaAberta.id}`)
+    }
     setTextoEvolucao('')
     toast.success('Evolução clínica gravada com sucesso no Prontuário do Residente!')
     await refresh()
@@ -1550,7 +1576,14 @@ export default function Teleconsulta() {
                       <div className="space-y-2 pt-2 border-t border-border/50 flex-1 flex flex-col">
                         <Label className="text-xs font-bold text-foreground flex items-center justify-between">
                           <span>Evolução Clínica da Consulta</span>
-                          <span className="text-[10px] text-muted-foreground font-normal">Grava no Prontuário</span>
+                          <div className="flex items-center gap-1.5">
+                            {salaAberta && temRascunho(`teleconsulta_evolucao_${salaAberta.id}`) && textoEvolucao.trim() && (
+                              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                                ✓ Rascunho salvo
+                              </span>
+                            )}
+                            <span className="text-[10px] text-muted-foreground font-normal">Grava no Prontuário</span>
+                          </div>
                         </Label>
                         <textarea
                           value={textoEvolucao}

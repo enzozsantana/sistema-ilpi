@@ -45,6 +45,7 @@ import {
 } from '../lib/business/pedidosMedicos'
 import type { Residente } from '../types/ilpi'
 import { cn } from '@/lib/utils'
+import { salvarRascunho, obterRascunho, limparRascunho, temRascunho } from '../lib/draftStorage'
 
 interface ModalPedidoMedicoProps {
   open: boolean
@@ -128,26 +129,113 @@ export function ModalPedidoMedico({
       setPrescritorFuncao(pedidoExistente.prescritor.funcao || '')
       setModo('visualizacao')
     } else {
-      setTipo(tipoInicial)
-      setDataEmissao(iso(new Date()))
-      setHoraEmissao(agoraHM())
-      setExamesSelecionados([])
-      setExamesLivres('')
-      setIndicacaoClinica('Avaliação clínica periódica de rotina geriátrica na ILPI')
-      setCid10('')
-      setObservacoesColeta('Coleta em domicílio / no leito na ILPI')
-      setTipoReceita('simples')
-      setMedicamentos([])
-      setOrientacoesGerais('')
-      setEspecialidadeDestino('')
-      setMotivoEncaminhamento('')
-      setResumoClinico('')
-      setPrescritorNome(profissional?.nome || '')
-      setPrescritorConselho(profissional?.conselho || 'CRM/SP')
-      setPrescritorFuncao(profissional?.funcao || 'Médico(a) Assistente')
+      const draftKey = `pedido_medico_draft_${residente.id}`
+      const rascunho = obterRascunho<any>(draftKey)
+      if (rascunho?.dados) {
+        setTipo(rascunho.dados.tipo || tipoInicial)
+        setDataEmissao(rascunho.dados.dataEmissao || iso(new Date()))
+        setHoraEmissao(rascunho.dados.horaEmissao || agoraHM())
+        setExamesSelecionados(rascunho.dados.examesSelecionados || [])
+        setExamesLivres(rascunho.dados.examesLivres || '')
+        setIndicacaoClinica(rascunho.dados.indicacaoClinica || 'Avaliação clínica periódica de rotina geriátrica na ILPI')
+        setCid10(rascunho.dados.cid10 || '')
+        setObservacoesColeta(rascunho.dados.observacoesColeta || 'Coleta em domicílio / no leito na ILPI')
+        setTipoReceita(rascunho.dados.tipoReceita || 'simples')
+        setMedicamentos(rascunho.dados.medicamentos || [])
+        setOrientacoesGerais(rascunho.dados.orientacoesGerais || '')
+        setEspecialidadeDestino(rascunho.dados.especialidadeDestino || '')
+        setMotivoEncaminhamento(rascunho.dados.motivoEncaminhamento || '')
+        setResumoClinico(rascunho.dados.resumoClinico || '')
+        setPrescritorNome(rascunho.dados.prescritorNome || profissional?.nome || '')
+        setPrescritorConselho(rascunho.dados.prescritorConselho || profissional?.conselho || 'CRM/SP')
+        setPrescritorFuncao(rascunho.dados.prescritorFuncao || profissional?.funcao || 'Médico(a) Assistente')
+      } else {
+        setTipo(tipoInicial)
+        setDataEmissao(iso(new Date()))
+        setHoraEmissao(agoraHM())
+        setExamesSelecionados([])
+        setExamesLivres('')
+        setIndicacaoClinica('Avaliação clínica periódica de rotina geriátrica na ILPI')
+        setCid10('')
+        setObservacoesColeta('Coleta em domicílio / no leito na ILPI')
+        setTipoReceita('simples')
+        setMedicamentos([])
+        setOrientacoesGerais('')
+        setEspecialidadeDestino('')
+        setMotivoEncaminhamento('')
+        setResumoClinico('')
+        setPrescritorNome(profissional?.nome || '')
+        setPrescritorConselho(profissional?.conselho || 'CRM/SP')
+        setPrescritorFuncao(profissional?.funcao || 'Médico(a) Assistente')
+      }
       setModo('edicao')
     }
-  }, [open, pedidoExistente, tipoInicial, profissional])
+  }, [open, pedidoExistente, tipoInicial, profissional, residente.id])
+
+  // Auto-save debounced do formulário para evitar perda de dados caso a conexão caia ou a máquina desligue
+  useEffect(() => {
+    if (!open || pedidoExistente || modo !== 'edicao') return
+    const draftKey = `pedido_medico_draft_${residente.id}`
+
+    const temConteudo =
+      examesSelecionados.length > 0 ||
+      examesLivres.trim() ||
+      medicamentos.length > 0 ||
+      orientacoesGerais.trim() ||
+      motivoEncaminhamento.trim() ||
+      resumoClinico.trim() ||
+      cid10.trim()
+
+    const timer = setTimeout(() => {
+      if (temConteudo) {
+        salvarRascunho(draftKey, {
+          tipo,
+          dataEmissao,
+          horaEmissao,
+          examesSelecionados,
+          examesLivres,
+          indicacaoClinica,
+          cid10,
+          observacoesColeta,
+          tipoReceita,
+          medicamentos,
+          orientacoesGerais,
+          especialidadeDestino,
+          motivoEncaminhamento,
+          resumoClinico,
+          prescritorNome,
+          prescritorConselho,
+          prescritorFuncao,
+        })
+      } else {
+        limparRascunho(draftKey)
+      }
+    }, 400)
+
+    return () => clearTimeout(timer)
+  }, [
+    open,
+    pedidoExistente,
+    modo,
+    residente.id,
+    tipo,
+    dataEmissao,
+    horaEmissao,
+    examesSelecionados,
+    examesLivres,
+    indicacaoClinica,
+    cid10,
+    observacoesColeta,
+    tipoReceita,
+    medicamentos,
+    orientacoesGerais,
+    especialidadeDestino,
+    motivoEncaminhamento,
+    resumoClinico,
+    prescritorNome,
+    prescritorConselho,
+    prescritorFuncao,
+  ])
 
   function toggleExame(nomeExame: string) {
     if (examesSelecionados.includes(nomeExame)) {
@@ -275,6 +363,7 @@ export function ModalPedidoMedico({
     }
 
     setSalvando(false)
+    limparRascunho(`pedido_medico_draft_${residente.id}`)
     toast.success('Pedido médico registrado com sucesso no prontuário!')
     await refresh()
     onPedidoSalvo?.()
@@ -311,9 +400,14 @@ export function ModalPedidoMedico({
         <div className="no-print p-5 border-b border-border/60 bg-muted/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <DialogHeader>
-              <DialogTitle className="text-base font-bold flex items-center gap-2 text-foreground">
+              <DialogTitle className="text-base font-bold flex items-center gap-2 text-foreground flex-wrap">
                 <Stethoscope className="size-5 text-emerald-600 dark:text-emerald-400" />
-                {pedidoExistente ? 'Visualizar / Re-imprimir Pedido Médico' : 'Emissão de Pedido Médico & Exames'}
+                <span>{pedidoExistente ? 'Visualizar / Re-imprimir Pedido Médico' : 'Emissão de Pedido Médico & Exames'}</span>
+                {!pedidoExistente && temRascunho(`pedido_medico_draft_${residente.id}`) && (
+                  <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-full ml-1">
+                    ✓ Rascunho salvo automaticamente
+                  </span>
+                )}
               </DialogTitle>
               <DialogDescription className="text-xs text-muted-foreground">
                 Gere pedidos de exames laboratoriais, receituários e guias com folha timbrada A4 pronta para impressão.
