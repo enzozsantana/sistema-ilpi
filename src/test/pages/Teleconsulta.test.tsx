@@ -108,7 +108,7 @@ describe('Teleconsulta Page', () => {
     }, { timeout: 3000 })
   })
 
-  it('exibe a Sala de Espera Virtual em PT-BR e permite ao prestador/moderador iniciar a chamada', async () => {
+  it('exibe a Sala de Espera Virtual com prévia estilo Google Meet e permite controlar microfone e câmera', async () => {
     render(<Teleconsulta />)
 
     // Vai para a aba de consultas agendadas
@@ -119,11 +119,23 @@ describe('Teleconsulta Page', () => {
     const botaoEntrar = screen.getByRole('button', { name: /Entrar na Sala Virtual/i })
     fireEvent.click(botaoEntrar)
 
-    // Verifica que exibe a Sala de Espera Virtual humanizada em PT-BR e controle do moderador
-    expect(screen.getByText(/Sala de Espera Virtual/i)).toBeInTheDocument()
+    // Verifica que exibe a Prévia Estilo Google Meet com identificação e botões de mídia
+    expect(screen.getByText(/Pronto para participar\?/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Sala de Espera Virtual/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/Controle do Prestador \/ Moderador/i)).toBeInTheDocument()
-    expect(screen.getByText(/Identificado como:/i)).toBeInTheDocument()
-    expect(screen.getByText(/Helena Prado/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Identificado como:/i).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText(/Helena Prado/i).length).toBeGreaterThanOrEqual(1)
+
+    // Botões de alternar microfone e câmera estilo Google Meet
+    const botaoMic = screen.getByRole('button', { name: /Silenciar microfone/i })
+    const botaoCam = screen.getByRole('button', { name: /Desativar câmera/i })
+    expect(botaoMic).toBeInTheDocument()
+    expect(botaoCam).toBeInTheDocument()
+
+    // Clica para desativar câmera e verifica que o botão alterna
+    fireEvent.click(botaoCam)
+    expect(screen.getByRole('button', { name: /Ativar câmera/i })).toBeInTheDocument()
+    expect(screen.getByText(/A câmera está desativada/i)).toBeInTheDocument()
 
     // O prestador/moderador clica para Iniciar o Atendimento e conectar a chamada
     const botaoIniciar = screen.getByRole('button', { name: /Iniciar Consulta & Conectar Chamada/i })

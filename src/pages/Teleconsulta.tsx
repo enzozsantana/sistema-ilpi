@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useIlpiData } from '../contexts/IlpiDataContext'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -37,6 +37,7 @@ import {
   Building2,
   Calendar,
   CalendarCheck,
+  Camera,
   CheckCircle2,
   Clock,
   Copy,
@@ -44,6 +45,8 @@ import {
   ExternalLink,
   FileText,
   Maximize2,
+  Mic,
+  MicOff,
   Minimize2,
   Pill,
   QrCode,
@@ -51,7 +54,9 @@ import {
   Share2,
   Sparkles,
   Video,
+  VideoOff,
   X,
+  AlertCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -136,8 +141,99 @@ export default function Teleconsulta() {
 
   const estaEmEspera = salaAberta?.status !== 'em_andamento'
 
+  // Controles de Prévia de Câmera e Microfone (Estilo Google Meet)
+  const videoPreviaRef = useRef<HTMLVideoElement>(null)
+  const [streamLocal, setStreamLocal] = useState<MediaStream | null>(null)
+  const [cameraAtiva, setCameraAtiva] = useState(true)
+  const [micAtivo, setMicAtivo] = useState(true)
+  const [erroMidia, setErroMidia] = useState<string | null>(null)
+
+  // Inicia e solicita a permissão de câmera e microfone para a prévia do usuário
+  const iniciarPreviaDispositivos = useCallback(async () => {
+    setErroMidia(null)
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      return
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      })
+      setStreamLocal(stream)
+      if (videoPreviaRef.current) {
+        videoPreviaRef.current.srcObject = stream
+      }
+    } catch (err: any) {
+      console.warn('Permissão de mídia na prévia:', err)
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setErroMidia('Permissão de câmera e microfone negada. Clique no ícone de cadeado na barra de endereços para permitir.')
+      } else {
+        setErroMidia('Nenhuma câmera ou microfone encontrado no dispositivo.')
+      }
+    }
+  }, [])
+
+  // Gerencia o ciclo de vida do stream da webcam na sala de espera
+  useEffect(() => {
+    if (salaAberta && estaEmEspera) {
+      iniciarPreviaDispositivos()
+    } else {
+      if (streamLocal) {
+        streamLocal.getTracks().forEach((t) => t.stop())
+        setStreamLocal(null)
+      }
+    }
+    return () => {
+      if (streamLocal) {
+        streamLocal.getTracks().forEach((t) => t.stop())
+      }
+    }
+  }, [salaAberta?.id, estaEmEspera])
+
+  // Vincula o srcObject ao elemento de vídeo quando a referência estiver pronta
+  useEffect(() => {
+    if (videoPreviaRef.current && streamLocal) {
+      videoPreviaRef.current.srcObject = streamLocal
+    }
+  }, [streamLocal, cameraAtiva])
+
+  function alternarCamera() {
+    if (streamLocal) {
+      const videoTrack = streamLocal.getVideoTracks()[0]
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled
+        setCameraAtiva(videoTrack.enabled)
+        toast.info(videoTrack.enabled ? 'Câmera ativada' : 'Câmera desativada')
+      }
+    } else {
+      const proximo = !cameraAtiva
+      setCameraAtiva(proximo)
+      if (proximo) iniciarPreviaDispositivos()
+    }
+  }
+
+  function alternarMicrofone() {
+    if (streamLocal) {
+      const audioTrack = streamLocal.getAudioTracks()[0]
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled
+        setMicAtivo(audioTrack.enabled)
+        toast.info(audioTrack.enabled ? 'Microfone ativado' : 'Microfone silenciado')
+      }
+    } else {
+      const proximo = !micAtivo
+      setMicAtivo(proximo)
+      if (proximo) iniciarPreviaDispositivos()
+    }
+  }
+
   function handleIniciarConsulta() {
     if (!salaAberta) return
+    // Desliga a prévia da webcam para liberar o hardware para o vídeo
+    if (streamLocal) {
+      streamLocal.getTracks().forEach((t) => t.stop())
+      setStreamLocal(null)
+    }
     atualizarStatusConsulta(salaAberta.id, 'em_andamento')
     setSalaAberta((prev) => (prev ? { ...prev, status: 'em_andamento' } : null))
     setConsultas((prev) =>
@@ -965,87 +1061,197 @@ export default function Teleconsulta() {
                 </div>
               </div>
 
-              {/* CORPO DA SALA: SALA DE ESPERA OU ATENDIMENTO AO VIVO */}
+              {/* CORPO DA SALA: PRÉVIA ESTILO GOOGLE MEET NA SALA DE ESPERA OU ATENDIMENTO AO VIVO */}
               {estaEmEspera ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-card via-card/95 to-muted/20 text-center overflow-y-auto">
-                  <div className="max-w-md w-full space-y-5">
-                    {/* Foto e Especialidade */}
-                    <div className="flex flex-col items-center space-y-2.5">
-                      <div className="relative">
-                        <img
-                          src={profDaConsulta?.foto || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300'}
-                          alt={salaAberta.profissionalNome}
-                          className="size-28 rounded-full object-cover border-4 border-teal-500/40 shadow-xl"
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-10 flex items-center justify-center bg-gradient-to-b from-card via-card/95 to-muted/20">
+                  <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
+                    {/* COLUNA 1: PRÉVIA DE CÂMERA & MICROFONE (LOBBY / GREEN ROOM GOOGLE MEET) */}
+                    <div className="lg:col-span-7 flex flex-col items-center">
+                      <div className="relative w-full aspect-video rounded-3xl overflow-hidden bg-slate-950 border border-border/80 shadow-2xl flex items-center justify-center group">
+                        {/* Feed de Vídeo da Câmera (Espelhada) */}
+                        <video
+                          ref={videoPreviaRef}
+                          autoPlay
+                          playsInline
+                          muted
+                          className={`w-full h-full object-cover scale-x-[-1] transition-opacity duration-300 ${
+                            cameraAtiva ? 'opacity-100' : 'opacity-0 absolute pointer-events-none'
+                          }`}
                         />
-                        <span className="absolute bottom-1 right-1 size-7 rounded-full bg-amber-500 border-2 border-background flex items-center justify-center text-xs shadow-md text-white">
-                          ⏳
-                        </span>
+
+                        {/* Fallback quando câmera estiver desligada */}
+                        {!cameraAtiva && (
+                          <div className="flex flex-col items-center justify-center gap-3 p-6 text-center select-none">
+                            <div className="size-24 sm:size-28 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-3xl font-bold text-slate-200 shadow-inner">
+                              {nomeUsuarioLogado.slice(0, 2).toUpperCase()}
+                            </div>
+                            <div className="space-y-0.5">
+                              <p className="text-sm font-semibold text-slate-200">A câmera está desativada</p>
+                              <p className="text-xs text-slate-400">Clique no botão abaixo para ligar sua câmera</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Badge de Alerta se houver erro de permissão */}
+                        {erroMidia && (
+                          <div className="absolute top-4 left-4 right-4 z-20 p-3 rounded-2xl bg-rose-950/90 border border-rose-500/40 text-rose-200 text-xs flex items-center gap-2 backdrop-blur-md">
+                            <AlertCircle className="size-4 shrink-0 text-rose-400" />
+                            <span className="leading-snug">{erroMidia}</span>
+                          </div>
+                        )}
+
+                        {/* Indicador de Status de Áudio (Canto superior esquerdo) */}
+                        <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+                          <span
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 backdrop-blur-md border ${
+                              micAtivo
+                                ? 'bg-black/60 border-white/10 text-emerald-300'
+                                : 'bg-rose-950/80 border-rose-500/30 text-rose-200'
+                            }`}
+                          >
+                            {micAtivo ? (
+                              <>
+                                <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                                <span>Microfone pronto</span>
+                              </>
+                            ) : (
+                              <>
+                                <MicOff className="size-3 text-rose-400" />
+                                <span>Microfone silenciado</span>
+                              </>
+                            )}
+                          </span>
+                        </div>
+
+                        {/* Identificação do Usuário no Feed de Vídeo (Canto inferior esquerdo) */}
+                        <div className="absolute bottom-4 left-4 z-10 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-black/60 border border-white/10 backdrop-blur-md text-white text-xs font-medium">
+                          <span>{nomeUsuarioLogado}</span>
+                        </div>
+
+                        {/* Barra Flutuante de Controles Estilo Google Meet (Câmera e Microfone) */}
+                        <div className="absolute bottom-4 z-20 flex items-center justify-center gap-3">
+                          <button
+                            type="button"
+                            onClick={alternarMicrofone}
+                            aria-label={micAtivo ? 'Silenciar microfone' : 'Ativar microfone'}
+                            title={micAtivo ? 'Silenciar microfone' : 'Ativar microfone'}
+                            className={`size-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg ${
+                              micAtivo
+                                ? 'bg-slate-800/90 hover:bg-slate-700 text-white border border-white/20'
+                                : 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-900/40 ring-2 ring-rose-400'
+                            }`}
+                          >
+                            {micAtivo ? <Mic className="size-5" /> : <MicOff className="size-5" />}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={alternarCamera}
+                            aria-label={cameraAtiva ? 'Desativar câmera' : 'Ativar câmera'}
+                            title={cameraAtiva ? 'Desativar câmera' : 'Ativar câmera'}
+                            className={`size-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg ${
+                              cameraAtiva
+                                ? 'bg-slate-800/90 hover:bg-slate-700 text-white border border-white/20'
+                                : 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-900/40 ring-2 ring-rose-400'
+                            }`}
+                          >
+                            {cameraAtiva ? <Camera className="size-5" /> : <VideoOff className="size-5" />}
+                          </button>
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <h3 className="text-base font-bold text-foreground">{salaAberta.profissionalNome}</h3>
-                        <p className="text-xs text-muted-foreground">{salaAberta.especialidade} · {salaAberta.registro}</p>
-                        <Badge variant="outline" className="text-[10px] border-teal-500/30 text-teal-700 dark:text-teal-300">
-                          {salaAberta.clinica}
-                        </Badge>
-                      </div>
+
+                      <p className="mt-3 text-xs text-muted-foreground text-center">
+                        Ajuste sua câmera e microfone antes de conectar. Ninguém na sala poderá ver você até que entre.
+                      </p>
                     </div>
 
-                    {/* Mensagem Acolhedora em Português */}
-                    <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center space-y-2">
-                      <div className="inline-flex items-center gap-2 text-amber-800 dark:text-amber-200 font-bold text-xs uppercase tracking-wide">
-                        <span className="size-2 rounded-full bg-amber-500 animate-ping" />
-                        <span>Sala de Espera Virtual</span>
+                    {/* COLUNA 2: INFORMAÇÕES DA CONSULTA & BOTÕES DE PARTICIPAR */}
+                    <div className="lg:col-span-5 flex flex-col space-y-5 text-left">
+                      {/* Header: Pronto para participar? */}
+                      <div className="space-y-1.5">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 font-bold text-xs uppercase tracking-wide">
+                          <span className="size-2 rounded-full bg-amber-500 animate-ping" />
+                          <span>Sala de Espera Virtual</span>
+                        </div>
+                        <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                          Pronto para participar?
+                        </h2>
+                        <p className="text-xs text-muted-foreground">
+                          Identificado como: <strong className="text-foreground">{nomeUsuarioLogado}</strong>
+                        </p>
                       </div>
-                      <p className="text-xs text-foreground/90 leading-relaxed font-medium">
-                        Olá! Você está na sala de espera para a consulta de <strong>{salaAberta.residenteNome}</strong>.
-                      </p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        O(A) profissional <strong>{salaAberta.profissionalNome}</strong> foi notificado(a) e está finalizando os preparativos do atendimento. Por favor, aguarde nesta tela — assim que o prestador iniciar, a chamada de vídeo começará automaticamente.
-                      </p>
-                    </div>
 
-                    {/* Painel do Prestador / Moderador (Equipe Logada no Sistema) */}
-                    <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-3">
-                      <div className="flex items-center justify-center gap-1.5 text-emerald-800 dark:text-emerald-200 font-bold text-xs">
-                        <span className="text-sm">🛡️</span>
-                        <span>Controle do Prestador / Moderador</span>
+                      {/* Card do Residente e Especialista */}
+                      <div className="p-4 rounded-2xl bg-card border border-border/80 shadow-xs space-y-3">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={
+                              profDaConsulta?.foto ||
+                              'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300'
+                            }
+                            alt={salaAberta.profissionalNome}
+                            className="size-14 rounded-2xl object-cover border-2 border-teal-500/40 shadow-sm"
+                          />
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-sm text-foreground truncate">
+                              {salaAberta.profissionalNome}
+                            </h4>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {salaAberta.especialidade} · {salaAberta.registro}
+                            </p>
+                            <Badge
+                              variant="outline"
+                              className="mt-1 text-[10px] border-teal-500/30 text-teal-700 dark:text-teal-300"
+                            >
+                              {salaAberta.clinica}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-border/50 text-xs space-y-1">
+                          <p className="text-muted-foreground">
+                            Paciente: <strong className="text-foreground">{salaAberta.residenteNome}</strong>
+                          </p>
+                          <p className="text-muted-foreground">
+                            Agendamento:{' '}
+                            <span className="text-foreground font-medium">
+                              {salaAberta.data} às {salaAberta.horario}
+                            </span>
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-[11px] text-emerald-900/80 dark:text-emerald-200/80">
-                        Você está autenticado(a) como responsável pela ILPI. Quando estiver pronto(a) para atender o paciente, clique no botão abaixo para liberar a sala de vídeo.
-                      </p>
-                      <Button
-                        type="button"
-                        size="lg"
-                        onClick={handleIniciarConsulta}
-                        className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-2 py-5 shadow-md"
-                      >
-                        <Video className="size-4" />
-                        <span>Iniciar Consulta & Conectar Chamada</span>
-                      </Button>
-                    </div>
 
-                    {/* Ações para o Paciente / Familiar */}
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-1">
+                      {/* Painel do Prestador / Moderador com Botão Principal */}
+                      <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-3">
+                        <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-200 font-bold text-xs">
+                          <span className="text-base">🛡️</span>
+                          <span>Controle do Prestador / Moderador</span>
+                        </div>
+                        <p className="text-xs text-emerald-950/80 dark:text-emerald-200/80 leading-relaxed">
+                          Você está logado(a) como responsável pelo atendimento. Quando estiver pronto(a), clique abaixo para abrir a sala virtual.
+                        </p>
+                        <Button
+                          type="button"
+                          size="lg"
+                          onClick={handleIniciarConsulta}
+                          className="w-full rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm py-6 gap-2 shadow-lg shadow-emerald-600/25 transition-all hover:scale-[1.01]"
+                        >
+                          <Video className="size-5" />
+                          <span>Iniciar Consulta & Conectar Chamada</span>
+                        </Button>
+                      </div>
+
+                      {/* Ação Auxiliar: Avisar Prestador no WhatsApp */}
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={() => compartilharWhatsApp(salaAberta)}
-                        className="w-full rounded-xl text-xs gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10"
+                        className="w-full rounded-xl text-xs gap-2 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10 py-2.5"
                       >
-                        <Share2 className="size-3.5 text-emerald-600" />
+                        <Share2 className="size-4 text-emerald-600" />
                         <span>Avisar Prestador via WhatsApp</span>
                       </Button>
-                    </div>
-
-                    {/* Status de Câmera e Microfone */}
-                    <div className="flex items-center justify-center gap-4 text-[11px] text-muted-foreground pt-1">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className="size-2 rounded-full bg-emerald-500" /> Microfone Pronto
-                      </span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className="size-2 rounded-full bg-emerald-500" /> Câmera Pronta
-                      </span>
                     </div>
                   </div>
                 </div>
