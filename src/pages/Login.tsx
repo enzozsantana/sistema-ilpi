@@ -18,17 +18,25 @@ import {
   Pill,
   ShieldCheck,
   Sparkles,
+  Stethoscope,
 } from 'lucide-react'
+import { ModalCadastroEspecialista } from '../components/ModalCadastroEspecialista'
 
 export default function Login() {
-  const { session, loading, signIn } = useAuth()
+  const { session, loading, profissional, signIn } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [erro, setErro] = useState('')
   const [busy, setBusy] = useState(false)
+  const [modalCadastroOpen, setModalCadastroOpen] = useState(false)
 
-  if (!loading && session) return <Navigate to="/plantao" replace />
+  if (!loading && session) {
+    if (profissional?.cat === 'tele_especialista') {
+      return <Navigate to="/teleconsulta" replace />
+    }
+    return <Navigate to="/plantao" replace />
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -207,6 +215,33 @@ export default function Login() {
                 </Button>
               </form>
 
+              {/* Divisor e Cadastro de Especialistas Independentes */}
+              <div className="relative my-1">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border/60" />
+                </div>
+                <div className="relative flex justify-center text-[11px] uppercase">
+                  <span className="bg-card px-2 text-muted-foreground font-medium">
+                    Atendimento Externo
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setModalCadastroOpen(true)}
+                  className="w-full h-10 rounded-xl font-semibold border-teal-600/30 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950/40 gap-2 shadow-2xs"
+                >
+                  <Stethoscope className="size-4 text-teal-600" />
+                  <span>Sou Especialista / Cadastrar Consultório</span>
+                </Button>
+                <p className="text-[11px] text-center text-muted-foreground">
+                  Médicos, estomaterapeutas, nutricionistas e psicólogos independentes
+                </p>
+              </div>
+
               {/* Demo Credentials Box */}
               <div className="pt-2">
                 <div className="p-3.5 rounded-xl border border-border/60 bg-muted/30 space-y-2.5 text-xs">
@@ -278,6 +313,11 @@ export default function Login() {
           Suporte e plantão de enfermagem · Senecurare
         </div>
       </div>
+
+      <ModalCadastroEspecialista
+        open={modalCadastroOpen}
+        onOpenChange={setModalCadastroOpen}
+      />
     </div>
   )
 }

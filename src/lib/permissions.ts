@@ -7,16 +7,28 @@ import type {
   NavView,
 } from '../types/ilpi'
 
+export const TODAS_CATEGORIAS_ILPI: Categoria[] = [
+  'rt',
+  'enf',
+  'tec',
+  'cuid',
+  'estag',
+  'med',
+  'multi',
+  'apoio',
+  'gestao',
+]
+
 /** Matriz de ações (can no protótipo). */
 export const CAN: Record<AcaoPermissao, Categoria[]> = {
   adm: [...NURSE, 'cuid'],
   anot: [...NURSE, 'cuid'],
   cuid: [...NURSE, 'cuid'],
   gerir: ['rt', 'enf', 'gestao'],
-  presc: ['med', 'rt', 'enf'],
+  presc: ['med', 'rt', 'enf', 'tele_especialista'],
   estoque: ['rt'],
   aval: ['rt', 'enf'],
-  evol: ['rt', 'enf', 'med', 'multi'],
+  evol: ['rt', 'enf', 'med', 'multi', 'tele_especialista'],
   pop_ver: ['rt', 'enf', 'tec', 'estag', 'cuid', 'med', 'multi', 'apoio', 'gestao'],
   pop_editar: ['rt', 'enf', 'gestao'],
   alvara: ['rt', 'gestao'],
@@ -24,10 +36,10 @@ export const CAN: Record<AcaoPermissao, Categoria[]> = {
 
 /** Acesso às views principais (NAV_ACESSO). */
 export const NAV_ACESSO: Record<NavView, '*' | Categoria[]> = {
-  plantao: '*',
+  plantao: TODAS_CATEGORIAS_ILPI,
   residentes: [...NURSE, 'cuid', 'med', 'multi', 'gestao'],
   estoque: ['rt'],
-  rotinas: '*',
+  rotinas: TODAS_CATEGORIAS_ILPI,
   equipe: [...NURSE, 'cuid', 'gestao'],
   gestao: ['rt', 'enf', 'gestao'],
   teleconsulta: '*',
@@ -40,10 +52,10 @@ export const TAB_ACESSO: Record<AbaResidente, '*' | Categoria[]> = {
   aval: ['rt', 'enf', 'tec', 'estag', 'med', 'multi'],
   pia: [...NURSE, 'med'],
   cuidados: [...NURSE, 'cuid'],
-  presc: [...NURSE, 'med', 'cuid'],
+  presc: [...NURSE, 'med', 'cuid', 'tele_especialista'],
   anot: [...NURSE, 'med', 'cuid'],
-  evol: ['rt', 'enf', 'med', 'multi'],
-  arquivos: ['rt', 'enf', 'tec', 'med', 'multi', 'gestao'],
+  evol: ['rt', 'enf', 'med', 'multi', 'tele_especialista'],
+  arquivos: ['rt', 'enf', 'tec', 'med', 'multi', 'gestao', 'tele_especialista'],
   estoque: ['rt'],
   tudo: ['rt', 'enf', 'med', 'gestao'],
 }

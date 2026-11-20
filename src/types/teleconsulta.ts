@@ -19,6 +19,26 @@ export interface ProfissionalVirtual {
   bio: string
   diasAtendimento: number[] // 0 = Domingo, 1 = Segunda, etc.
   horariosPadrao: string[]
+  email?: string
+  isIndependente?: boolean
+}
+
+export interface CadastroEspecialistaInput {
+  nome: string
+  email: string
+  senha?: string
+  password?: string
+  especialidade: EspecialidadeVirtual
+  especialidadeLabel?: string
+  titulo: string
+  registro: string
+  conselho?: string
+  consultorio?: string
+  clinica?: string
+  preco: number
+  duracaoMin?: number
+  bio: string
+  foto?: string
 }
 
 export type StatusConsulta = 'agendada' | 'confirmada' | 'em_andamento' | 'concluida' | 'cancelada'

@@ -4,13 +4,13 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { iso } from '../lib/business/dates'
 import {
-  PROFISSIONAIS_VIRTUAIS,
   gerarLinkSalaJitsi,
   buildJitsiUrl,
   obterConsultasVirtuais,
   salvarConsultaVirtual,
   atualizarStatusConsulta,
   marcarEvolucaoConsulta,
+  obterProfissionaisVirtuais,
 } from '../lib/teleconsultaStorage'
 import type {
   ConsultaVirtual,
@@ -34,6 +34,7 @@ import {
 } from '../components/ui/dialog'
 import { ModalPedidoMedico } from '../components/ModalPedidoMedico'
 import { ModalConectarMercadoPago } from '../components/ModalConectarMercadoPago'
+import { ModalCadastroEspecialista } from '../components/ModalCadastroEspecialista'
 import { salvarRascunho, obterRascunho, limparRascunho, temRascunho } from '../lib/draftStorage'
 import { calcularSplit, processarPagamentoSplit, gerarPixCopiaECola } from '../lib/mercadopagoService'
 import {
@@ -59,6 +60,7 @@ import {
   Search,
   Share2,
   Sparkles,
+  Stethoscope,
   Users,
   Video,
   VideoOff,
@@ -82,6 +84,12 @@ const ROTULOS_ESPECIALIDADE: Record<EspecialidadeVirtual | 'todas', string> = {
 export default function Teleconsulta() {
   const { residentes, refresh } = useIlpiData()
   const { profissional } = useAuth()
+
+  // Especialistas Virtuais disponíveis (semente + independentes cadastrados)
+  const [profissionais, setProfissionais] = useState<ProfissionalVirtual[]>(() =>
+    obterProfissionaisVirtuais(),
+  )
+  const [modalCadastroOpen, setModalCadastroOpen] = useState(false)
 
   // Aba ativa: Vitrine de Especialistas ou Consultas Agendadas
   const [abaAtiva, setAbaAtiva] = useState<'especialistas' | 'consultas'>('especialistas')
@@ -163,8 +171,8 @@ export default function Teleconsulta() {
 
   const profDaConsulta = useMemo(() => {
     if (!salaAberta) return null
-    return PROFISSIONAIS_VIRTUAIS.find((p) => p.id === salaAberta.profissionalId) || null
-  }, [salaAberta])
+    return profissionais.find((p) => p.id === salaAberta.profissionalId) || null
+  }, [salaAberta, profissionais])
 
   // Estado da sessão de vídeo: false = na Sala de Espera / Lobby Google Meet; true = chamada ao vivo conectada
   const [chamadaAtiva, setChamadaAtiva] = useState(false)
@@ -338,7 +346,7 @@ export default function Teleconsulta() {
 
   // Filtro de profissionais
   const profissionaisFiltrados = useMemo(() => {
-    return PROFISSIONAIS_VIRTUAIS.filter((p) => {
+    return profissionais.filter((p) => {
       if (filtroEsp !== 'todas' && p.especialidade !== filtroEsp) return false
       if (busca.trim()) {
         const q = busca.toLowerCase()
@@ -349,7 +357,7 @@ export default function Teleconsulta() {
       }
       return true
     })
-  }, [filtroEsp, busca])
+  }, [filtroEsp, busca, profissionais])
 
   // Residente selecionado para a consulta
   const residenteEscolhido = useMemo(() => {
@@ -520,6 +528,17 @@ export default function Teleconsulta() {
 
         {/* Ações e Seletor de Abas */}
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          {/* Botão Cadastrar como Especialista Independente */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setModalCadastroOpen(true)}
+            className="rounded-xl text-xs gap-1.5 border-teal-600/40 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40"
+          >
+            <Stethoscope className="size-3.5 text-teal-600" />
+            <span>Cadastrar como Especialista</span>
+          </Button>
+
           {/* Botão de Gestão Mercado Pago Marketplace */}
           <Button
             size="sm"
@@ -563,6 +582,41 @@ export default function Teleconsulta() {
           </div>
         </div>
       </div>
+
+      {/* Banner de Consultório Virtual para Especialista Independente Autenticado */}
+      {profissional?.cat === 'tele_especialista' && (
+        <div className="p-4 rounded-2xl bg-gradient-to-r from-teal-500/10 via-primary/10 to-teal-500/5 border border-teal-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <div className="size-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+              {profissional.nome.charAt(0)}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold text-foreground">
+                  Consultório Virtual de {profissional.nome}
+                </h2>
+                <Badge className="bg-teal-600 text-white text-[10px] px-2 py-0.5">
+                  Especialista Independente
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {profissional.area || 'Especialista credenciado'} · Registro {profissional.conselho || 'N/A'} · Atendendo ILPIs parceiras e particulares
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setModalMercadoPagoOpen(true)}
+              className="text-xs rounded-xl border-[#009EE3]/40 text-[#009EE3] hover:bg-[#009EE3]/10 gap-1.5 shadow-2xs"
+            >
+              <ArrowRightLeft className="size-3.5" />
+              Conectar Mercado Pago (Split)
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* ABA 1: VITRINE DE PROFISSIONAIS E AGENDAMENTO */}
       {abaAtiva === 'especialistas' && (
@@ -609,11 +663,17 @@ export default function Teleconsulta() {
                   {/* Topo: Foto e Dados Principais */}
                   <div className="flex items-start gap-4">
                     <div className="relative shrink-0">
-                      <img
-                        src={prof.foto}
-                        alt={prof.nome}
-                        className="size-18 rounded-2xl object-cover border-2 border-border/80 shadow-xs"
-                      />
+                      {prof.foto ? (
+                        <img
+                          src={prof.foto}
+                          alt={prof.nome}
+                          className="size-18 rounded-2xl object-cover border-2 border-border/80 shadow-xs"
+                        />
+                      ) : (
+                        <div className="size-18 rounded-2xl bg-teal-500/10 border-2 border-border/80 text-teal-700 dark:text-teal-400 font-bold text-xl flex items-center justify-center shadow-xs">
+                          {prof.nome.charAt(0)}
+                        </div>
+                      )}
                       <span className="absolute -bottom-1 -right-1 size-4.5 rounded-full bg-emerald-500 border-2 border-card flex items-center justify-center text-white" title="Disponível para teleatendimento">
                         <CheckCircle2 className="size-3" />
                       </span>
@@ -621,11 +681,18 @@ export default function Teleconsulta() {
 
                     <div className="min-w-0 flex-1 space-y-1">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700 dark:text-teal-400">
-                          {prof.especialidadeLabel}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700 dark:text-teal-400">
+                            {prof.especialidadeLabel}
+                          </span>
+                          {prof.isIndependente && (
+                            <Badge variant="outline" className="text-[9px] bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/20 py-0 h-4">
+                              Independente
+                            </Badge>
+                          )}
+                        </div>
                         <Badge variant="outline" className="text-[10px] bg-muted/40 border-border/60">
-                          <Clock className="size-2.5 mr-1 text-muted-foreground" /> {prof.duracaoMin} min
+                          <Clock className="size-2.5 mr-1 text-muted-foreground" /> {prof.duracaoMin || 45} min
                         </Badge>
                       </div>
 
@@ -1842,7 +1909,18 @@ export default function Teleconsulta() {
       <ModalConectarMercadoPago
         open={modalMercadoPagoOpen}
         onOpenChange={setModalMercadoPagoOpen}
-        profissionais={PROFISSIONAIS_VIRTUAIS}
+        profissionais={profissionais}
+      />
+
+      {/* MODAL DE CADASTRO DE ESPECIALISTA INDEPENDENTE */}
+      <ModalCadastroEspecialista
+        open={modalCadastroOpen}
+        onOpenChange={(open) => {
+          setModalCadastroOpen(open)
+          if (!open) {
+            setProfissionais(obterProfissionaisVirtuais())
+          }
+        }}
       />
     </div>
   )

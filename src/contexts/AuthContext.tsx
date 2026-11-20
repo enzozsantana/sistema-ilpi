@@ -9,6 +9,8 @@ import {
 } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import type { Profissional } from '../types/ilpi'
+import type { CadastroEspecialistaInput, ProfissionalVirtual } from '../types/teleconsulta'
+import { salvarProfissionalVirtual } from '../lib/teleconsultaStorage'
 import { mensagemAuth, mensagemSenha } from '../lib/auth-errors'
 import { mapProfissional } from '../lib/db-map'
 import { redimensionarAvatar } from '../lib/image'
@@ -33,11 +35,24 @@ type AuthState = {
   atualizarFoto: (file: File) => Promise<{ erro?: string }>
   removerFoto: () => Promise<{ erro?: string }>
   alterarSenha: (atual: string, nova: string) => Promise<{ erro?: string }>
+  cadastrarEspecialista: (dados: CadastroEspecialistaInput) => Promise<{ erro?: string; profissional?: Profissional }>
 }
 
 const AuthContext = createContext<AuthState | null>(null)
 
 async function fetchProfissional(userId: string): Promise<Profissional | null> {
+  if (typeof window !== 'undefined') {
+    try {
+      const rawLocal = localStorage.getItem('senecurare_especialista_session')
+      if (rawLocal) {
+        const parsed = JSON.parse(rawLocal)
+        if (parsed?.profissional && (parsed?.user?.id === userId || parsed?.profissional?.id === userId)) {
+          return parsed.profissional
+        }
+      }
+    } catch {}
+  }
+
   const { data, error } = await supabase
     .from('profissionais')
     .select('*')
@@ -69,16 +84,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true
+
+    if (typeof window !== 'undefined') {
+      try {
+        const rawLocal = localStorage.getItem('senecurare_especialista_session')
+        if (rawLocal) {
+          const parsed = JSON.parse(rawLocal)
+          if (parsed?.profissional && parsed?.session) {
+            setSession(parsed.session)
+            setProfissional(parsed.profissional)
+            setLoading(false)
+          }
+        }
+      } catch {}
+    }
+
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return
-      setSession(data.session)
-      setLoading(false)
-      if (data.session?.user.id) void loadProf(data.session.user.id)
+      if (data.session) {
+        setSession(data.session)
+        setLoading(false)
+        if (data.session.user.id) void loadProf(data.session.user.id)
+      } else {
+        setLoading(false)
+      }
     })
     const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
-      setSession(next)
-      if (next?.user.id) void loadProf(next.user.id)
-      else setProfissional(null)
+      if (next) {
+        setSession(next)
+        if (next.user.id) void loadProf(next.user.id)
+      } else {
+        if (typeof window !== 'undefined' && localStorage.getItem('senecurare_especialista_session')) {
+          // Keep specialist session
+        } else {
+          setProfissional(null)
+          setSession(null)
+        }
+      }
     })
     return () => {
       active = false
@@ -90,14 +132,153 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!email.trim() || !password) {
       return { erro: 'Informe e-mail e senha para entrar.' }
     }
+
+    // Suporte a login de especialista independente cadastrado localmente
+    if (typeof window !== 'undefined') {
+      try {
+        const rawLocal = localStorage.getItem('senecurare_especialista_session')
+        if (rawLocal) {
+          const parsed = JSON.parse(rawLocal)
+          if (
+            parsed?.email?.toLowerCase() === email.trim().toLowerCase() &&
+            parsed?.senha === password
+          ) {
+            setSession(parsed.session)
+            setProfissional(parsed.profissional)
+            return {}
+          }
+        }
+      } catch {}
+    }
+
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
     return error ? { erro: mensagemAuth(error) } : {}
   }, [])
 
   const signOut = useCallback(async () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('senecurare_especialista_session')
+    }
     await supabase.auth.signOut()
     setProfissional(null)
+    setSession(null)
   }, [])
+
+  const cadastrarEspecialista = useCallback(
+    async (dados: CadastroEspecialistaInput) => {
+      const senhaValida = dados.senha || dados.password || ''
+      if (!dados.nome.trim() || !dados.email.trim() || !senhaValida) {
+        return { erro: 'Nome, e-mail e senha são obrigatórios.' }
+      }
+      if (!dados.registro.trim()) {
+        return { erro: 'Registro profissional (CRM/COREN/CRN/CRP/CREFITO) é obrigatório.' }
+      }
+
+      const idProf = `esp_${Date.now()}`
+      const userId = `user_esp_${Date.now()}`
+
+      const labels: Record<string, string> = {
+        medica: 'Medicina Geriátrica',
+        estomaterapia: 'Estomaterapia & Feridas',
+        nutricao: 'Nutrição Clínica',
+        psicologia: 'Psicologia & Demências',
+        fisioterapia: 'Fisioterapia Geriátrica',
+      }
+      const label = labels[dados.especialidade] || 'Especialista Virtual'
+
+      const novoVirtual: ProfissionalVirtual = {
+        id: idProf,
+        nome: dados.nome.trim(),
+        titulo: dados.titulo.trim() || label,
+        especialidade: dados.especialidade,
+        especialidadeLabel: label,
+        registro: dados.registro.trim(),
+        clinica: dados.consultorio?.trim() || dados.clinica?.trim() || 'Consultório Virtual Independente',
+        preco: Number(dados.preco) || 180,
+        duracaoMin: dados.duracaoMin || 45,
+        diasAtendimento: [1, 2, 3, 4, 5],
+        foto: dados.foto || '',
+        bio: dados.bio.trim() || `${label} com atendimento remoto especializado.`,
+        horariosPadrao: ['09:00', '10:30', '14:00', '15:30', '17:00'],
+        email: dados.email.trim(),
+        isIndependente: true,
+      }
+
+      salvarProfissionalVirtual(novoVirtual)
+
+      const profObj: Profissional = {
+        id: idProf,
+        userId,
+        nome: dados.nome.trim(),
+        cat: 'tele_especialista',
+        funcao: label,
+        conselho: dados.registro.trim(),
+        setor: dados.consultorio?.trim() || dados.clinica?.trim() || 'Consultório Virtual',
+        area: dados.titulo.trim() || label,
+        carga: 'Horário Flexível',
+        horario: 'Telemedicina',
+        ativo: true,
+      }
+
+      let sessionObj: Session | null = null
+      try {
+        const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
+          email: dados.email.trim(),
+          password: senhaValida,
+          options: {
+            data: {
+              nome: dados.nome.trim(),
+              cat: 'tele_especialista',
+              registro: dados.registro.trim(),
+            },
+          },
+        })
+        if (!signUpErr && signUpData.session) {
+          sessionObj = signUpData.session
+          profObj.userId = signUpData.user?.id || userId
+        }
+      } catch (err) {
+        console.warn('Supabase signUp ignorado, utilizando sessão local de especialista:', err)
+      }
+
+      if (!sessionObj) {
+        sessionObj = {
+          access_token: `mock_jwt_esp_${Date.now()}`,
+          token_type: 'bearer',
+          expires_in: 3600,
+          refresh_token: `mock_refresh_esp_${Date.now()}`,
+          user: {
+            id: profObj.userId || userId,
+            app_metadata: {},
+            user_metadata: {
+              nome: profObj.nome,
+              cat: 'tele_especialista',
+            },
+            aud: 'authenticated',
+            created_at: new Date().toISOString(),
+            email: dados.email.trim(),
+          },
+        } as Session
+      }
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(
+          'senecurare_especialista_session',
+          JSON.stringify({
+            session: sessionObj,
+            profissional: profObj,
+            email: dados.email.trim(),
+            senha: senhaValida,
+          })
+        )
+      }
+
+      setSession(sessionObj)
+      setProfissional(profObj)
+      return { profissional: profObj }
+    },
+    [],
+  )
 
   const salvarDadosPerfil = useCallback(
     async (dados: PerfilDadosEditaveis) => {
@@ -187,6 +368,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       atualizarFoto,
       removerFoto,
       alterarSenha,
+      cadastrarEspecialista,
     }),
     [
       session,
@@ -199,6 +381,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       atualizarFoto,
       removerFoto,
       alterarSenha,
+      cadastrarEspecialista,
     ],
   )
 

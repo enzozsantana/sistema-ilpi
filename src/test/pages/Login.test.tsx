@@ -24,6 +24,7 @@ describe('Login Page', () => {
       atualizarFoto: vi.fn(),
       removerFoto: vi.fn(),
       alterarSenha: vi.fn(),
+      cadastrarEspecialista: vi.fn(),
     })
   })
 

@@ -29,10 +29,19 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return children
 }
 
+function RootRedirect() {
+  const { profissional } = useAuth()
+  if (profissional?.cat === 'tele_especialista') {
+    return <Navigate to="/teleconsulta" replace />
+  }
+  return <Navigate to="/plantao" replace />
+}
+
 function GuardView({ view, children }: { view: NavView; children: React.ReactNode }) {
   const { profissional } = useAuth()
   if (!profissional || !canNav(profissional.cat, view)) {
-    return <Navigate to="/plantao" replace />
+    const fallback = profissional?.cat === 'tele_especialista' ? '/teleconsulta' : '/plantao'
+    return <Navigate to={fallback} replace />
   }
   return children
 }
@@ -42,7 +51,7 @@ function AuthedRoutes() {
     <IlpiDataProvider>
       <Routes>
         <Route element={<AppShell />}>
-          <Route index element={<Navigate to="/plantao" replace />} />
+          <Route index element={<RootRedirect />} />
           <Route
             path="plantao"
             element={

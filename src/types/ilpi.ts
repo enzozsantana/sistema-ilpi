@@ -9,6 +9,7 @@ export type Categoria =
   | 'multi'
   | 'apoio'
   | 'gestao'
+  | 'tele_especialista'
 
 export type NavView =
   | 'plantao'
@@ -120,6 +121,7 @@ export interface Assinatura {
 
 export interface Profissional {
   id: string
+  userId?: string
   nome: string
   cat: Categoria
   funcao: string

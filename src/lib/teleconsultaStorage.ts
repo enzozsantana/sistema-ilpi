@@ -63,6 +63,44 @@ export const PROFISSIONAIS_VIRTUAIS: ProfissionalVirtual[] = [
   },
 ]
 
+const PROFS_STORAGE_KEY = 'senecurare_profissionais_virtuais'
+
+export function obterProfissionaisVirtuais(): ProfissionalVirtual[] {
+  if (typeof window === 'undefined') return PROFISSIONAIS_VIRTUAIS
+  try {
+    const raw = localStorage.getItem(PROFS_STORAGE_KEY)
+    if (!raw) {
+      localStorage.setItem(PROFS_STORAGE_KEY, JSON.stringify(PROFISSIONAIS_VIRTUAIS))
+      return PROFISSIONAIS_VIRTUAIS
+    }
+    const lista = JSON.parse(raw) as ProfissionalVirtual[]
+    // Garante que os profissionais demo estejam presentes
+    const ids = new Set(lista.map((p) => p.id))
+    PROFISSIONAIS_VIRTUAIS.forEach((p) => {
+      if (!ids.has(p.id)) lista.push(p)
+    })
+    return lista
+  } catch {
+    return PROFISSIONAIS_VIRTUAIS
+  }
+}
+
+export function salvarProfissionalVirtual(novo: ProfissionalVirtual): void {
+  if (typeof window === 'undefined') return
+  try {
+    const lista = obterProfissionaisVirtuais()
+    const idx = lista.findIndex((p) => p.id === novo.id || (novo.email && p.email === novo.email))
+    if (idx >= 0) {
+      lista[idx] = { ...lista[idx], ...novo }
+    } else {
+      lista.unshift(novo)
+    }
+    localStorage.setItem(PROFS_STORAGE_KEY, JSON.stringify(lista))
+  } catch (err) {
+    console.error('Erro ao salvar profissional virtual:', err)
+  }
+}
+
 const STORAGE_KEY = 'ilpi_consultas_virtuais'
 
 // Provedor WebRTC P2P que permite incorporação segura em iframe sem bloqueio de moderação e sem 'conexão recusada'

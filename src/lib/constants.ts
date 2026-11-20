@@ -10,6 +10,7 @@ export const CATS: Record<Categoria, string> = {
   med: 'Médico(a)',
   multi: 'Equipe multiprofissional',
   apoio: 'Apoio (cozinha, limpeza, lavanderia)',
+  tele_especialista: 'Especialista Teleconsulta (Independente)',
 }
 
 export const NURSE: Categoria[] = ['rt', 'enf', 'tec', 'estag']

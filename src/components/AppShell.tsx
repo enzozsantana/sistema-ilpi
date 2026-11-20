@@ -213,7 +213,9 @@ export function AppShell() {
                 {tituloRota(pathname)}
               </h2>
               <span className="text-xs text-muted-foreground font-medium hidden sm:inline-block">
-                {instNome} · {dataCurta()}
+                {profissional.cat === 'tele_especialista'
+                  ? 'Consultório Virtual · Telemedicina Independente'
+                  : `${instNome} · ${dataCurta()}`}
               </span>
             </div>
           </div>
@@ -223,7 +225,7 @@ export function AppShell() {
             {/* Shift status pill */}
             <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-muted/60 border border-border/50 text-xs font-medium text-muted-foreground">
               <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Plantão ativo</span>
+              <span>{profissional.cat === 'tele_especialista' ? 'Consultório online' : 'Plantão ativo'}</span>
             </div>
 
             <NotificacoesMenu />
