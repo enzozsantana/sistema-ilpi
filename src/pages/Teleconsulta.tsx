@@ -139,7 +139,15 @@ export default function Teleconsulta() {
     return PROFISSIONAIS_VIRTUAIS.find((p) => p.id === salaAberta.profissionalId) || null
   }, [salaAberta])
 
-  const estaEmEspera = salaAberta?.status !== 'em_andamento'
+  // Estado da sessão de vídeo: false = na Sala de Espera / Lobby Google Meet; true = chamada ao vivo conectada
+  const [chamadaAtiva, setChamadaAtiva] = useState(false)
+  const estaEmEspera = !chamadaAtiva
+
+  function abrirSalaVirtual(consulta: ConsultaVirtual) {
+    setChamadaAtiva(false)
+    setSalaAberta(consulta)
+    setPainelProntuarioAberto(true)
+  }
 
   // Controles de Prévia de Câmera e Microfone (Estilo Google Meet)
   const videoPreviaRef = useRef<HTMLVideoElement>(null)
@@ -234,6 +242,7 @@ export default function Teleconsulta() {
       streamLocal.getTracks().forEach((t) => t.stop())
       setStreamLocal(null)
     }
+    setChamadaAtiva(true)
     atualizarStatusConsulta(salaAberta.id, 'em_andamento')
     setSalaAberta((prev) => (prev ? { ...prev, status: 'em_andamento' } : null))
     setConsultas((prev) =>
@@ -244,6 +253,7 @@ export default function Teleconsulta() {
 
   function handleFinalizarConsulta() {
     if (!salaAberta) return
+    setChamadaAtiva(false)
     atualizarStatusConsulta(salaAberta.id, 'concluida')
     setSalaAberta((prev) => (prev ? { ...prev, status: 'concluida' } : null))
     setConsultas((prev) =>
@@ -613,10 +623,7 @@ export default function Teleconsulta() {
                 <div className="flex items-center gap-2 flex-wrap md:flex-nowrap shrink-0">
                   <Button
                     size="sm"
-                    onClick={() => {
-                      setSalaAberta(c)
-                      setPainelProntuarioAberto(true)
-                    }}
+                    onClick={() => abrirSalaVirtual(c)}
                     className="gap-1.5 text-xs rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold shadow-xs"
                   >
                     <Video className="size-3.5" />
@@ -930,7 +937,7 @@ export default function Teleconsulta() {
                       className="flex-1 rounded-xl text-xs bg-teal-600 hover:bg-teal-700 text-white font-semibold gap-1.5"
                       onClick={() => {
                         setModalAgendamentoOpen(false)
-                        setSalaAberta(consultaCriada)
+                        abrirSalaVirtual(consultaCriada)
                       }}
                     >
                       <Video className="size-3.5" />
@@ -1000,16 +1007,29 @@ export default function Teleconsulta() {
                       <span>Iniciar Atendimento</span>
                     </Button>
                   ) : (
-                    <Button
-                      type="button"
-                      size="xs"
-                      variant="outline"
-                      onClick={handleFinalizarConsulta}
-                      className="text-xs rounded-xl gap-1.5 text-rose-700 dark:text-rose-300 border-rose-500/40 hover:bg-rose-500/10"
-                      title="Finalizar consulta e registrar no prontuário"
-                    >
-                      <span>Finalizar Atendimento</span>
-                    </Button>
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        type="button"
+                        size="xs"
+                        variant="outline"
+                        onClick={() => setChamadaAtiva(false)}
+                        className="text-xs rounded-xl gap-1 border-teal-500/40 text-teal-700 dark:text-teal-300 hover:bg-teal-500/10"
+                        title="Retornar à sala de espera com prévia de câmera"
+                      >
+                        <Camera className="size-3.5" />
+                        <span className="hidden sm:inline">Sala de Espera</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        size="xs"
+                        variant="outline"
+                        onClick={handleFinalizarConsulta}
+                        className="text-xs rounded-xl gap-1.5 text-rose-700 dark:text-rose-300 border-rose-500/40 hover:bg-rose-500/10"
+                        title="Finalizar consulta e registrar no prontuário"
+                      >
+                        <span>Finalizar Atendimento</span>
+                      </Button>
+                    </div>
                   )}
 
                   <Button
@@ -1052,7 +1072,10 @@ export default function Teleconsulta() {
                     type="button"
                     size="xs"
                     variant="ghost"
-                    onClick={() => setSalaAberta(null)}
+                    onClick={() => {
+                      setChamadaAtiva(false)
+                      setSalaAberta(null)
+                    }}
                     className="size-7 p-0 rounded-full"
                     title="Fechar chamada"
                   >

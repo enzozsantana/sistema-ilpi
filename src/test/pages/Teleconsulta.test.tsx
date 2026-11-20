@@ -141,12 +141,11 @@ describe('Teleconsulta Page', () => {
     const botaoIniciar = screen.getByRole('button', { name: /Iniciar Consulta & Conectar Chamada/i })
     fireEvent.click(botaoIniciar)
 
-    // Após iniciar, a sala de vídeo é conectada com Jitsi configurado em PT-BR e com identificação
+    // Após iniciar, a sala de vídeo é conectada sem bloqueio de moderação e com identificação
     const iframe = screen.getByTitle('Sala de Vídeo Teleconsulta')
     expect(iframe).toBeInTheDocument()
     const src = iframe.getAttribute('src') || ''
-    expect(src).toContain('meet.jit.si')
-    expect(src).toContain('config.defaultLanguage=%22ptBR%22')
-    expect(src).toContain('userInfo.displayName=%22Helena%20Prado%22')
+    expect(src).toContain('p2p.mirotalk.com/join')
+    expect(src).toContain('name=Helena%20Prado')
   })
 })

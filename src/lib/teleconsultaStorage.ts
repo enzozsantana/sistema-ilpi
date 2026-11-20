@@ -65,12 +65,12 @@ export const PROFISSIONAIS_VIRTUAIS: ProfissionalVirtual[] = [
 
 const STORAGE_KEY = 'ilpi_consultas_virtuais'
 
-// Provedor WebRTC / Jitsi Meet com localização forçada para Português (Brasil)
+// Provedor WebRTC P2P que permite incorporação segura em iframe sem bloqueio de moderação e sem 'conexão recusada'
+export const WEBRTC_ROOM_BASE = 'https://p2p.mirotalk.com/join'
 export const JITSI_ROOM_BASE = 'https://meet.jit.si'
 
 /**
- * Constrói os parâmetros de URL hash para configurar o Jitsi Meet 100% em PT-BR,
- * eliminando telas em inglês, bypassando pré-salas repetidas e identificando o usuário logado.
+ * Constrói os parâmetros de URL hash para configurar o Jitsi Meet em PT-BR
  */
 export function buildJitsiConfigHash(displayName?: string): string {
   const nome = displayName && displayName.trim() ? displayName.trim() : 'Participante'
@@ -99,7 +99,8 @@ export function buildJitsiConfigHash(displayName?: string): string {
 }
 
 export function gerarLinkSalaJitsi(codigoSala: string, displayName?: string): string {
-  return `${JITSI_ROOM_BASE}/${codigoSala}${buildJitsiConfigHash(displayName)}`
+  const nomeParam = displayName ? `?name=${encodeURIComponent(displayName)}` : ''
+  return `${WEBRTC_ROOM_BASE}/${codigoSala}${nomeParam}`
 }
 
 export function buildJitsiUrl(
@@ -107,10 +108,10 @@ export function buildJitsiUrl(
   displayName?: string,
   _options?: { audioMuted?: boolean; videoMuted?: boolean }
 ): string {
-  // Extrai o código da sala e remove domínios legados ou parâmetros antigos
   const partes = linkBase.split('?')[0].split('#')[0].split('/')
   const codigoSala = partes[partes.length - 1] || 'senecurare-teleconsulta'
-  return `${JITSI_ROOM_BASE}/${codigoSala}${buildJitsiConfigHash(displayName)}`
+  const nomeFinal = displayName && displayName.trim() ? displayName.trim() : 'Participante'
+  return `${WEBRTC_ROOM_BASE}/${codigoSala}?name=${encodeURIComponent(nomeFinal)}`
 }
 
 export function gerarLinkExternoJitsi(codigoSala: string, displayName?: string): string {
