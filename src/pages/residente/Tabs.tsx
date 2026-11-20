@@ -89,6 +89,8 @@ import { cn } from '@/lib/utils'
 import { ModalPedidoMedico } from '../../components/ModalPedidoMedico'
 import { ModalPedidoEstoque } from '../../components/ModalPedidoEstoque'
 import { OrigemItemSelect } from '../../components/OrigemItemSelect'
+import { BadgeTipoEstoque } from '../../components/BadgeTipoEstoque'
+import { classificarTipoItem } from '../../lib/business/categoriaEstoque'
 import {
   getPedidosLocais,
   removerPedidoLocal,
@@ -4231,20 +4233,73 @@ export function TabEstoque({ r, profNome }: Ctx) {
   const { profissional } = useAuth()
   const [modalPedido, setModalPedido] = useState(false)
   const [itensSelecionados, setItensSelecionados] = useState<string[]>([])
+  const [filtroTipo, setFiltroTipo] = useState<'todos' | 'medicamento' | 'higiene'>('todos')
 
-  const todosMarcados = r.estoque.length > 0 && itensSelecionados.length === r.estoque.length
+  const totalMeds = r.estoque.filter((it) => classificarTipoItem(it.id, it.nome) === 'medicamento').length
+  const totalHigs = r.estoque.filter((it) => classificarTipoItem(it.id, it.nome) === 'higiene').length
+
+  const itensExibidos = r.estoque.filter(
+    (it) => filtroTipo === 'todos' || classificarTipoItem(it.id, it.nome) === filtroTipo
+  )
+
+  const todosMarcados =
+    itensExibidos.length > 0 && itensExibidos.every((it) => itensSelecionados.includes(it.id))
 
   return (
     <Card className="border border-border/70 shadow-2xs overflow-hidden">
       <CardHeader className="pb-3 border-b border-border/40 bg-muted/20">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <CardTitle className="text-sm font-bold flex items-center gap-2">
-            <Package className="size-4 text-primary" />
-            <span>Estoque Individual (Medicamentos & Materiais de Higiene)</span>
-            <Badge variant="secondary" className="text-xs ml-1">
-              {r.estoque.length} itens
-            </Badge>
-          </CardTitle>
+          <div className="flex items-center gap-2 flex-wrap">
+            <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <Package className="size-4 text-primary" />
+              <span>Estoque Individual</span>
+              <Badge variant="secondary" className="text-xs ml-1">
+                {r.estoque.length} itens
+              </Badge>
+            </CardTitle>
+
+            {/* Filtros de Categoria (Medicamentos vs Higiene) */}
+            <div className="flex items-center gap-1.5 ml-0 sm:ml-2">
+              <button
+                type="button"
+                onClick={() => setFiltroTipo('todos')}
+                className={cn(
+                  'px-2 py-0.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer',
+                  filtroTipo === 'todos'
+                    ? 'bg-foreground text-background border-foreground shadow-2xs'
+                    : 'bg-muted/40 text-muted-foreground border-border/60 hover:bg-muted'
+                )}
+              >
+                Todos ({r.estoque.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFiltroTipo('medicamento')}
+                className={cn(
+                  'px-2 py-0.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1',
+                  filtroTipo === 'medicamento'
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
+                    : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/20'
+                )}
+              >
+                <span>💊 Medicamentos</span>
+                <span className="text-[10px] opacity-80">({totalMeds})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFiltroTipo('higiene')}
+                className={cn(
+                  'px-2 py-0.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1',
+                  filtroTipo === 'higiene'
+                    ? 'bg-teal-600 text-white border-teal-600 shadow-2xs'
+                    : 'bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/30 hover:bg-teal-500/20'
+                )}
+              >
+                <span>🧴 Higiene</span>
+                <span className="text-[10px] opacity-80">({totalHigs})</span>
+              </button>
+            </div>
+          </div>
 
           <Button
             size="xs"
@@ -4268,11 +4323,17 @@ export function TabEstoque({ r, profNome }: Ctx) {
               <TableHead className="w-8 px-3">
                 <input
                   type="checkbox"
-                  title="Selecionar / Desmarcar todos"
+                  title="Selecionar / Desmarcar exibidos"
                   checked={todosMarcados}
-                  onChange={(e) =>
-                    setItensSelecionados(e.target.checked ? r.estoque.map((it) => it.id) : [])
-                  }
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      const novos = Array.from(new Set([...itensSelecionados, ...itensExibidos.map((it) => it.id)]))
+                      setItensSelecionados(novos)
+                    } else {
+                      const idsExibidos = new Set(itensExibidos.map((it) => it.id))
+                      setItensSelecionados((prev) => prev.filter((id) => !idsExibidos.has(id)))
+                    }
+                  }}
                   className="rounded border-border text-primary focus:ring-primary size-3.5 cursor-pointer align-middle"
                 />
               </TableHead>
@@ -4283,14 +4344,23 @@ export function TabEstoque({ r, profNome }: Ctx) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {r.estoque.map((it) => {
+            {itensExibidos.map((it) => {
               const c = consumoDia(r, it, T)
               const n = nivelEst(c, it)
               const dias = diasRest(c, it.qtd)
               const isSelected = itensSelecionados.includes(it.id)
+              const tipo = classificarTipoItem(it.id, it.nome)
 
               return (
-                <TableRow key={it.id} className={isSelected ? 'bg-primary/5 dark:bg-primary/10' : undefined}>
+                <TableRow
+                  key={it.id}
+                  className={cn(
+                    tipo === 'medicamento'
+                      ? 'border-l-4 border-l-indigo-500 bg-indigo-500/[0.02]'
+                      : 'border-l-4 border-l-teal-500 bg-teal-500/[0.02]',
+                    isSelected && 'bg-primary/5 dark:bg-primary/10'
+                  )}
+                >
                   <TableCell className="w-8 px-3">
                     <input
                       type="checkbox"
@@ -4306,6 +4376,7 @@ export function TabEstoque({ r, profNome }: Ctx) {
                   <TableCell className="font-bold text-foreground text-xs">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span>{it.nome}</span>
+                      <BadgeTipoEstoque itemId={it.id} nomeItem={it.nome} />
                       <OrigemItemSelect itemId={it.id} nomeItem={it.nome} />
                     </div>
                   </TableCell>
@@ -4321,10 +4392,10 @@ export function TabEstoque({ r, profNome }: Ctx) {
                 </TableRow>
               )
             })}
-            {!r.estoque.length && (
+            {!itensExibidos.length && (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-4 text-xs text-muted-foreground italic">
-                  Nenhum item cadastrado no estoque individual deste residente.
+                  Nenhum item encontrado nesta categoria.
                 </TableCell>
               </TableRow>
             )}

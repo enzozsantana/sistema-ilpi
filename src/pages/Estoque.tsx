@@ -9,6 +9,8 @@ import { useIlpiData } from '../contexts/IlpiDataContext'
 import { Avatar, EmptyState, PageHeader, StatusBadge } from '../components/Ui'
 import { ModalPedidoEstoque } from '../components/ModalPedidoEstoque'
 import { OrigemItemSelect } from '../components/OrigemItemSelect'
+import { BadgeTipoEstoque } from '../components/BadgeTipoEstoque'
+import { classificarTipoItem } from '../lib/business/categoriaEstoque'
 import { salvarOrigemItem } from '../lib/business/origemEstoque'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
@@ -157,20 +159,47 @@ export default function Estoque() {
   async function copiarListaReposicaoGeral() {
     const blocos: string[] = []
     residentesAtivos.forEach((r) => {
-      const linhas = r.estoque
-        .map((it) => {
-          const c = consumoDia(r, it, T)
-          const q = qtdPedir(c, it)
-          if (q <= 0) return null
-          return `  • ${it.nome}: repor ${num(q)} ${it.unid} (saldo: ${it.qtd} ${it.unid})`
-        })
-        .filter(Boolean)
+      const respInfo = r.responsavel?.nome
+        ? ` · Contato: ${r.responsavel.nome} (${r.responsavel.tel || 'sem tel'})`
+        : ''
 
-      if (linhas.length) {
-        const respInfo = r.responsavel?.nome
-          ? ` · Contato: ${r.responsavel.nome} (${r.responsavel.tel || 'sem tel'})`
-          : ''
-        blocos.push(`👤 ${r.nome} (Quarto ${r.quarto})${respInfo}:\n${linhas.join('\n')}`)
+      const meds = r.estoque.filter((it) => {
+        const c = consumoDia(r, it, T)
+        return classificarTipoItem(it.id, it.nome) === 'medicamento' && qtdPedir(c, it) > 0
+      })
+
+      const higs = r.estoque.filter((it) => {
+        const c = consumoDia(r, it, T)
+        return classificarTipoItem(it.id, it.nome) === 'higiene' && qtdPedir(c, it) > 0
+      })
+
+      if (meds.length > 0 || higs.length > 0) {
+        const subBlocos: string[] = []
+        if (meds.length > 0) {
+          subBlocos.push(
+            `  💊 MEDICAMENTOS:\n` +
+              meds
+                .map((it) => {
+                  const c = consumoDia(r, it, T)
+                  const q = qtdPedir(c, it)
+                  return `    • ${it.nome}: repor ${num(q)} ${it.unid} (saldo: ${it.qtd} ${it.unid})`
+                })
+                .join('\n')
+          )
+        }
+        if (higs.length > 0) {
+          subBlocos.push(
+            `  🧴 HIGIENE & CUIDADOS:\n` +
+              higs
+                .map((it) => {
+                  const c = consumoDia(r, it, T)
+                  const q = qtdPedir(c, it)
+                  return `    • ${it.nome}: repor ${num(q)} ${it.unid} (saldo: ${it.qtd} ${it.unid})`
+                })
+                .join('\n')
+          )
+        }
+        blocos.push(`👤 ${r.nome} (Quarto ${r.quarto})${respInfo}:\n${subBlocos.join('\n')}`)
       }
     })
 
@@ -541,9 +570,18 @@ export default function Estoque() {
                       const n = nivelEst(c, it)
                       const d = diasRest(c, it.qtd)
                       const isSelected = (itensSelecionadosPorRes[r.id] || []).includes(it.id)
+                      const tipo = classificarTipoItem(it.id, it.nome)
 
                       return (
-                        <TableRow key={it.id} className={isSelected ? 'bg-primary/5 dark:bg-primary/10' : undefined}>
+                        <TableRow
+                          key={it.id}
+                          className={cn(
+                            tipo === 'medicamento'
+                              ? 'border-l-4 border-l-indigo-500 bg-indigo-500/[0.02]'
+                              : 'border-l-4 border-l-teal-500 bg-teal-500/[0.02]',
+                            isSelected && 'bg-primary/5 dark:bg-primary/10'
+                          )}
+                        >
                           <TableCell className="w-8 px-3">
                             <input
                               type="checkbox"
@@ -555,6 +593,7 @@ export default function Estoque() {
                           <TableCell className="font-bold text-xs text-foreground">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span>{it.nome}</span>
+                              <BadgeTipoEstoque itemId={it.id} nomeItem={it.nome} />
                               <OrigemItemSelect itemId={it.id} nomeItem={it.nome} />
                             </div>
                           </TableCell>

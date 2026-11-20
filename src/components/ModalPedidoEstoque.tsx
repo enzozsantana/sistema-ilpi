@@ -15,7 +15,9 @@ import { Badge } from './ui/badge'
 import { Label } from './ui/label'
 import { StatusBadge } from './Ui'
 import { OrigemItemSelect } from './OrigemItemSelect'
+import { BadgeTipoEstoque } from './BadgeTipoEstoque'
 import { getOrigemItem } from '../lib/business/origemEstoque'
+import { classificarTipoItem } from '../lib/business/categoriaEstoque'
 import {
   Building2,
   Check,
@@ -58,6 +60,7 @@ export function ModalPedidoEstoque({
   const [buscaItem, setBuscaItem] = useState('')
   const [obsExtra, setObsExtra] = useState('')
   const [copiado, setCopiado] = useState(false)
+  const [filtroTipo, setFiltroTipo] = useState<'todos' | 'medicamento' | 'higiene'>('todos')
 
   // Mapa de seleção: { [itemId]: { check: boolean; qtd: number } }
   const [selecao, setSelecao] = useState<Record<string, { check: boolean; qtd: number }>>({})
@@ -95,10 +98,14 @@ export function ModalPedidoEstoque({
   if (!residente) return null
 
   const itensFiltrados = useMemo(() => {
-    if (!buscaItem.trim()) return residente.estoque
+    let list = residente.estoque
+    if (filtroTipo !== 'todos') {
+      list = list.filter((it) => classificarTipoItem(it.id, it.nome) === filtroTipo)
+    }
+    if (!buscaItem.trim()) return list
     const q = buscaItem.toLowerCase()
-    return residente.estoque.filter((it) => it.nome.toLowerCase().includes(q))
-  }, [residente.estoque, buscaItem])
+    return list.filter((it) => it.nome.toLowerCase().includes(q))
+  }, [residente.estoque, filtroTipo, buscaItem])
 
   const itensSelecionadosList = useMemo(() => {
     return residente.estoque
@@ -189,52 +196,68 @@ export function ModalPedidoEstoque({
   // Gera o texto personalizado conforme o canal e os itens selecionados
   const textoGerado = useMemo(() => {
     const dataFmt = fmt(T)
-    const linhas = itensSelecionadosList.map(
-      (it) => `• ${it.nome} — Quantidade: ${num(it.qtdPedir)} ${it.unid} (Saldo atual: ${it.qtd} ${it.unid})`
-    )
-
-    if (linhas.length === 0) {
+    if (itensSelecionadosList.length === 0) {
       return 'Nenhum item selecionado para este pedido. Selecione um ou mais itens à esquerda.'
     }
 
+    const meds = itensSelecionadosList.filter((it) => classificarTipoItem(it.id, it.nome) === 'medicamento')
+    const higs = itensSelecionadosList.filter((it) => classificarTipoItem(it.id, it.nome) === 'higiene')
     const obsTexto = obsExtra.trim() ? `\nObservação: ${obsExtra.trim()}` : ''
 
     switch (canal) {
       case 'familia': {
-        const itensSimples = itensSelecionadosList.map(
-          (it) => `• ${it.nome}: ${num(it.qtdPedir)} ${it.unid}`
-        )
+        const blocos: string[] = []
+        if (meds.length > 0) {
+          blocos.push(`💊 MEDICAMENTOS:\n${meds.map((it) => `• ${it.nome}: ${num(it.qtdPedir)} ${it.unid}`).join('\n')}`)
+        }
+        if (higs.length > 0) {
+          blocos.push(`🧴 PRODUTOS DE HIGIENE & CUIDADOS:\n${higs.map((it) => `• ${it.nome}: ${num(it.qtdPedir)} ${it.unid}`).join('\n')}`)
+        }
         return (
           `Olá! Notificação da equipe de enfermagem — ${primeiro(residente.nome)} (Quarto ${residente.quarto}):\n\n` +
-          `Solicitamos a reposição dos seguintes itens de uso individual:\n` +
-          `${itensSimples.join('\n')}\n` +
+          `Solicitamos a reposição dos seguintes itens de uso individual:\n\n` +
+          `${blocos.join('\n\n')}\n` +
           `${obsTexto ? `${obsTexto}\n` : ''}\n` +
           `Favor entregar na instituição aos cuidados da enfermagem. Muito obrigado!`
         )
       }
 
       case 'popular': {
+        const blocos: string[] = []
+        if (meds.length > 0) {
+          blocos.push(`💊 MEDICAMENTOS (Farmácia Popular):\n${meds.map((it) => `• ${it.nome} — Quantidade: ${num(it.qtdPedir)} ${it.unid} (Saldo atual: ${it.qtd} ${it.unid})`).join('\n')}`)
+        }
+        if (higs.length > 0) {
+          blocos.push(`🧴 PRODUTOS DE HIGIENE / MATERIAIS:\n${higs.map((it) => `• ${it.nome} — Quantidade: ${num(it.qtdPedir)} ${it.unid} (Saldo atual: ${it.qtd} ${it.unid})`).join('\n')}`)
+        }
         return (
           `SOLICITAÇÃO DE MEDICAMENTOS — PROGRAMA FARMÁCIA POPULAR\n` +
           `Instituição: ${instituicaoNome}\n` +
           `Data: ${dataFmt}\n\n` +
           `Residente: ${residente.nome} (Quarto ${residente.quarto})\n` +
           (residente.responsavel?.nome ? `Responsável Legal: ${residente.responsavel.nome}\n` : '') +
-          `\nMedicamentos para retirada:\n` +
-          `${linhas.join('\n')}\n` +
+          `\nItens para retirada:\n\n` +
+          `${blocos.join('\n\n')}\n` +
           `${obsTexto ? `${obsTexto}\n` : ''}\n` +
           `Solicitante: ${usuarioNome}`
         )
       }
 
       case 'comercial': {
+        const blocos: string[] = []
+        if (meds.length > 0) {
+          blocos.push(`💊 MEDICAMENTOS:\n${meds.map((it) => `• ${it.nome} — Quantidade: ${num(it.qtdPedir)} ${it.unid} (Saldo atual: ${it.qtd} ${it.unid})`).join('\n')}`)
+        }
+        if (higs.length > 0) {
+          blocos.push(`🧴 PRODUTOS DE HIGIENE & MATERIAIS:\n${higs.map((it) => `• ${it.nome} — Quantidade: ${num(it.qtdPedir)} ${it.unid} (Saldo atual: ${it.qtd} ${it.unid})`).join('\n')}`)
+        }
         return (
           `PEDIDO / COTAÇÃO DE MEDICAMENTOS E MATERIAIS\n` +
           `Instituição: ${instituicaoNome}\n` +
           `Data: ${dataFmt}\n\n` +
           `Residente: ${residente.nome} (Quarto ${residente.quarto})\n\n` +
-          `Itens para compra / entrega:\n` +
-          `${linhas.join('\n')}\n` +
+          `Itens para compra / entrega:\n\n` +
+          `${blocos.join('\n\n')}\n` +
           `${obsTexto ? `${obsTexto}\n` : ''}\n` +
           `Solicitado por: ${usuarioNome}`
         )
@@ -242,12 +265,18 @@ export function ModalPedidoEstoque({
 
       case 'geral':
       default: {
+        const blocos: string[] = []
+        if (meds.length > 0) {
+          blocos.push(`💊 MEDICAMENTOS:\n${meds.map((it) => `• ${it.nome}: ${num(it.qtdPedir)} ${it.unid}`).join('\n')}`)
+        }
+        if (higs.length > 0) {
+          blocos.push(`🧴 PRODUTOS DE HIGIENE & CUIDADOS:\n${higs.map((it) => `• ${it.nome}: ${num(it.qtdPedir)} ${it.unid}`).join('\n')}`)
+        }
         return (
           `LISTA DE MEDICAMENTOS & MATERIAIS INDIVIDUAIS\n` +
           `Residente: ${residente.nome} (Quarto ${residente.quarto})\n` +
           `Data: ${dataFmt}\n\n` +
-          `Itens:\n` +
-          `${linhas.join('\n')}\n` +
+          `${blocos.join('\n\n')}\n` +
           `${obsTexto}`
         )
       }
@@ -300,6 +329,40 @@ export function ModalPedidoEstoque({
         ? 'Solicitação de Reposição - Família'
         : 'Lista de Medicamentos e Materiais'
 
+    const meds = itensSelecionadosList.filter((it) => classificarTipoItem(it.id, it.nome) === 'medicamento')
+    const higs = itensSelecionadosList.filter((it) => classificarTipoItem(it.id, it.nome) === 'higiene')
+
+    const tabelaHtml = (titulo: string, icone: string, cor: string, itens: typeof itensSelecionadosList) => {
+      if (!itens.length) return ''
+      return `
+        <h3 style="color: ${cor}; font-size: 13px; font-weight: bold; margin-top: 18px; margin-bottom: 6px; display: flex; items-center: center;">
+          ${icone} ${titulo} (${itens.length})
+        </h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Material / Insumo</th>
+              <th>Quantidade a Solicitar</th>
+              <th>Saldo Físico Atual</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itens
+              .map(
+                (it) => `
+              <tr>
+                <td><strong>${it.nome}</strong></td>
+                <td>${num(it.qtdPedir)} ${it.unid}</td>
+                <td>${it.qtd} ${it.unid}</td>
+              </tr>
+            `
+              )
+              .join('')}
+          </tbody>
+        </table>
+      `
+    }
+
     janela.document.write(`
       <!DOCTYPE html>
       <html>
@@ -310,7 +373,7 @@ export function ModalPedidoEstoque({
           h1 { font-size: 18px; margin-bottom: 4px; }
           .sub { color: #555; font-size: 12px; margin-bottom: 16px; border-bottom: 1px solid #ddd; padding-bottom: 8px; }
           .info { background: #f8f9fa; border: 1px solid #e9ecef; padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 13px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 6px; margin-bottom: 12px; font-size: 13px; }
           th, td { border: 1px solid #dee2e6; padding: 8px 10px; text-align: left; }
           th { background: #e9ecef; }
           .obs { margin-top: 16px; padding: 10px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px; font-size: 12px; }
@@ -326,28 +389,8 @@ export function ModalPedidoEstoque({
           ${residente?.responsavel?.nome ? `<strong>Responsável:</strong> ${residente.responsavel.nome} ${residente.responsavel.tel ? `(${residente.responsavel.tel})` : ''}` : ''}
         </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th>Material / Medicamento</th>
-              <th>Quantidade a Solicitar</th>
-              <th>Saldo Físico Atual</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${itensSelecionadosList
-              .map(
-                (it) => `
-              <tr>
-                <td><strong>${it.nome}</strong></td>
-                <td>${num(it.qtdPedir)} ${it.unid}</td>
-                <td>${it.qtd} ${it.unid}</td>
-              </tr>
-            `
-              )
-              .join('')}
-          </tbody>
-        </table>
+        ${tabelaHtml('Medicamentos', '💊', '#3730a3', meds)}
+        ${tabelaHtml('Produtos de Higiene & Cuidados', '🧴', '#0f766e', higs)}
 
         ${obsExtra.trim() ? `<div class="obs"><strong>Observações:</strong> ${obsExtra.trim()}</div>` : ''}
 
@@ -521,16 +564,64 @@ export function ModalPedidoEstoque({
                 </div>
               </div>
 
-              {/* Filtro de Busca */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Filtrar medicamento ou material..."
-                  value={buscaItem}
-                  onChange={(e) => setBuscaItem(e.target.value)}
-                  className="h-8 pl-8 text-xs rounded-xl"
-                />
+              {/* Filtro de Busca e Filtro de Categoria (Medicamentos vs Higiene) */}
+              <div className="space-y-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Filtrar medicamento ou material..."
+                    value={buscaItem}
+                    onChange={(e) => setBuscaItem(e.target.value)}
+                    className="h-8 pl-8 text-xs rounded-xl"
+                  />
+                </div>
+
+                {/* Filtro por Categoria (Medicamentos vs Produtos de Higiene) */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setFiltroTipo('todos')}
+                    className={cn(
+                      'px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all shrink-0',
+                      filtroTipo === 'todos'
+                        ? 'bg-foreground text-background border-foreground shadow-2xs'
+                        : 'bg-muted/40 text-muted-foreground border-border/60 hover:bg-muted'
+                    )}
+                  >
+                    Todos ({residente.estoque.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFiltroTipo('medicamento')}
+                    className={cn(
+                      'px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all shrink-0 flex items-center gap-1',
+                      filtroTipo === 'medicamento'
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
+                        : 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/20'
+                    )}
+                  >
+                    <span>💊 Medicamentos</span>
+                    <span className="text-[10px] opacity-80">
+                      ({residente.estoque.filter((it) => classificarTipoItem(it.id, it.nome) === 'medicamento').length})
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFiltroTipo('higiene')}
+                    className={cn(
+                      'px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all shrink-0 flex items-center gap-1',
+                      filtroTipo === 'higiene'
+                        ? 'bg-teal-600 text-white border-teal-600 shadow-2xs'
+                        : 'bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/30 hover:bg-teal-500/20'
+                    )}
+                  >
+                    <span>🧴 Higiene & Cuidados</span>
+                    <span className="text-[10px] opacity-80">
+                      ({residente.estoque.filter((it) => classificarTipoItem(it.id, it.nome) === 'higiene').length})
+                    </span>
+                  </button>
+                </div>
               </div>
 
               {/* Lista dos Itens com Checkbox, Status e Ajuste de Quantidade */}
@@ -540,12 +631,16 @@ export function ModalPedidoEstoque({
                   const n = nivelEst(c, it)
                   const isSelected = !!selecao[it.id]?.check
                   const qtdAtual = selecao[it.id]?.qtd || 1
+                  const tipo = classificarTipoItem(it.id, it.nome)
 
                   return (
                     <div
                       key={it.id}
                       className={cn(
                         'p-2.5 sm:px-3 flex items-center justify-between gap-3 transition-colors',
+                        tipo === 'medicamento'
+                          ? 'border-l-4 border-l-indigo-500 bg-indigo-500/[0.03]'
+                          : 'border-l-4 border-l-teal-500 bg-teal-500/[0.03]',
                         isSelected ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-muted/30'
                       )}
                     >
@@ -562,6 +657,7 @@ export function ModalPedidoEstoque({
                             <span className="font-semibold text-xs sm:text-sm text-foreground block truncate">
                               {it.nome}
                             </span>
+                            <BadgeTipoEstoque itemId={it.id} nomeItem={it.nome} />
                             <OrigemItemSelect itemId={it.id} nomeItem={it.nome} />
                           </div>
                           <span className="text-[11px] text-muted-foreground flex items-center gap-2 flex-wrap">

@@ -135,4 +135,42 @@ describe('ModalPedidoEstoque', () => {
     expect(textarea.value).toContain('Bromoprida 4 mg/mL')
     expect(textarea.value).not.toContain('Pantoprazol 40 mg')
   })
+
+  it('separa medicamentos e produtos de higiene em blocos distintos no pedido', () => {
+    const residenteComHigiene: Residente = {
+      ...mockResidente,
+      estoque: [
+        {
+          id: 'it_pantoprazol',
+          nome: 'Pantoprazol 40 mg',
+          unid: 'un',
+          qtd: 5,
+          min: 7,
+        },
+        {
+          id: 'it_shampoo',
+          nome: 'Shampoo Anticaspa',
+          unid: 'un',
+          qtd: 0,
+          min: 1,
+        },
+      ],
+    }
+
+    render(
+      <ModalPedidoEstoque
+        open={true}
+        onOpenChange={vi.fn()}
+        residente={residenteComHigiene}
+        itensIniciaisIds={['it_pantoprazol', 'it_shampoo']}
+        usuarioNome="Egle (RT)"
+      />
+    )
+
+    const textarea = screen.getByTestId('preview-texto') as HTMLTextAreaElement
+    expect(textarea.value).toContain('💊 MEDICAMENTOS:')
+    expect(textarea.value).toContain('Pantoprazol 40 mg')
+    expect(textarea.value).toContain('🧴 PRODUTOS DE HIGIENE & CUIDADOS:')
+    expect(textarea.value).toContain('Shampoo Anticaspa')
+  })
 })
