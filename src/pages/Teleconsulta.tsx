@@ -1358,6 +1358,7 @@ export default function Teleconsulta() {
           onOpenChange={setModalReceitaOpen}
           residente={residenteParaReceita}
           tipoInicial="receituario"
+          className="!w-[96vw] !max-w-[96vw] sm:!max-w-[96vw] lg:!max-w-[96vw] xl:!max-w-[1600px] !max-h-[94vh] overflow-y-auto overflow-x-hidden"
           onPedidoSalvo={() => {
             toast.success('Receita / pedido médico gravado e assinado no prontuário!')
           }}

@@ -303,7 +303,7 @@ export function ModalPedidoMedico({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          'w-[96vw] sm:max-w-5xl lg:max-w-6xl xl:max-w-7xl max-h-[94vh] overflow-y-auto p-0 gap-0 border-border/80 shadow-2xl',
+          '!w-[96vw] !max-w-[96vw] sm:!max-w-[96vw] lg:!max-w-[96vw] xl:!max-w-[1600px] !max-h-[94vh] overflow-y-auto overflow-x-hidden p-0 gap-0 border-border/80 shadow-2xl',
           className
         )}
       >
@@ -793,7 +793,7 @@ export function ModalPedidoMedico({
             ========================================================================= */}
         <div
           className={cn(
-            'w-full bg-slate-100/70 dark:bg-slate-900/40 p-4 sm:p-8 flex justify-center overflow-x-auto',
+            'w-full bg-slate-100/70 dark:bg-slate-900/40 p-4 sm:p-8 flex justify-center overflow-x-hidden',
             modo === 'edicao' ? 'hidden' : 'block'
           )}
         >
