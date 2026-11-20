@@ -53,6 +53,7 @@ interface ModalPedidoMedicoProps {
   tipoInicial?: TipoPedido
   pedidoExistente?: PedidoMedicoData | null
   onPedidoSalvo?: () => void
+  className?: string
 }
 
 export function ModalPedidoMedico({
@@ -62,6 +63,7 @@ export function ModalPedidoMedico({
   tipoInicial = 'exames',
   pedidoExistente = null,
   onPedidoSalvo,
+  className,
 }: ModalPedidoMedicoProps) {
   const { profissional } = useAuth()
   const { inst, refresh } = useIlpiData()
@@ -299,7 +301,12 @@ export function ModalPedidoMedico({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto p-0 gap-0 border-border/80 shadow-2xl">
+      <DialogContent
+        className={cn(
+          'w-[96vw] sm:max-w-5xl lg:max-w-6xl xl:max-w-7xl max-h-[94vh] overflow-y-auto p-0 gap-0 border-border/80 shadow-2xl',
+          className
+        )}
+      >
         {/* CABEÇALHO DO MODAL (Não aparece na impressão) */}
         <div className="no-print p-5 border-b border-border/60 bg-muted/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -454,7 +461,7 @@ export function ModalPedidoMedico({
                         <span className="font-bold text-[11px] uppercase tracking-wider text-muted-foreground block">
                           {grupo.label}
                         </span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
                           {examesDoGrupo.map((exame) => {
                             const marcado = examesSelecionados.includes(exame.nome)
                             return (
@@ -786,11 +793,14 @@ export function ModalPedidoMedico({
             ========================================================================= */}
         <div
           className={cn(
-            'folha-impressao-a4 bg-white text-slate-900 p-8 sm:p-10 transition-all font-sans',
+            'w-full bg-slate-100/70 dark:bg-slate-900/40 p-4 sm:p-8 flex justify-center overflow-x-auto',
             modo === 'edicao' ? 'hidden' : 'block'
           )}
-          style={{ minHeight: '297mm' }}
         >
+          <div
+            className="folha-impressao-a4 bg-white text-slate-900 p-8 sm:p-12 transition-all font-sans w-full max-w-[210mm] shadow-xl border border-slate-200 rounded-sm"
+            style={{ minHeight: '297mm' }}
+          >
           {/* CABEÇALHO INSTITUCIONAL */}
           <div className="border-b-2 border-slate-800 pb-4 mb-6 flex items-start justify-between gap-4">
             <div>
@@ -990,6 +1000,7 @@ export function ModalPedidoMedico({
             </div>
           </div>
         </div>
+      </div>
 
         {/* RODAPÉ DO MODAL (Não aparece na impressão) */}
         <DialogFooter className="no-print p-4 border-t border-border/60 bg-muted/20 flex flex-col sm:flex-row items-center justify-between gap-3">
