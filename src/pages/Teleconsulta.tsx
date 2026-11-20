@@ -506,7 +506,7 @@ export default function Teleconsulta() {
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground font-heading flex items-center gap-2">
-                <span>Teleconsulta & Consultas Virtuais</span>
+                <span>Teleconsulta & Especialistas Virtuais</span>
                 <Badge variant="outline" className="bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/20 text-xs">
                   <Sparkles className="size-3 mr-1" /> Telemedicina ILPI
                 </Badge>
