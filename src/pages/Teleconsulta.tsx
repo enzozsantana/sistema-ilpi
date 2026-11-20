@@ -9,6 +9,7 @@ import {
   buildJitsiUrl,
   obterConsultasVirtuais,
   salvarConsultaVirtual,
+  atualizarStatusConsulta,
   marcarEvolucaoConsulta,
 } from '../lib/teleconsultaStorage'
 import type {
@@ -127,6 +128,33 @@ export default function Teleconsulta() {
   // Modal de Prescrição / Pedido Médico
   const [modalReceitaOpen, setModalReceitaOpen] = useState(false)
   const [residenteParaReceita, setResidenteParaReceita] = useState<Residente | null>(null)
+
+  const profDaConsulta = useMemo(() => {
+    if (!salaAberta) return null
+    return PROFISSIONAIS_VIRTUAIS.find((p) => p.id === salaAberta.profissionalId) || null
+  }, [salaAberta])
+
+  const estaEmEspera = salaAberta?.status !== 'em_andamento'
+
+  function handleIniciarConsulta() {
+    if (!salaAberta) return
+    atualizarStatusConsulta(salaAberta.id, 'em_andamento')
+    setSalaAberta((prev) => (prev ? { ...prev, status: 'em_andamento' } : null))
+    setConsultas((prev) =>
+      prev.map((c) => (c.id === salaAberta.id ? { ...c, status: 'em_andamento' } : c))
+    )
+    toast.success('Atendimento iniciado! Chamada de vídeo conectada.')
+  }
+
+  function handleFinalizarConsulta() {
+    if (!salaAberta) return
+    atualizarStatusConsulta(salaAberta.id, 'concluida')
+    setSalaAberta((prev) => (prev ? { ...prev, status: 'concluida' } : null))
+    setConsultas((prev) =>
+      prev.map((c) => (c.id === salaAberta.id ? { ...c, status: 'concluida' } : c))
+    )
+    toast.success('Consulta finalizada! Registre a evolução e prescrições no prontuário.')
+  }
 
   // Filtro de profissionais
   const profissionaisFiltrados = useMemo(() => {
@@ -864,6 +892,30 @@ export default function Teleconsulta() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
+                  {estaEmEspera ? (
+                    <Button
+                      type="button"
+                      size="xs"
+                      onClick={handleIniciarConsulta}
+                      className="text-xs rounded-xl gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                      title="Iniciar o atendimento e conectar a chamada de vídeo"
+                    >
+                      <Video className="size-3.5" />
+                      <span>Iniciar Atendimento</span>
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      size="xs"
+                      variant="outline"
+                      onClick={handleFinalizarConsulta}
+                      className="text-xs rounded-xl gap-1.5 text-rose-700 dark:text-rose-300 border-rose-500/40 hover:bg-rose-500/10"
+                      title="Finalizar consulta e registrar no prontuário"
+                    >
+                      <span>Finalizar Atendimento</span>
+                    </Button>
+                  )}
+
                   <Button
                     type="button"
                     size="xs"
@@ -913,127 +965,181 @@ export default function Teleconsulta() {
                 </div>
               </div>
 
-              {/* Barra de Instruções Acolhedoras em PT-BR */}
-              <div className="bg-emerald-500/10 border-b border-emerald-500/20 px-3 sm:px-6 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                <div className="flex items-center gap-2 text-emerald-950 dark:text-emerald-200">
-                  <span className="size-2 rounded-full bg-emerald-500 animate-ping shrink-0" />
-                  <span className="font-medium">
-                    <strong>Sala Pronta em Português (PT-BR)</strong> · Conexão direta sem exigência de login ou senha. Permita câmera e microfone se o navegador solicitar.
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Button
-                    type="button"
-                    size="xs"
-                    variant="outline"
-                    onClick={() => compartilharWhatsApp(salaAberta)}
-                    className="h-6 text-[11px] gap-1 rounded-lg border-emerald-600/40 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-500/20"
-                    title="Convidar a família ou especialista pelo WhatsApp"
-                  >
-                    <Share2 className="size-3 text-emerald-600" />
-                    <span>Convidar via WhatsApp</span>
-                  </Button>
-                </div>
-              </div>
-
-              {/* Corpo da Sala: Vídeo Jitsi + Prontuário Lateral */}
-              <div className="flex-1 flex flex-col lg:flex-row overflow-hidden bg-slate-950">
-                {/* Janela de Vídeo Jitsi Meet */}
-                <div className="flex-1 h-full min-h-[350px] relative bg-black">
-                  {/* Backdrop de Carregamento Acolhedor em Português */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 text-slate-300 pointer-events-none z-0">
-                    <div className="size-9 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin mb-3" />
-                    <p className="font-semibold text-sm text-white">Carregando Sala Virtual em Português...</p>
-                    <p className="text-xs text-slate-400 mt-1 max-w-sm">
-                      Sem exigência de login de moderador. A transmissão de vídeo iniciará automaticamente.
-                    </p>
-                  </div>
-                  <iframe
-                    src={urlSalaLogado}
-                    allow="camera; microphone; display-capture; autoplay; clipboard-write"
-                    className="w-full h-full border-none relative z-10"
-                    title="Sala de Vídeo Teleconsulta"
-                  />
-                </div>
-
-                {/* Painel Clínico Lateral: Prontuário, Evolução e Prescrição */}
-                {painelProntuarioAberto && (
-                  <div className="w-full lg:w-[420px] xl:w-[450px] border-t lg:border-t-0 lg:border-l border-border/70 bg-card flex flex-col max-h-[50vh] lg:max-h-full overflow-y-auto p-4 sm:p-5 space-y-4 text-xs">
-                    {/* Header do Residente */}
-                    {residenteEscolhido ? (
-                      <div className="p-3 rounded-xl bg-muted/30 border border-border/60 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <strong className="text-foreground font-bold">{residenteEscolhido.nome}</strong>
-                          <Badge variant="outline" className="text-[10px]">
-                            Quarto {residenteEscolhido.quarto || '-'}
-                          </Badge>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground">
-                          {residenteEscolhido.nasc ? `Nascimento: ${String(residenteEscolhido.nasc)}` : ''} · Convênio: {String(residenteEscolhido.convenio || 'Particular')}
-                        </p>
-                        {residenteEscolhido.alergias && (
-                          <div className="pt-1">
-                            <span className="text-[10px] text-rose-600 font-semibold block">⚠️ Alergias:</span>
-                            <span className="text-[10px] text-rose-700 dark:text-rose-300">
-                              {Array.isArray(residenteEscolhido.alergias)
-                                ? (residenteEscolhido.alergias as string[]).join(', ')
-                                : String(residenteEscolhido.alergias)}
-                            </span>
-                          </div>
-                        )}
+              {/* CORPO DA SALA: SALA DE ESPERA OU ATENDIMENTO AO VIVO */}
+              {estaEmEspera ? (
+                <div className="flex-1 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-card via-card/95 to-muted/20 text-center overflow-y-auto">
+                  <div className="max-w-md w-full space-y-5">
+                    {/* Foto e Especialidade */}
+                    <div className="flex flex-col items-center space-y-2.5">
+                      <div className="relative">
+                        <img
+                          src={profDaConsulta?.foto || 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300'}
+                          alt={salaAberta.profissionalNome}
+                          className="size-28 rounded-full object-cover border-4 border-teal-500/40 shadow-xl"
+                        />
+                        <span className="absolute bottom-1 right-1 size-7 rounded-full bg-amber-500 border-2 border-background flex items-center justify-center text-xs shadow-md text-white">
+                          ⏳
+                        </span>
                       </div>
-                    ) : (
-                      <p className="text-muted-foreground italic">Residente da ILPI</p>
-                    )}
+                      <div className="space-y-1">
+                        <h3 className="text-base font-bold text-foreground">{salaAberta.profissionalNome}</h3>
+                        <p className="text-xs text-muted-foreground">{salaAberta.especialidade} · {salaAberta.registro}</p>
+                        <Badge variant="outline" className="text-[10px] border-teal-500/30 text-teal-700 dark:text-teal-300">
+                          {salaAberta.clinica}
+                        </Badge>
+                      </div>
+                    </div>
 
-                    {/* Ações Rápidas: Receita & Exames */}
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-foreground block">
-                        Prescrição & Pedido de Exames:
-                      </Label>
+                    {/* Mensagem Acolhedora em Português */}
+                    <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center space-y-2">
+                      <div className="inline-flex items-center gap-2 text-amber-800 dark:text-amber-200 font-bold text-xs uppercase tracking-wide">
+                        <span className="size-2 rounded-full bg-amber-500 animate-ping" />
+                        <span>Sala de Espera Virtual (PT-BR)</span>
+                      </div>
+                      <p className="text-xs text-foreground/90 leading-relaxed font-medium">
+                        Olá! Você está na sala de espera para a consulta de <strong>{salaAberta.residenteNome}</strong>.
+                      </p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        O(A) profissional <strong>{salaAberta.profissionalNome}</strong> foi notificado(a) e está finalizando os preparativos do atendimento. Por favor, aguarde nesta tela — assim que o prestador iniciar, a chamada de vídeo começará automaticamente.
+                      </p>
+                    </div>
+
+                    {/* Painel do Prestador / Moderador (Equipe Logada no Sistema) */}
+                    <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-3">
+                      <div className="flex items-center justify-center gap-1.5 text-emerald-800 dark:text-emerald-200 font-bold text-xs">
+                        <span className="text-sm">🛡️</span>
+                        <span>Controle do Prestador / Moderador</span>
+                      </div>
+                      <p className="text-[11px] text-emerald-900/80 dark:text-emerald-200/80">
+                        Você está autenticado(a) como responsável pela ILPI. Quando estiver pronto(a) para atender o paciente, clique no botão abaixo para liberar a sala de vídeo.
+                      </p>
                       <Button
                         type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          if (residenteEscolhido) {
-                            setResidenteParaReceita(residenteEscolhido)
-                            setModalReceitaOpen(true)
-                          }
-                        }}
-                        className="w-full rounded-xl text-xs gap-1.5 border-teal-500/40 text-teal-700 dark:text-teal-300 hover:bg-teal-500/10"
+                        size="lg"
+                        onClick={handleIniciarConsulta}
+                        className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs gap-2 py-5 shadow-md"
                       >
-                        <Pill className="size-3.5" />
-                        <span>Emitir Receita & Pedidos de Exames</span>
+                        <Video className="size-4" />
+                        <span>Iniciar Consulta & Conectar Chamada</span>
                       </Button>
                     </div>
 
-                    {/* Formulário de Evolução da Teleconsulta */}
-                    <div className="space-y-2 pt-2 border-t border-border/50 flex-1 flex flex-col">
-                      <Label className="text-xs font-bold text-foreground flex items-center justify-between">
-                        <span>Evolução Clínica da Consulta</span>
-                        <span className="text-[10px] text-muted-foreground font-normal">Grava no Prontuário</span>
-                      </Label>
-                      <textarea
-                        value={textoEvolucao}
-                        onChange={(e) => setTextoEvolucao(e.target.value)}
-                        placeholder="Descreva o atendimento, conduta terapêutica, orientações aos cuidadores..."
-                        rows={6}
-                        className="w-full text-xs rounded-xl border border-input bg-background p-2.5 focus-visible:outline-ring resize-none leading-relaxed"
-                      />
+                    {/* Ações para o Paciente / Familiar */}
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-1">
                       <Button
                         type="button"
+                        variant="outline"
                         size="sm"
-                        disabled={salvandoEvolucao}
-                        onClick={handleSalvarEvolucaoConsulta}
-                        className="rounded-xl text-xs bg-[#123F4A] hover:bg-[#123F4A]/90 text-white font-semibold"
+                        onClick={() => compartilharWhatsApp(salaAberta)}
+                        className="w-full rounded-xl text-xs gap-1.5 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10"
                       >
-                        {salvandoEvolucao ? 'Salvando...' : 'Salvar Evolução no Prontuário'}
+                        <Share2 className="size-3.5 text-emerald-600" />
+                        <span>Avisar Prestador via WhatsApp</span>
                       </Button>
+                    </div>
+
+                    {/* Status de Câmera e Microfone */}
+                    <div className="flex items-center justify-center gap-4 text-[11px] text-muted-foreground pt-1">
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="size-2 rounded-full bg-emerald-500" /> Microfone Pronto
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="size-2 rounded-full bg-emerald-500" /> Câmera Pronta
+                      </span>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col lg:flex-row overflow-hidden bg-slate-950">
+                  {/* Janela de Vídeo WebRTC */}
+                  <div className="flex-1 h-full min-h-[350px] relative bg-black">
+                    <iframe
+                      src={urlSalaLogado}
+                      allow="camera; microphone; display-capture; autoplay; clipboard-write; fullscreen"
+                      className="w-full h-full border-none relative z-10"
+                      title="Sala de Vídeo Teleconsulta"
+                    />
+                  </div>
+
+                  {/* Painel Clínico Lateral: Prontuário, Evolução e Prescrição */}
+                  {painelProntuarioAberto && (
+                    <div className="w-full lg:w-[420px] xl:w-[450px] border-t lg:border-t-0 lg:border-l border-border/70 bg-card flex flex-col max-h-[50vh] lg:max-h-full overflow-y-auto p-4 sm:p-5 space-y-4 text-xs">
+                      {/* Header do Residente */}
+                      {residenteEscolhido ? (
+                        <div className="p-3 rounded-xl bg-muted/30 border border-border/60 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <strong className="text-foreground font-bold">{residenteEscolhido.nome}</strong>
+                            <Badge variant="outline" className="text-[10px]">
+                              Quarto {residenteEscolhido.quarto || '-'}
+                            </Badge>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground">
+                            {residenteEscolhido.nasc ? `Nascimento: ${String(residenteEscolhido.nasc)}` : ''} · Convênio: {String(residenteEscolhido.convenio || 'Particular')}
+                          </p>
+                          {residenteEscolhido.alergias && (
+                            <div className="pt-1">
+                              <span className="text-[10px] text-rose-600 font-semibold block">⚠️ Alergias:</span>
+                              <span className="text-[10px] text-rose-700 dark:text-rose-300">
+                                {Array.isArray(residenteEscolhido.alergias)
+                                  ? (residenteEscolhido.alergias as string[]).join(', ')
+                                  : String(residenteEscolhido.alergias)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-muted-foreground italic">Residente da ILPI</p>
+                      )}
+
+                      {/* Ações Rápidas: Receita & Exames */}
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-bold text-foreground block">
+                          Prescrição & Pedido de Exames:
+                        </Label>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            if (residenteEscolhido) {
+                              setResidenteParaReceita(residenteEscolhido)
+                              setModalReceitaOpen(true)
+                            }
+                          }}
+                          className="w-full rounded-xl text-xs gap-1.5 border-teal-500/40 text-teal-700 dark:text-teal-300 hover:bg-teal-500/10"
+                        >
+                          <Pill className="size-3.5" />
+                          <span>Emitir Receita & Pedidos de Exames</span>
+                        </Button>
+                      </div>
+
+                      {/* Formulário de Evolução da Teleconsulta */}
+                      <div className="space-y-2 pt-2 border-t border-border/50 flex-1 flex flex-col">
+                        <Label className="text-xs font-bold text-foreground flex items-center justify-between">
+                          <span>Evolução Clínica da Consulta</span>
+                          <span className="text-[10px] text-muted-foreground font-normal">Grava no Prontuário</span>
+                        </Label>
+                        <textarea
+                          value={textoEvolucao}
+                          onChange={(e) => setTextoEvolucao(e.target.value)}
+                          placeholder="Descreva o atendimento, conduta terapêutica, orientações aos cuidadores..."
+                          rows={6}
+                          className="w-full text-xs rounded-xl border border-input bg-background p-2.5 focus-visible:outline-ring resize-none leading-relaxed"
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={salvandoEvolucao}
+                          onClick={handleSalvarEvolucaoConsulta}
+                          className="rounded-xl text-xs bg-[#123F4A] hover:bg-[#123F4A]/90 text-white font-semibold"
+                        >
+                          {salvandoEvolucao ? 'Salvando...' : 'Salvar Evolução no Prontuário'}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
         </DialogContent>

@@ -108,7 +108,7 @@ describe('Teleconsulta Page', () => {
     }, { timeout: 3000 })
   })
 
-  it('preenche automaticamente a identificação do usuário logado e remove tela de "enter your name" no Jitsi', async () => {
+  it('exibe a Sala de Espera Virtual em PT-BR e permite ao prestador/moderador iniciar a chamada', async () => {
     render(<Teleconsulta />)
 
     // Vai para a aba de consultas agendadas
@@ -119,20 +119,21 @@ describe('Teleconsulta Page', () => {
     const botaoEntrar = screen.getByRole('button', { name: /Entrar na Sala Virtual/i })
     fireEvent.click(botaoEntrar)
 
-    // Verifica que exibe "Identificado como: Helena Prado" e a mensagem acolhedora em PT-BR
+    // Verifica que exibe a Sala de Espera Virtual humanizada em PT-BR e controle do moderador
+    expect(screen.getByText(/Sala de Espera Virtual \(PT-BR\)/i)).toBeInTheDocument()
+    expect(screen.getByText(/Controle do Prestador \/ Moderador/i)).toBeInTheDocument()
     expect(screen.getByText(/Identificado como:/i)).toBeInTheDocument()
     expect(screen.getByText(/Helena Prado/i)).toBeInTheDocument()
-    expect(screen.getByText(/Sala Pronta em Português/i)).toBeInTheDocument()
 
-    // Verifica o iframe gerado com parâmetros para ignorar prejoin, definir pt-BR e servidor livre
+    // O prestador/moderador clica para Iniciar o Atendimento e conectar a chamada
+    const botaoIniciar = screen.getByRole('button', { name: /Iniciar Consulta & Conectar Chamada/i })
+    fireEvent.click(botaoIniciar)
+
+    // Após iniciar, a sala de vídeo é conectada sem 'conexão recusada' e com identificação
     const iframe = screen.getByTitle('Sala de Vídeo Teleconsulta')
     expect(iframe).toBeInTheDocument()
     const src = iframe.getAttribute('src') || ''
-    expect(src).toContain('meet.ffmuc.net')
-    expect(src).toContain('lang=ptBR')
-    expect(src).toContain('userInfo.displayName=%22Helena%20Prado%22')
-    expect(src).toContain('config.prejoinConfig.enabled=false')
-    expect(src).toContain('config.prejoinPageEnabled=false')
-    expect(src).toContain('config.requireDisplayName=false')
+    expect(src).toContain('p2p.mirotalk.com/join')
+    expect(src).toContain('name=Helena%20Prado')
   })
 })

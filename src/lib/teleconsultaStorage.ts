@@ -65,47 +65,31 @@ export const PROFISSIONAIS_VIRTUAIS: ProfissionalVirtual[] = [
 
 const STORAGE_KEY = 'ilpi_consultas_virtuais'
 
-// Servidor Jitsi público comunitário sem exigência de login de moderador e com suporte nativo a PT-BR
-export const JITSI_SERVER = 'https://meet.ffmuc.net'
+// Provedor WebRTC P2P que permite incorporação segura em iframe sem bloqueio de moderação e sem 'conexão recusada'
+export const WEBRTC_ROOM_BASE = 'https://p2p.mirotalk.com/join'
+export const JITSI_ROOM_BASE = 'https://meet.jit.si'
 
 export function gerarLinkSalaJitsi(codigoSala: string, displayName?: string): string {
-  // Instância pública comunitária que não bloqueia sala exigindo login de moderador
-  const base = `${JITSI_SERVER}/${codigoSala}?lang=ptBR`
-  return displayName ? buildJitsiUrl(base, displayName) : base
+  const nomeParam = displayName ? `?name=${encodeURIComponent(displayName)}` : ''
+  return `${WEBRTC_ROOM_BASE}/${codigoSala}${nomeParam}`
 }
 
 export function buildJitsiUrl(
   linkBase: string,
   displayName?: string,
-  options?: { audioMuted?: boolean; videoMuted?: boolean }
+  _options?: { audioMuted?: boolean; videoMuted?: boolean }
 ): string {
-  // Migra automaticamente links legados do meet.jit.si para o servidor livre sem barreira de login
-  let urlTratada = linkBase.replace('https://meet.jit.si', JITSI_SERVER)
-  const [cleanBase] = urlTratada.split('#')
+  // Extrai o código da sala e remove domínios legados que bloqueiam iframe (como ffmuc ou jit.si)
+  const partes = linkBase.split('?')[0].split('#')[0].split('/')
+  const codigoSala = partes[partes.length - 1] || 'senecurare-teleconsulta'
 
-  // Garante que o idioma seja português do Brasil (PT-BR)
-  const urlComIdioma = cleanBase.includes('lang=')
-    ? cleanBase
-    : cleanBase.includes('?')
-    ? `${cleanBase}&lang=ptBR`
-    : `${cleanBase}?lang=ptBR`
+  const nomeFinal = displayName && displayName.trim() ? displayName.trim() : 'Participante'
+  return `${WEBRTC_ROOM_BASE}/${codigoSala}?name=${encodeURIComponent(nomeFinal)}`
+}
 
-  const params: string[] = [
-    'config.defaultLanguage="ptBR"',
-    'config.prejoinConfig.enabled=false',
-    'config.prejoinPageEnabled=false',
-    'config.requireDisplayName=false',
-    'config.enableWelcomePage=false',
-    `config.startWithAudioMuted=${options?.audioMuted ? 'true' : 'false'}`,
-    `config.startWithVideoMuted=${options?.videoMuted ? 'true' : 'false'}`,
-    'config.disableDeepLinking=true',
-  ]
-
-  if (displayName && displayName.trim()) {
-    params.unshift(`userInfo.displayName=${encodeURIComponent(`"${displayName.trim()}"`)}`)
-  }
-
-  return `${urlComIdioma}#${params.join('&')}`
+export function gerarLinkExternoJitsi(codigoSala: string, displayName?: string): string {
+  const nomeParam = displayName ? `#userInfo.displayName=%22${encodeURIComponent(displayName)}%22` : ''
+  return `${JITSI_ROOM_BASE}/${codigoSala}${nomeParam}`
 }
 
 export function obterConsultasVirtuais(): ConsultaVirtual[] {
