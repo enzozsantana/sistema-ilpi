@@ -1167,14 +1167,14 @@ export default function Teleconsulta() {
 
                     {/* COLUNA 2: INFORMAÇÕES DA CONSULTA & BOTÕES DE PARTICIPAR */}
                     <div className="lg:col-span-5 flex flex-col space-y-5 text-left">
-                      {/* Header: Pronto para participar? */}
+                      {/* Header: Pronto(a) para participar? */}
                       <div className="space-y-1.5">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 font-bold text-xs uppercase tracking-wide">
                           <span className="size-2 rounded-full bg-amber-500 animate-ping" />
                           <span>Sala de Espera Virtual</span>
                         </div>
                         <h2 className="text-2xl font-bold tracking-tight text-foreground">
-                          Pronto para participar?
+                          Pronto(a) para participar?
                         </h2>
                         <p className="text-xs text-muted-foreground">
                           Identificado como: <strong className="text-foreground">{nomeUsuarioLogado}</strong>

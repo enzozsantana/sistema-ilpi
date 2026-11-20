@@ -120,7 +120,7 @@ describe('Teleconsulta Page', () => {
     fireEvent.click(botaoEntrar)
 
     // Verifica que exibe a Prévia Estilo Google Meet com identificação e botões de mídia
-    expect(screen.getByText(/Pronto para participar\?/i)).toBeInTheDocument()
+    expect(screen.getByText(/Pronto\(a\) para participar\?/i)).toBeInTheDocument()
     expect(screen.getAllByText(/Sala de Espera Virtual/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/Controle do Prestador \/ Moderador/i)).toBeInTheDocument()
     expect(screen.getAllByText(/Identificado como:/i).length).toBeGreaterThanOrEqual(1)
