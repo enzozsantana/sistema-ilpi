@@ -68,6 +68,7 @@ import {
 } from '../lib/business/passagemAvisos'
 import type { PrioridadeAviso, TurnoPlantao } from '../types/ilpi'
 import { toast } from 'sonner'
+import { mascaraPA } from '../lib/masks'
 import { cn } from '@/lib/utils'
 
 const T = iso(new Date())
@@ -1924,7 +1925,7 @@ export default function Plantao() {
                     <Label className="text-[10px]">Pressão Arterial (PA)</Label>
                     <Input
                       value={ssvvPa}
-                      onChange={(e) => setSsvvPa(e.target.value)}
+                      onChange={(e) => setSsvvPa(mascaraPA(e.target.value))}
                       placeholder="120x80"
                       className="h-8 text-xs font-mono"
                     />

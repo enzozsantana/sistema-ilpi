@@ -6,3 +6,11 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export { formatarMoeda, parseMoeda, mascaraMoeda } from './currency'
+export {
+  mascaraConselho,
+  mascaraTelefone,
+  mascaraCartao,
+  mascaraValidadeCartao,
+  mascaraCvv,
+  mascaraPA,
+} from './masks'

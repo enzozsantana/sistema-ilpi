@@ -23,6 +23,7 @@ import {
 import { PasswordInput } from './ui/password-input'
 import { CurrencyInput } from './ui/currency-input'
 import { parseMoeda } from '../lib/currency'
+import { mascaraConselho } from '../lib/masks'
 import { toast } from 'sonner'
 
 interface ModalCadastroEspecialistaProps {
@@ -227,7 +228,7 @@ export function ModalCadastroEspecialista({
                 <Input
                   placeholder="ex: CRM-SP 189432 / COREN-SP 24512"
                   value={registro}
-                  onChange={(e) => setRegistro(e.target.value)}
+                  onChange={(e) => setRegistro(mascaraConselho(e.target.value))}
                   required
                   className="h-10.5 text-xs sm:text-sm rounded-xl px-3.5"
                 />

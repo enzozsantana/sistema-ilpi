@@ -11,6 +11,7 @@ import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
+import { mascaraConselho } from '../lib/masks'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import {
   Dialog,
@@ -1012,7 +1013,7 @@ export default function Equipe() {
                 <Input
                   placeholder="ex: COREN-SP 123456-TE"
                   value={colabConselho}
-                  onChange={(e) => setColabConselho(e.target.value)}
+                  onChange={(e) => setColabConselho(mascaraConselho(e.target.value))}
                   className="text-xs font-mono"
                 />
               </div>

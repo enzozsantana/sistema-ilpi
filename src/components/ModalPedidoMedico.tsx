@@ -26,6 +26,7 @@ import {
   Edit3,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { mascaraConselho } from '../lib/masks'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useIlpiData } from '../contexts/IlpiDataContext'
@@ -865,7 +866,7 @@ export function ModalPedidoMedico({
                   <Label className="text-[10px]">Conselho / Registro (CRM / COREN)</Label>
                   <Input
                     value={prescritorConselho}
-                    onChange={(e) => setPrescritorConselho(e.target.value)}
+                    onChange={(e) => setPrescritorConselho(mascaraConselho(e.target.value))}
                     className="text-xs h-8"
                   />
                 </div>

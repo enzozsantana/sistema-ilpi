@@ -22,6 +22,7 @@ import {
   User,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { mascaraConselho } from '../lib/masks'
 
 export default function Perfil() {
   const {
@@ -227,7 +228,7 @@ export default function Perfil() {
                   id="conselho"
                   type="text"
                   value={conselho}
-                  onChange={(e) => setConselho(e.target.value)}
+                  onChange={(e) => setConselho(mascaraConselho(e.target.value))}
                   placeholder="Ex.: COREN-SP 123.456-ENF"
                   className="h-9 text-xs rounded-xl"
                 />

@@ -12,6 +12,7 @@ import { supabase } from '../lib/supabase'
 import { Allergy, Avatar, EmptyState, PageHeader, ResidentMeta, StatusBadge } from '../components/Ui'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
+import { mascaraTelefone } from '../lib/masks'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
 import { Card, CardContent } from '../components/ui/card'
@@ -650,7 +651,7 @@ export default function Residentes() {
                     <Input
                       id="respTel"
                       value={novoRespTel}
-                      onChange={(e) => setNovoRespTel(e.target.value)}
+                      onChange={(e) => setNovoRespTel(mascaraTelefone(e.target.value))}
                       placeholder="Ex: (11) 98888-7777"
                       className="h-8 text-xs"
                     />

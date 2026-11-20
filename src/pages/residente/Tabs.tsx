@@ -85,6 +85,7 @@ import {
   isCuidadoLpp,
 } from '../../lib/business/cuidados'
 import { toast } from 'sonner'
+import { mascaraTelefone, mascaraPA } from '../../lib/masks'
 import { cn } from '@/lib/utils'
 import { ModalPedidoMedico } from '../../components/ModalPedidoMedico'
 import { ModalPedidoEstoque } from '../../components/ModalPedidoEstoque'
@@ -570,7 +571,7 @@ export function TabFicha({ r, cat }: Ctx) {
                   </div>
                   <div className="space-y-1">
                     <Label className="text-[10px]">Telefone</Label>
-                    <Input value={respTel} onChange={(e) => setRespTel(e.target.value)} className="h-8 text-xs" />
+                    <Input value={respTel} onChange={(e) => setRespTel(mascaraTelefone(e.target.value))} placeholder="Ex: (11) 98888-7777" className="h-8 text-xs" />
                   </div>
                 </div>
               </div>
@@ -3700,7 +3701,7 @@ export function TabAnot({ r, cat }: Ctx) {
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                   <div className="space-y-1">
                     <Label className="text-[10px]">PA (mmHg)</Label>
-                    <Input value={pa} onChange={(e) => setPa(e.target.value)} placeholder="120x80" className="h-8 text-xs font-mono" />
+                    <Input value={pa} onChange={(e) => setPa(mascaraPA(e.target.value))} placeholder="120x80" className="h-8 text-xs font-mono" />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-[10px]">Pulso (bpm)</Label>

@@ -38,6 +38,7 @@ import { ModalCadastroEspecialista } from '../components/ModalCadastroEspecialis
 import { salvarRascunho, obterRascunho, limparRascunho, temRascunho } from '../lib/draftStorage'
 import { calcularSplit, processarPagamentoSplit, gerarPixCopiaECola } from '../lib/mercadopagoService'
 import { formatarMoeda } from '../lib/currency'
+import { mascaraCartao, mascaraValidadeCartao, mascaraCvv } from '../lib/masks'
 import {
   ArrowRightLeft,
   Building2,
@@ -1057,8 +1058,9 @@ export default function Teleconsulta() {
                         <Input
                           placeholder="0000 0000 0000 0000"
                           value={numCartao}
-                          onChange={(e) => setNumCartao(e.target.value)}
-                          className="h-8.5 text-xs rounded-xl"
+                          onChange={(e) => setNumCartao(mascaraCartao(e.target.value))}
+                          maxLength={19}
+                          className="h-8.5 text-xs rounded-xl font-mono"
                         />
                       </div>
                       <div className="space-y-1">
@@ -1066,7 +1068,7 @@ export default function Teleconsulta() {
                         <Input
                           placeholder="Nome Completo"
                           value={nomeCartao}
-                          onChange={(e) => setNomeCartao(e.target.value)}
+                          onChange={(e) => setNomeCartao(e.target.value.toUpperCase())}
                           className="h-8.5 text-xs rounded-xl"
                         />
                       </div>
@@ -1076,8 +1078,9 @@ export default function Teleconsulta() {
                           <Input
                             placeholder="12/28"
                             value={valCartao}
-                            onChange={(e) => setValCartao(e.target.value)}
-                            className="h-8.5 text-xs rounded-xl"
+                            onChange={(e) => setValCartao(mascaraValidadeCartao(e.target.value))}
+                            maxLength={5}
+                            className="h-8.5 text-xs rounded-xl font-mono"
                           />
                         </div>
                         <div className="space-y-1">
@@ -1085,8 +1088,9 @@ export default function Teleconsulta() {
                           <Input
                             placeholder="123"
                             value={cvvCartao}
-                            onChange={(e) => setCvvCartao(e.target.value)}
-                            className="h-8.5 text-xs rounded-xl"
+                            onChange={(e) => setCvvCartao(mascaraCvv(e.target.value))}
+                            maxLength={4}
+                            className="h-8.5 text-xs rounded-xl font-mono"
                           />
                         </div>
                       </div>
