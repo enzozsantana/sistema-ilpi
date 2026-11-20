@@ -11,7 +11,7 @@ import { supabase } from '../../lib/supabase'
 import { useIlpiData } from '../../contexts/IlpiDataContext'
 import { useAuth } from '../../contexts/AuthContext'
 import { PROCESSO_ENFERMAGEM_PADRAO, type ItemProcessoEnfermagem } from '../../lib/constants/processoEnfermagem'
-import type { AbaResidente, Categoria, EscalaCategoria, EscalaCustomizada, NivelBadge, PiaItemNanda, Residente, StatusResidente } from '../../types/ilpi'
+import type { AbaResidente, Categoria, EscalaCategoria, EscalaCustomizada, NivelBadge, PiaItemNanda, Prescricao, Residente, StatusResidente } from '../../types/ilpi'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
@@ -2919,6 +2919,10 @@ export function TabPresc({ r, cat }: Ctx) {
   const [modalReceita, setModalReceita] = useState(false)
   const [salvando, setSalvando] = useState(false)
 
+  // Prescrição sendo editada (null se for novo cadastro)
+  const [prescEditando, setPrescEditando] = useState<Prescricao | null>(null)
+  const [reativarAoSalvar, setReativarAoSalvar] = useState(true)
+
   // Form states
   const [med, setMed] = useState('')
   const [dose, setDose] = useState('')
@@ -2930,6 +2934,7 @@ export function TabPresc({ r, cat }: Ctx) {
   const [controladoManual, setControladoManual] = useState(false)
 
   function handleAbrirModal() {
+    setPrescEditando(null)
     setMed('')
     setDose('')
     setVia('VO')
@@ -2938,6 +2943,21 @@ export function TabPresc({ r, cat }: Ctx) {
     setObs('')
     setControlado(false)
     setControladoManual(false)
+    setReativarAoSalvar(true)
+    setModalNova(true)
+  }
+
+  function handleAbrirEditar(p: Prescricao) {
+    setPrescEditando(p)
+    setMed(p.med)
+    setDose(p.dose || '')
+    setVia(p.via || 'VO')
+    setTipo((p.tipo as 'diario' | 'sn' | 'dias' | 'intervalo') || 'diario')
+    setHorariosStr(Array.isArray(p.horarios) ? p.horarios.join(', ') : '08:00')
+    setObs(p.obs || '')
+    setControlado(isMedicamentoControlado(p))
+    setControladoManual(true)
+    setReativarAoSalvar(true)
     setModalNova(true)
   }
 
@@ -2946,8 +2966,56 @@ export function TabPresc({ r, cat }: Ctx) {
     if (!med.trim() || !profissional) return
 
     setSalvando(true)
-    const id = 'p_' + Math.random().toString(36).substring(2, 9)
     const horarios = horariosStr.split(',').map((s) => s.trim()).filter(Boolean)
+
+    if (prescEditando) {
+      // UPDATE: Altera posologia, dosagem, via, horários ou observações sem necessidade de suspender
+      const updatePayloadBase = {
+        medicamento: med.trim(),
+        dose: dose.trim() || '1 cp',
+        via: via.trim(),
+        tipo,
+        horarios,
+        obs: obs.trim(),
+        ...(prescEditando.suspensa && reativarAoSalvar ? { suspensa: false } : {}),
+      }
+
+      let { error } = await supabase
+        .from('prescricoes')
+        .update({
+          ...updatePayloadBase,
+          controlado,
+        })
+        .eq('id', prescEditando.id)
+
+      if (error && (error.code === '42703' || error.message?.includes('controlado'))) {
+        const resFallback = await supabase
+          .from('prescricoes')
+          .update(updatePayloadBase)
+          .eq('id', prescEditando.id)
+        error = resFallback.error
+      }
+
+      setSalvando(false)
+
+      if (error) {
+        toast.error('Erro ao atualizar prescrição: ' + error.message)
+        return
+      }
+
+      const msgSucesso = prescEditando.suspensa && reativarAoSalvar
+        ? 'Prescrição médica corrigida e reativada com sucesso!'
+        : 'Prescrição médica atualizada com sucesso!'
+      toast.success(msgSucesso)
+
+      setModalNova(false)
+      setPrescEditando(null)
+      await data.refresh()
+      return
+    }
+
+    // INSERT: Novo cadastro
+    const id = 'p_' + Math.random().toString(36).substring(2, 9)
 
     const basePayload = {
       id,
@@ -3079,19 +3147,31 @@ export function TabPresc({ r, cat }: Ctx) {
                 </TableCell>
                 <TableCell className="text-right">
                   {can(cat, 'presc') ? (
-                    <Button
-                      size="xs"
-                      variant={p.suspensa ? 'outline' : 'ghost'}
-                      onClick={() => void handleToggleSuspender(p.id, !!p.suspensa)}
-                      className={cn(
-                        'text-[11px] font-semibold h-6 px-2 rounded-md',
-                        p.suspensa
-                          ? 'text-emerald-600 border-emerald-500/30'
-                          : 'text-rose-600 hover:bg-rose-500/10'
-                      )}
-                    >
-                      {p.suspensa ? 'Reativar' : 'Suspender'}
-                    </Button>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        onClick={() => handleAbrirEditar(p)}
+                        className="text-[11px] font-semibold h-6 px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+                        title="Editar posologia, dosagem ou horários"
+                      >
+                        <Edit3 className="size-3 mr-1" />
+                        Editar
+                      </Button>
+                      <Button
+                        size="xs"
+                        variant={p.suspensa ? 'outline' : 'ghost'}
+                        onClick={() => void handleToggleSuspender(p.id, !!p.suspensa)}
+                        className={cn(
+                          'text-[11px] font-semibold h-6 px-2 rounded-md',
+                          p.suspensa
+                            ? 'text-emerald-600 border-emerald-500/30'
+                            : 'text-rose-600 hover:bg-rose-500/10'
+                        )}
+                      >
+                        {p.suspensa ? 'Reativar' : 'Suspender'}
+                      </Button>
+                    </div>
                   ) : p.suspensa ? (
                     <Badge variant="destructive" className="text-[10px]">Suspensa</Badge>
                   ) : (
@@ -3106,16 +3186,50 @@ export function TabPresc({ r, cat }: Ctx) {
         </Table>
       </CardContent>
 
-      <Dialog open={modalNova} onOpenChange={setModalNova}>
+      <Dialog open={modalNova} onOpenChange={(open) => {
+        setModalNova(open)
+        if (!open) setPrescEditando(null)
+      }}>
         <DialogContent className="max-w-md">
           <form onSubmit={handleSalvarPrescricao}>
             <DialogHeader>
-              <DialogTitle className="text-base font-bold">Cadastrar Prescrição Médica</DialogTitle>
+              <DialogTitle className="text-base font-bold flex items-center gap-2">
+                {prescEditando ? (
+                  <>
+                    <Edit3 className="size-4 text-[#123F4A]" />
+                    Editar Prescrição Médica
+                  </>
+                ) : (
+                  'Cadastrar Prescrição Médica'
+                )}
+              </DialogTitle>
               <DialogDescription className="text-xs">
-                A prescrição alimentará a ronda de medicação do plantão assistencial.
+                {prescEditando
+                  ? 'Corrija a posologia, horários, dosagem ou via deste medicamento sem precisar suspender.'
+                  : 'A prescrição alimentará a ronda de medicação do plantão assistencial.'}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 py-3 text-xs">
+              {/* Opção para reativar caso o medicamento esteja atualmente suspenso */}
+              {prescEditando?.suspensa && (
+                <div className="p-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 flex items-center justify-between gap-3">
+                  <div className="space-y-0.5">
+                    <span className="text-xs text-amber-950 dark:text-amber-200 font-bold block">
+                      Medicamento Atualmente Suspenso
+                    </span>
+                    <span className="text-[11px] text-amber-900/80 dark:text-amber-300/80 block">
+                      Deseja reativar o medicamento imediatamente após salvar a correção?
+                    </span>
+                  </div>
+                  <Checkbox
+                    id="pReativar"
+                    checked={reativarAoSalvar}
+                    onCheckedChange={(checked) => setReativarAoSalvar(!!checked)}
+                    className="data-checked:bg-emerald-600 data-checked:border-emerald-600 shrink-0"
+                  />
+                </div>
+              )}
+
               <div className="space-y-1">
                 <Label htmlFor="pMed" className="text-[11px] font-semibold">Medicamento & Dosagem *</Label>
                 <Input
@@ -3253,11 +3367,19 @@ export function TabPresc({ r, cat }: Ctx) {
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" size="sm" onClick={() => setModalNova(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setModalNova(false)
+                  setPrescEditando(null)
+                }}
+              >
                 Cancelar
               </Button>
               <Button type="submit" size="sm" disabled={salvando} className="bg-[#123F4A] hover:bg-[#123F4A]/90 text-white font-semibold">
-                {salvando ? 'Salvando...' : 'Salvar Prescrição'}
+                {salvando ? 'Salvando...' : prescEditando ? 'Salvar Alterações' : 'Salvar Prescrição'}
               </Button>
             </DialogFooter>
           </form>
