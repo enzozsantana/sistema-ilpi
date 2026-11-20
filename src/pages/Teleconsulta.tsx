@@ -48,11 +48,15 @@ import {
   Mic,
   MicOff,
   Minimize2,
+  Monitor,
+  MonitorOff,
+  PhoneOff,
   Pill,
   QrCode,
   Search,
   Share2,
   Sparkles,
+  Users,
   Video,
   VideoOff,
   X,
@@ -181,29 +185,72 @@ export default function Teleconsulta() {
     }
   }, [])
 
-  // Gerencia o ciclo de vida do stream da webcam na sala de espera
+  const videoChamadaLocalRef = useRef<HTMLVideoElement>(null)
+  const [compartilhandoTela, setCompartilhandoTela] = useState(false)
+  const streamTelaRef = useRef<MediaStream | null>(null)
+
+  // Gerencia o ciclo de vida do stream da webcam enquanto a consulta estiver aberta
   useEffect(() => {
-    if (salaAberta && estaEmEspera) {
+    if (salaAberta) {
       iniciarPreviaDispositivos()
     } else {
       if (streamLocal) {
         streamLocal.getTracks().forEach((t) => t.stop())
         setStreamLocal(null)
       }
+      if (streamTelaRef.current) {
+        streamTelaRef.current.getTracks().forEach((t) => t.stop())
+        streamTelaRef.current = null
+      }
+      setCompartilhandoTela(false)
     }
     return () => {
       if (streamLocal) {
         streamLocal.getTracks().forEach((t) => t.stop())
       }
+      if (streamTelaRef.current) {
+        streamTelaRef.current.getTracks().forEach((t) => t.stop())
+      }
     }
-  }, [salaAberta?.id, estaEmEspera])
+  }, [salaAberta?.id])
 
-  // Vincula o srcObject ao elemento de vídeo quando a referência estiver pronta
+  // Vincula o srcObject aos elementos de vídeo (prévia e chamada ao vivo)
   useEffect(() => {
     if (videoPreviaRef.current && streamLocal) {
       videoPreviaRef.current.srcObject = streamLocal
     }
-  }, [streamLocal, cameraAtiva])
+    if (videoChamadaLocalRef.current && streamLocal) {
+      videoChamadaLocalRef.current.srcObject = streamLocal
+    }
+  }, [streamLocal, cameraAtiva, chamadaAtiva])
+
+  async function alternarCompartilhamentoTela() {
+    if (compartilhandoTela) {
+      if (streamTelaRef.current) {
+        streamTelaRef.current.getTracks().forEach((t) => t.stop())
+        streamTelaRef.current = null
+      }
+      setCompartilhandoTela(false)
+      toast.info('Compartilhamento de tela encerrado.')
+    } else {
+      if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getDisplayMedia) {
+        toast.error('Compartilhamento de tela não suportado neste navegador.')
+        return
+      }
+      try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true })
+        streamTelaRef.current = stream
+        setCompartilhandoTela(true)
+        toast.success('Compartilhando sua tela na chamada.')
+        stream.getVideoTracks()[0].onended = () => {
+          setCompartilhandoTela(false)
+          streamTelaRef.current = null
+        }
+      } catch (err: any) {
+        console.warn('Compartilhamento cancelado:', err)
+      }
+    }
+  }
 
   function alternarCamera() {
     if (streamLocal) {
@@ -237,22 +284,26 @@ export default function Teleconsulta() {
 
   function handleIniciarConsulta() {
     if (!salaAberta) return
-    // Desliga a prévia da webcam para liberar o hardware para o vídeo
-    if (streamLocal) {
-      streamLocal.getTracks().forEach((t) => t.stop())
-      setStreamLocal(null)
-    }
     setChamadaAtiva(true)
     atualizarStatusConsulta(salaAberta.id, 'em_andamento')
     setSalaAberta((prev) => (prev ? { ...prev, status: 'em_andamento' } : null))
     setConsultas((prev) =>
       prev.map((c) => (c.id === salaAberta.id ? { ...c, status: 'em_andamento' } : c))
     )
-    toast.success('Atendimento iniciado! Chamada de vídeo conectada.')
+    toast.success('Atendimento iniciado! Conectado na chamada.')
   }
 
   function handleFinalizarConsulta() {
     if (!salaAberta) return
+    if (streamLocal) {
+      streamLocal.getTracks().forEach((t) => t.stop())
+      setStreamLocal(null)
+    }
+    if (streamTelaRef.current) {
+      streamTelaRef.current.getTracks().forEach((t) => t.stop())
+      streamTelaRef.current = null
+    }
+    setCompartilhandoTela(false)
     setChamadaAtiva(false)
     atualizarStatusConsulta(salaAberta.id, 'concluida')
     setSalaAberta((prev) => (prev ? { ...prev, status: 'concluida' } : null))
@@ -1280,14 +1331,185 @@ export default function Teleconsulta() {
                 </div>
               ) : (
                 <div className="flex-1 flex flex-col lg:flex-row overflow-hidden bg-slate-950">
-                  {/* Janela de Vídeo WebRTC */}
-                  <div className="flex-1 h-full min-h-[350px] relative bg-black">
-                    <iframe
-                      src={urlSalaLogado}
-                      allow="camera; microphone; display-capture; autoplay; clipboard-write; fullscreen"
-                      className="w-full h-full border-none relative z-10"
-                      title="Sala de Vídeo Teleconsulta"
-                    />
+                  {/* Janela de Vídeo WebRTC Nativa (100% em Português) */}
+                  <div
+                    title="Sala de Vídeo Teleconsulta"
+                    className="flex-1 h-full min-h-[350px] relative bg-slate-950 flex flex-col justify-between overflow-hidden"
+                  >
+                    {/* Topo Flutuante: Badge de Conexão Segura e Identificação */}
+                    <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none">
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white text-xs pointer-events-auto shadow-sm">
+                        <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="font-semibold">Consulta ao Vivo</span>
+                        <span className="text-white/40">·</span>
+                        <span className="text-white/80">Criptografia P2P</span>
+                      </div>
+
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white text-xs pointer-events-auto shadow-sm">
+                        <span className="text-white/70">Sala:</span>
+                        <span className="font-mono text-emerald-400 font-bold">{salaAberta.codigoSala}</span>
+                      </div>
+                    </div>
+
+                    {/* Área Principal de Vídeo */}
+                    <div className="flex-1 relative flex items-center justify-center p-4">
+                      {/* Se estiver compartilhando tela, exibe a tela no palco principal */}
+                      {compartilhandoTela ? (
+                        <div className="w-full h-full max-h-[70vh] rounded-2xl overflow-hidden bg-black flex items-center justify-center border border-white/10 shadow-2xl">
+                          <video
+                            ref={(el) => {
+                              if (el && streamTelaRef.current) {
+                                el.srcObject = streamTelaRef.current
+                              }
+                            }}
+                            autoPlay
+                            playsInline
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      ) : (
+                        /* Palco Central: Informações do Paciente & Status de Conexão */
+                        <div className="max-w-md w-full p-6 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-2xl text-center space-y-4 backdrop-blur-md">
+                          <div className="relative mx-auto size-24 sm:size-28">
+                            <img
+                              src={
+                                profDaConsulta?.foto ||
+                                'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300'
+                              }
+                              alt={salaAberta.profissionalNome}
+                              className="size-full rounded-full object-cover border-4 border-teal-500/40 shadow-xl"
+                            />
+                            <span className="absolute bottom-1 right-1 size-7 rounded-full bg-emerald-500 border-2 border-slate-900 flex items-center justify-center text-xs text-white shadow-md">
+                              ✓
+                            </span>
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-[11px] font-semibold">
+                              <span className="size-1.5 rounded-full bg-emerald-400 animate-ping" />
+                              <span>Você está conectado(a) na chamada</span>
+                            </div>
+                            <h3 className="text-base font-bold text-white">
+                              Atendimento de {salaAberta.residenteNome}
+                            </h3>
+                            <p className="text-xs text-slate-400">
+                              {salaAberta.especialidade} com {salaAberta.profissionalNome}
+                            </p>
+                          </div>
+
+                          {/* Caixa de Acolhimento do Paciente / Familiar */}
+                          <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800 text-xs text-left space-y-2">
+                            <div className="flex items-center justify-between text-slate-300">
+                              <span className="font-semibold text-slate-200">
+                                Aguardando entrada de {salaAberta.residenteNome}
+                              </span>
+                              <span className="size-2 rounded-full bg-amber-400 animate-pulse" />
+                            </div>
+                            <p className="text-[11px] text-slate-400 leading-relaxed">
+                              O link da teleconsulta já está ativo. Caso o paciente ou familiar ainda não tenha entrado pelo celular ou tablet, envie uma mensagem pelo WhatsApp com o botão abaixo.
+                            </p>
+                            <Button
+                              type="button"
+                              onClick={() => compartilharWhatsApp(salaAberta)}
+                              className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs py-2 gap-2 shadow-md"
+                            >
+                              <Share2 className="size-3.5" />
+                              <span>Enviar Link no WhatsApp da Família</span>
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* PiP (Picture-in-Picture) com a Câmera Local do Usuário */}
+                      <div className="absolute bottom-20 right-4 sm:bottom-24 sm:right-6 z-20 w-44 sm:w-60 aspect-video rounded-2xl overflow-hidden bg-slate-900 border-2 border-slate-700 shadow-2xl">
+                        <video
+                          ref={videoChamadaLocalRef}
+                          autoPlay
+                          playsInline
+                          muted
+                          className={`w-full h-full object-cover scale-x-[-1] ${
+                            cameraAtiva ? 'block' : 'hidden'
+                          }`}
+                        />
+                        {!cameraAtiva && (
+                          <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 text-slate-300 select-none">
+                            <div className="size-12 rounded-full bg-slate-800 flex items-center justify-center font-bold text-sm text-slate-300">
+                              {nomeUsuarioLogado.slice(0, 2).toUpperCase()}
+                            </div>
+                            <span className="text-[10px] text-slate-400 mt-1">Câmera desligada</span>
+                          </div>
+                        )}
+                        <div className="absolute bottom-1.5 left-2 right-2 flex items-center justify-between text-[10px] text-white/90 bg-black/60 px-2 py-0.5 rounded-lg backdrop-blur-xs">
+                          <span className="truncate max-w-[120px] font-medium">{nomeUsuarioLogado}</span>
+                          <span>{micAtivo ? '🎤' : '🔇'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Barra de Controles Inferior 100% em Português */}
+                    <div className="p-4 z-20 flex items-center justify-center gap-3 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent">
+                      <button
+                        type="button"
+                        onClick={alternarMicrofone}
+                        aria-label={micAtivo ? 'Silenciar Microfone' : 'Ativar Microfone'}
+                        title={micAtivo ? 'Silenciar Microfone' : 'Ativar Microfone'}
+                        className={`size-11 rounded-full flex items-center justify-center transition-all shadow-md ${
+                          micAtivo
+                            ? 'bg-slate-800/90 hover:bg-slate-700 text-white border border-white/20'
+                            : 'bg-rose-600 hover:bg-rose-700 text-white ring-2 ring-rose-400'
+                        }`}
+                      >
+                        {micAtivo ? <Mic className="size-5" /> : <MicOff className="size-5" />}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={alternarCamera}
+                        aria-label={cameraAtiva ? 'Desativar Câmera' : 'Ativar Câmera'}
+                        title={cameraAtiva ? 'Desativar Câmera' : 'Ativar Câmera'}
+                        className={`size-11 rounded-full flex items-center justify-center transition-all shadow-md ${
+                          cameraAtiva
+                            ? 'bg-slate-800/90 hover:bg-slate-700 text-white border border-white/20'
+                            : 'bg-rose-600 hover:bg-rose-700 text-white ring-2 ring-rose-400'
+                        }`}
+                      >
+                        {cameraAtiva ? <Camera className="size-5" /> : <VideoOff className="size-5" />}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={alternarCompartilhamentoTela}
+                        aria-label={compartilhandoTela ? 'Parar Compartilhamento' : 'Compartilhar Tela'}
+                        title={compartilhandoTela ? 'Parar Compartilhamento' : 'Compartilhar Tela'}
+                        className={`size-11 rounded-full flex items-center justify-center transition-all shadow-md ${
+                          compartilhandoTela
+                            ? 'bg-teal-600 text-white ring-2 ring-teal-400'
+                            : 'bg-slate-800/90 hover:bg-slate-700 text-white border border-white/20'
+                        }`}
+                      >
+                        {compartilhandoTela ? <MonitorOff className="size-5" /> : <Monitor className="size-5" />}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setChamadaAtiva(false)}
+                        aria-label="Voltar para Sala de Espera"
+                        title="Voltar para Sala de Espera"
+                        className="size-11 rounded-full flex items-center justify-center bg-slate-800/90 hover:bg-slate-700 text-white border border-white/20 transition-all shadow-md"
+                      >
+                        <Users className="size-5" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleFinalizarConsulta}
+                        aria-label="Finalizar Atendimento"
+                        title="Finalizar Atendimento"
+                        className="size-11 rounded-full flex items-center justify-center bg-rose-600 hover:bg-rose-700 text-white transition-all shadow-md shadow-rose-900/50"
+                      >
+                        <PhoneOff className="size-5" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Painel Clínico Lateral: Prontuário, Evolução e Prescrição */}

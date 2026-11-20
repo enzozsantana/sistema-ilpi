@@ -141,11 +141,12 @@ describe('Teleconsulta Page', () => {
     const botaoIniciar = screen.getByRole('button', { name: /Iniciar Consulta & Conectar Chamada/i })
     fireEvent.click(botaoIniciar)
 
-    // Após iniciar, a sala de vídeo é conectada sem bloqueio de moderação e com identificação
-    const iframe = screen.getByTitle('Sala de Vídeo Teleconsulta')
-    expect(iframe).toBeInTheDocument()
-    const src = iframe.getAttribute('src') || ''
-    expect(src).toContain('p2p.mirotalk.com/join')
-    expect(src).toContain('name=Helena%20Prado')
+    // Após iniciar, a sala de vídeo nativa é conectada 100% em PT-BR com identificação e controles
+    const salaVideo = screen.getByTitle('Sala de Vídeo Teleconsulta')
+    expect(salaVideo).toBeInTheDocument()
+    expect(screen.getByText(/Consulta ao Vivo/i)).toBeInTheDocument()
+    expect(screen.getByText(/Atendimento de Sebastião Arruda/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Compartilhar Tela/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Voltar para Sala de Espera/i })).toBeInTheDocument()
   })
 })
