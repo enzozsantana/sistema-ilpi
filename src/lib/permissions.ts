@@ -12,23 +12,24 @@ export const CAN: Record<AcaoPermissao, Categoria[]> = {
   adm: [...NURSE, 'cuid'],
   anot: [...NURSE, 'cuid'],
   cuid: [...NURSE, 'cuid'],
-  gerir: ['rt', 'enf'],
+  gerir: ['rt', 'enf', 'gestao'],
   presc: ['med', 'rt', 'enf'],
   estoque: ['rt'],
   aval: ['rt', 'enf'],
   evol: ['rt', 'enf', 'med', 'multi'],
-  pop_ver: ['rt', 'enf', 'tec', 'estag', 'cuid', 'med', 'multi', 'apoio'],
-  pop_editar: ['rt', 'enf'],
+  pop_ver: ['rt', 'enf', 'tec', 'estag', 'cuid', 'med', 'multi', 'apoio', 'gestao'],
+  pop_editar: ['rt', 'enf', 'gestao'],
+  alvara: ['rt', 'gestao'],
 }
 
 /** Acesso às views principais (NAV_ACESSO). */
 export const NAV_ACESSO: Record<NavView, '*' | Categoria[]> = {
   plantao: '*',
-  residentes: [...NURSE, 'cuid', 'med', 'multi'],
+  residentes: [...NURSE, 'cuid', 'med', 'multi', 'gestao'],
   estoque: ['rt'],
   rotinas: '*',
-  equipe: [...NURSE, 'cuid'],
-  gestao: ['rt', 'enf'],
+  equipe: [...NURSE, 'cuid', 'gestao'],
+  gestao: ['rt', 'enf', 'gestao'],
 }
 
 /** Acesso às abas do residente (TAB_ACESSO). */
@@ -41,9 +42,9 @@ export const TAB_ACESSO: Record<AbaResidente, '*' | Categoria[]> = {
   presc: [...NURSE, 'med', 'cuid'],
   anot: [...NURSE, 'med', 'cuid'],
   evol: ['rt', 'enf', 'med', 'multi'],
-  arquivos: ['rt', 'enf', 'tec', 'med', 'multi'],
+  arquivos: ['rt', 'enf', 'tec', 'med', 'multi', 'gestao'],
   estoque: ['rt'],
-  tudo: ['rt', 'enf', 'med'],
+  tudo: ['rt', 'enf', 'med', 'gestao'],
 }
 
 /** Áreas multiprofissionais por escala clínica (ESCALA_AREA). */

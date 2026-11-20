@@ -67,6 +67,7 @@ export default function Gestao() {
   const { inst, residentes, documentos, pops, eventos, equipe, escalaMes, refresh } = useIlpiData()
 
   const podeGerir = profissional ? can(profissional.cat, 'gerir') : false
+  const podeAlvara = profissional ? can(profissional.cat, 'alvara') : false
 
   const [mesInd, setMesInd] = useState<string>(MK_ATUAL)
   const dim = useMemo(() => dimensionamento(residentes, equipe, escalaMes, T), [residentes, equipe, escalaMes])
@@ -379,7 +380,10 @@ export default function Gestao() {
       </div>
 
       {/* KPI Stats Strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+      <div className={cn(
+        'grid gap-3 sm:gap-4',
+        podeAlvara ? 'grid-cols-2 md:grid-cols-4' : 'grid-cols-2'
+      )}>
         <Card className="border border-border/60 bg-card/60 shadow-2xs">
           <CardContent className="p-3.5 flex items-center justify-between">
             <div>
@@ -396,37 +400,41 @@ export default function Gestao() {
           </CardContent>
         </Card>
 
-        <Card className="border border-border/60 bg-card/60 shadow-2xs">
-          <CardContent className="p-3.5 flex items-center justify-between">
-            <div>
-              <span className="text-[11px] font-medium text-muted-foreground block">
-                Licenças & Alvarás
-              </span>
-              <span className="text-xl font-bold text-foreground">
-                {documentos.length}
-              </span>
-            </div>
-            <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-              <FileCheck2 className="size-4" />
-            </div>
-          </CardContent>
-        </Card>
+        {podeAlvara && (
+          <>
+            <Card className="border border-border/60 bg-card/60 shadow-2xs">
+              <CardContent className="p-3.5 flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-medium text-muted-foreground block">
+                    Licenças & Alvarás
+                  </span>
+                  <span className="text-xl font-bold text-foreground">
+                    {documentos.length}
+                  </span>
+                </div>
+                <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                  <FileCheck2 className="size-4" />
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card className="border border-border/60 bg-card/60 shadow-2xs">
-          <CardContent className="p-3.5 flex items-center justify-between">
-            <div>
-              <span className="text-[11px] font-medium text-muted-foreground block">
-                Alvarás a Vencer
-              </span>
-              <span className={cn('text-xl font-bold', docVencendo > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-foreground')}>
-                {docVencendo}
-              </span>
-            </div>
-            <div className={cn('size-8 rounded-lg flex items-center justify-center', docVencendo > 0 ? 'bg-amber-500/10 text-amber-600' : 'bg-muted text-muted-foreground')}>
-              <AlertTriangle className="size-4" />
-            </div>
-          </CardContent>
-        </Card>
+            <Card className="border border-border/60 bg-card/60 shadow-2xs">
+              <CardContent className="p-3.5 flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-medium text-muted-foreground block">
+                    Alvarás a Vencer
+                  </span>
+                  <span className={cn('text-xl font-bold', docVencendo > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-foreground')}>
+                    {docVencendo}
+                  </span>
+                </div>
+                <div className={cn('size-8 rounded-lg flex items-center justify-center', docVencendo > 0 ? 'bg-amber-500/10 text-amber-600' : 'bg-muted text-muted-foreground')}>
+                  <AlertTriangle className="size-4" />
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
 
         <Card className="border border-border/60 bg-card/60 shadow-2xs">
           <CardContent className="p-3.5 flex items-center justify-between">
@@ -506,28 +514,28 @@ export default function Gestao() {
         </CardContent>
       </Card>
 
-      {/* Alvarás, Licenças Sanitárias e AVCB */}
-      <Card className="border border-border/70 shadow-xs rounded-2xl overflow-hidden">
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/40 bg-muted/20 px-5 pt-4">
-          <div className="flex items-center gap-2.5">
-            <div className="size-8 rounded-lg bg-teal-500/10 text-teal-600 flex items-center justify-center">
-              <ShieldCheck className="size-4.5" />
+      {/* Alvarás, Licenças Sanitárias e AVCB (Exclusivo para RT e Gestão) */}
+      {podeAlvara && (
+        <Card className="border border-border/70 shadow-xs rounded-2xl overflow-hidden">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/40 bg-muted/20 px-5 pt-4">
+            <div className="flex items-center gap-2.5">
+              <div className="size-8 rounded-lg bg-teal-500/10 text-teal-600 flex items-center justify-center">
+                <ShieldCheck className="size-4.5" />
+              </div>
+              <div>
+                <CardTitle className="text-sm font-bold font-heading">
+                  Alvarás, Vistorias e Licenças Sanitárias
+                </CardTitle>
+                <span className="text-[11px] text-muted-foreground">
+                  Documentação fiscalizatória e datas de vencimento (Exclusivo RT & Gestão)
+                </span>
+              </div>
             </div>
-            <div>
-              <CardTitle className="text-sm font-bold font-heading">
-                Alvarás, Vistorias e Licenças Sanitárias
-              </CardTitle>
-              <span className="text-[11px] text-muted-foreground">
-                Documentação fiscalizatória e datas de vencimento
-              </span>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="text-xs">
-              {documentos.length} licenças
-            </Badge>
-            {podeGerir && (
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-xs">
+                {documentos.length} licenças
+              </Badge>
               <Button
                 size="sm"
                 variant="outline"
@@ -536,33 +544,31 @@ export default function Gestao() {
               >
                 <Plus className="size-3.5" /> Nova Licença
               </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="p-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {documentos.map((d) => {
-              const v = d.validade ? diffDays(d.validade, T) : 999
-              const status = v <= 0 ? 'danger' : v <= 60 ? 'warn' : 'ok'
+            </div>
+          </CardHeader>
+          <CardContent className="p-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {documentos.map((d) => {
+                const v = d.validade ? diffDays(d.validade, T) : 999
+                const status = v <= 0 ? 'danger' : v <= 60 ? 'warn' : 'ok'
 
-              return (
-                <div
-                  key={d.id}
-                  className="p-3.5 rounded-xl border border-border/60 bg-card hover:bg-muted/15 transition-all shadow-2xs flex items-center justify-between gap-3 text-xs"
-                >
-                  <div className="min-w-0">
-                    <span className="font-bold text-foreground block truncate">{d.nome}</span>
-                    <span className="text-[11px] text-muted-foreground block truncate mt-0.5">
-                      Órgão: <strong>{d.orgao}</strong> · Validade: {fmt(d.validade)}
-                    </span>
-                  </div>
+                return (
+                  <div
+                    key={d.id}
+                    className="p-3.5 rounded-xl border border-border/60 bg-card hover:bg-muted/15 transition-all shadow-2xs flex items-center justify-between gap-3 text-xs"
+                  >
+                    <div className="min-w-0">
+                      <span className="font-bold text-foreground block truncate">{d.nome}</span>
+                      <span className="text-[11px] text-muted-foreground block truncate mt-0.5">
+                        Órgão: <strong>{d.orgao}</strong> · Validade: {fmt(d.validade)}
+                      </span>
+                    </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <StatusBadge tone={status}>
-                      {v <= 0 ? 'Vencido' : v <= 60 ? `Vence em ${v}d` : 'Em dia'}
-                    </StatusBadge>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <StatusBadge tone={status}>
+                        {v <= 0 ? 'Vencido' : v <= 60 ? `Vence em ${v}d` : 'Em dia'}
+                      </StatusBadge>
 
-                    {podeGerir && (
                       <div className="flex items-center gap-1">
                         <Button
                           variant="ghost"
@@ -583,14 +589,14 @@ export default function Gestao() {
                           <Trash2 className="size-3.5" />
                         </Button>
                       </div>
-                    )}
+                    </div>
                   </div>
-                </div>
-              )
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Protocolos e POPs (Visualização para todos, edição restrita a Enfermeiro e RT) */}
       <SecaoPops />

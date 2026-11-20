@@ -8,6 +8,7 @@ export type Categoria =
   | 'med'
   | 'multi'
   | 'apoio'
+  | 'gestao'
 
 export type NavView =
   | 'plantao'
@@ -41,6 +42,7 @@ export type AcaoPermissao =
   | 'evol'
   | 'pop_ver'
   | 'pop_editar'
+  | 'alvara'
 
 export type TipoPrescricao = 'fixo' | 'semanal' | 'intervalo' | 'sn'
 

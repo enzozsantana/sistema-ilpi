@@ -71,6 +71,17 @@ describe('RBAC & Permission Matrix', () => {
       expect(can('multi', 'pop_editar')).toBe(false)
       expect(can('apoio', 'pop_editar')).toBe(false)
     })
+
+    it('alvara: restrito exclusivamente a RT e Gestão (funções diferentes de enfermagem assistencial)', () => {
+      expect(can('rt', 'alvara')).toBe(true)
+      expect(can('gestao', 'alvara')).toBe(true)
+      expect(can('enf', 'alvara')).toBe(false)
+      expect(can('tec', 'alvara')).toBe(false)
+      expect(can('cuid', 'alvara')).toBe(false)
+      expect(can('med', 'alvara')).toBe(false)
+      expect(can('multi', 'alvara')).toBe(false)
+      expect(can('apoio', 'alvara')).toBe(false)
+    })
   })
 
   describe('canNav (Navegação nas views principais)', () => {
@@ -78,11 +89,13 @@ describe('RBAC & Permission Matrix', () => {
       expect(canNav('cuid', 'plantao')).toBe(true)
       expect(canNav('apoio', 'plantao')).toBe(true)
       expect(canNav('rt', 'plantao')).toBe(true)
+      expect(canNav('gestao', 'plantao')).toBe(true)
     })
 
-    it('gestao é restrita a RT e Enfermeiro', () => {
+    it('gestao é acessível para RT, Enfermeiro e Gestão', () => {
       expect(canNav('rt', 'gestao')).toBe(true)
       expect(canNav('enf', 'gestao')).toBe(true)
+      expect(canNav('gestao', 'gestao')).toBe(true)
       expect(canNav('cuid', 'gestao')).toBe(false)
       expect(canNav('med', 'gestao')).toBe(false)
       expect(canNav('apoio', 'gestao')).toBe(false)

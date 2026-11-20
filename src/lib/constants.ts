@@ -2,6 +2,7 @@ import type { Categoria } from '../types/ilpi'
 
 export const CATS: Record<Categoria, string> = {
   rt: 'Responsável técnica',
+  gestao: 'Gestão / Administração (Diretoria)',
   enf: 'Enfermeiro(a)',
   tec: 'Técnico(a) ou auxiliar de enfermagem',
   cuid: 'Cuidador(a)',
