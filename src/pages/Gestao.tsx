@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { diffDays, fmt, iso, mesKey } from '../lib/business/dates'
 import { calcInd, dimensionamento, INDICADORES_VIGILANCIA, ROTULO_EVENTO } from '../lib/business/indicadores'
 import { useIlpiData } from '../contexts/IlpiDataContext'
@@ -44,20 +44,33 @@ import {
   ChevronRight,
   ClipboardList,
   Copy,
+  Download,
   Edit,
   Eye,
   FileCheck2,
   FileText,
   ListFilter,
+  Paperclip,
   Plus,
   Scale,
   ShieldAlert,
   ShieldCheck,
   Trash2,
+  UploadCloud,
+  X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import type { DocumentoInstituicao, EventoTipo, EventoVigilancia } from '../types/ilpi'
+import {
+  type AnexoDocumento,
+  carregarTodosAnexosLocais,
+  processarArquivoParaAnexo,
+  removerAnexoLocal,
+  formatarTamanhoArquivo,
+  baixarDocumento,
+} from '../lib/documentosStorage'
+import { VisualizadorDocumentoModal } from '../components/VisualizadorDocumentoModal'
 
 const T = iso(new Date())
 const MK_ATUAL = mesKey(new Date())
@@ -93,6 +106,21 @@ export default function Gestao() {
 
   // Dialog State: Exclusão de Documento
   const [docParaExcluir, setDocParaExcluir] = useState<DocumentoInstituicao | null>(null)
+
+  // Anexos de Alvarás e Licenças (Vigilância Sanitária)
+  const [anexosAlvaras, setAnexosAlvaras] = useState<Record<string, AnexoDocumento>>({})
+  const [arquivoSelecionado, setArquivoSelecionado] = useState<File | null>(null)
+  const [anexoAtual, setAnexoAtual] = useState<AnexoDocumento | null>(null)
+  const [removerAnexoExistente, setRemoverAnexoExistente] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Visualizador de Documento Anexo
+  const [modalVisualizarDoc, setModalVisualizarDoc] = useState(false)
+  const [docParaVisualizar, setDocParaVisualizar] = useState<{ anexo: AnexoDocumento; titulo: string } | null>(null)
+
+  useEffect(() => {
+    carregarTodosAnexosLocais('alvara').then(setAnexosAlvaras)
+  }, [])
 
   // Ocorrências do Mês Selecionado (Vigilância Sanitária)
   const [anoInd, mesIndNum] = mesInd.split('-').map(Number)
@@ -270,6 +298,10 @@ export default function Gestao() {
     setDocNome('')
     setDocOrgao('')
     setDocValidade('')
+    setArquivoSelecionado(null)
+    setAnexoAtual(null)
+    setRemoverAnexoExistente(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
     setDialogDocOpen(true)
   }
 
@@ -278,6 +310,20 @@ export default function Gestao() {
     setDocNome(d.nome)
     setDocOrgao(d.orgao)
     setDocValidade(d.validade)
+    setArquivoSelecionado(null)
+    setRemoverAnexoExistente(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+
+    const anexoExistente = anexosAlvaras[d.id] || (d.arquivo_url ? {
+      id: d.id,
+      tipoDocumento: 'alvara' as const,
+      nomeArquivo: d.arquivo_nome || 'alvara.pdf',
+      tipoMime: d.arquivo_tipo || 'application/pdf',
+      tamanho: d.arquivo_tamanho || 0,
+      dataUpload: d.arquivo_data || '',
+      url: d.arquivo_url,
+    } : null)
+    setAnexoAtual(anexoExistente)
     setDialogDocOpen(true)
   }
 
@@ -292,16 +338,63 @@ export default function Gestao() {
     }
 
     setSalvandoDoc(true)
+    const docId = docEditando ? docEditando.id : `doc_${Date.now()}`
+
+    let anexoSalvo: AnexoDocumento | null = null
+    if (arquivoSelecionado) {
+      try {
+        anexoSalvo = await processarArquivoParaAnexo('alvara', docId, arquivoSelecionado)
+        setAnexosAlvaras((prev) => ({ ...prev, [docId]: anexoSalvo! }))
+      } catch (err) {
+        console.error('Erro ao processar anexo:', err)
+        toast.error('Falha ao processar arquivo anexo.')
+      }
+    } else if (removerAnexoExistente) {
+      await removerAnexoLocal('alvara', docId)
+      setAnexosAlvaras((prev) => {
+        const copy = { ...prev }
+        delete copy[docId]
+        return copy
+      })
+    }
+
+    const payloadBase = {
+      nome: docNome.trim(),
+      orgao: docOrgao.trim() || 'Órgão Regulador',
+      validade: docValidade,
+    }
+
+    const payloadComArquivo = {
+      ...payloadBase,
+      ...(anexoSalvo ? {
+        arquivo_url: anexoSalvo.url,
+        arquivo_nome: anexoSalvo.nomeArquivo,
+        arquivo_tipo: anexoSalvo.tipoMime,
+        arquivo_tamanho: anexoSalvo.tamanho,
+        arquivo_data: anexoSalvo.dataUpload,
+      } : removerAnexoExistente ? {
+        arquivo_url: null,
+        arquivo_nome: null,
+        arquivo_tipo: null,
+        arquivo_tamanho: null,
+        arquivo_data: null,
+      } : {}),
+    }
+
     if (docEditando) {
       // UPDATE
-      const { error } = await supabase
+      let { error } = await supabase
         .from('documentos_inst')
-        .update({
-          nome: docNome.trim(),
-          orgao: docOrgao.trim() || 'Órgão Regulador',
-          validade: docValidade,
-        })
+        .update(payloadComArquivo)
         .eq('id', docEditando.id)
+
+      if (error && error.message?.includes('column')) {
+        const fallback = await supabase
+          .from('documentos_inst')
+          .update(payloadBase)
+          .eq('id', docEditando.id)
+        error = fallback.error
+      }
 
       setSalvandoDoc(false)
       if (error) {
@@ -311,13 +404,18 @@ export default function Gestao() {
       toast.success('Licença sanitária atualizada!')
     } else {
       // INSERT
-      const id = `doc_${Date.now()}`
-      const { error } = await supabase.from('documentos_inst').insert({
-        id,
-        nome: docNome.trim(),
-        orgao: docOrgao.trim() || 'Órgão Regulador',
-        validade: docValidade,
+      let { error } = await supabase.from('documentos_inst').insert({
+        id: docId,
+        ...payloadComArquivo,
       })
+
+      if (error && error.message?.includes('column')) {
+        const fallback = await supabase.from('documentos_inst').insert({
+          id: docId,
+          ...payloadBase,
+        })
+        error = fallback.error
+      }
 
       setSalvandoDoc(false)
       if (error) {
@@ -333,7 +431,14 @@ export default function Gestao() {
 
   async function handleExcluirDoc() {
     if (!docParaExcluir) return
-    const { error } = await supabase.from('documentos_inst').delete().eq('id', docParaExcluir.id)
+    const id = docParaExcluir.id
+    await removerAnexoLocal('alvara', id)
+    setAnexosAlvaras((prev) => {
+      const copy = { ...prev }
+      delete copy[id]
+      return copy
+    })
+    const { error } = await supabase.from('documentos_inst').delete().eq('id', id)
     if (error) {
       toast.error(`Erro ao excluir: ${error.message}`)
       return
@@ -551,44 +656,111 @@ export default function Gestao() {
               {documentos.map((d) => {
                 const v = d.validade ? diffDays(d.validade, T) : 999
                 const status = v <= 0 ? 'danger' : v <= 60 ? 'warn' : 'ok'
+                const anexo = anexosAlvaras[d.id] || (d.arquivo_url ? {
+                  id: d.id,
+                  tipoDocumento: 'alvara' as const,
+                  nomeArquivo: d.arquivo_nome || 'documento_alvara.pdf',
+                  tipoMime: d.arquivo_tipo || 'application/pdf',
+                  tamanho: d.arquivo_tamanho || 0,
+                  dataUpload: d.arquivo_data || '',
+                  url: d.arquivo_url,
+                } : null)
 
                 return (
                   <div
                     key={d.id}
-                    className="p-3.5 rounded-xl border border-border/60 bg-card hover:bg-muted/15 transition-all shadow-2xs flex items-center justify-between gap-3 text-xs"
+                    className="p-3.5 rounded-xl border border-border/60 bg-card hover:bg-muted/15 transition-all shadow-2xs flex flex-col justify-between gap-2.5 text-xs"
                   >
-                    <div className="min-w-0">
-                      <span className="font-bold text-foreground block truncate">{d.nome}</span>
-                      <span className="text-[11px] text-muted-foreground block truncate mt-0.5">
-                        Órgão: <strong>{d.orgao}</strong> · Validade: {fmt(d.validade)}
-                      </span>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <span className="font-bold text-foreground block truncate">{d.nome}</span>
+                        <span className="text-[11px] text-muted-foreground block truncate mt-0.5">
+                          Órgão: <strong>{d.orgao}</strong> · Validade: {fmt(d.validade)}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <StatusBadge tone={status}>
+                          {v <= 0 ? 'Vencido' : v <= 60 ? `Vence em ${v}d` : 'Em dia'}
+                        </StatusBadge>
+
+                        <div className="flex items-center gap-0.5">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-7 text-muted-foreground hover:text-foreground"
+                            onClick={() => abrirEditarDoc(d)}
+                            title="Editar licença e anexos"
+                          >
+                            <Edit className="size-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-7 text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10"
+                            onClick={() => setDocParaExcluir(d)}
+                            title="Excluir licença"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <StatusBadge tone={status}>
-                        {v <= 0 ? 'Vencido' : v <= 60 ? `Vence em ${v}d` : 'Em dia'}
-                      </StatusBadge>
-
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-7 text-muted-foreground hover:text-foreground"
-                          onClick={() => abrirEditarDoc(d)}
-                          title="Editar licença"
-                        >
-                          <Edit className="size-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-7 text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10"
-                          onClick={() => setDocParaExcluir(d)}
-                          title="Excluir licença"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </Button>
-                      </div>
+                    {/* Linha do Documento Digitalizado Anexo para Fiscalização */}
+                    <div className="pt-2 border-t border-border/50 flex items-center justify-between gap-2 text-[11px]">
+                      {anexo ? (
+                        <>
+                          <div className="flex items-center gap-1.5 text-teal-800 dark:text-teal-300 font-medium min-w-0">
+                            <Paperclip className="size-3.5 shrink-0 text-teal-600" />
+                            <span className="truncate max-w-[150px] sm:max-w-[210px]">{anexo.nomeArquivo}</span>
+                            <span className="text-[10px] text-muted-foreground hidden sm:inline">
+                              ({formatarTamanhoArquivo(anexo.tamanho)})
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-6 px-2 text-[10px] rounded-lg gap-1 border-teal-500/30 text-teal-700 dark:text-teal-300 hover:bg-teal-500/10"
+                              onClick={() => {
+                                setDocParaVisualizar({ anexo, titulo: d.nome })
+                                setModalVisualizarDoc(true)
+                              }}
+                              title="Visualizar documento original em tela"
+                            >
+                              <Eye className="size-3" /> Visualizar
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="size-6 p-0 text-muted-foreground hover:text-foreground"
+                              onClick={() => baixarDocumento(anexo)}
+                              title="Baixar arquivo original"
+                            >
+                              <Download className="size-3" />
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-amber-800 dark:text-amber-300 flex items-center gap-1 text-[11px]">
+                            <AlertTriangle className="size-3 text-amber-500 shrink-0" />
+                            <span>Sem documento digitalizado</span>
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-[10px] text-teal-700 dark:text-teal-400 hover:underline hover:bg-teal-500/10 rounded-lg"
+                            onClick={() => abrirEditarDoc(d)}
+                          >
+                            + Anexar via original
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
                 )
@@ -855,6 +1027,107 @@ export default function Gestao() {
                 onChange={(e) => setDocValidade(e.target.value)}
                 className="text-xs"
               />
+            </div>
+
+            {/* Upload de Documento Digitalizado (PDF ou Imagem) */}
+            <div className="space-y-1.5 pt-1">
+              <Label className="text-xs font-semibold flex items-center justify-between">
+                <span>Via Digitalizada Original (PDF ou Imagem)</span>
+                <span className="text-[10px] text-muted-foreground font-normal">Exigência Vigilância</span>
+              </Label>
+
+              <div className="border border-dashed border-border/80 rounded-xl p-3 bg-muted/10 text-center">
+                {arquivoSelecionado ? (
+                  <div className="flex items-center justify-between gap-2 bg-card p-2 rounded-lg border border-border">
+                    <div className="flex items-center gap-2 min-w-0 text-left">
+                      <FileCheck2 className="size-4 text-teal-600 shrink-0" />
+                      <div className="min-w-0 text-xs">
+                        <span className="font-semibold block truncate">{arquivoSelecionado.name}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {formatarTamanhoArquivo(arquivoSelecionado.size)} (Novo arquivo selecionado)
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-6 text-muted-foreground hover:text-rose-600"
+                      onClick={() => {
+                        setArquivoSelecionado(null)
+                        if (fileInputRef.current) fileInputRef.current.value = ''
+                      }}
+                      title="Descartar seleção"
+                    >
+                      <X className="size-3.5" />
+                    </Button>
+                  </div>
+                ) : anexoAtual && !removerAnexoExistente ? (
+                  <div className="flex items-center justify-between gap-2 bg-card p-2 rounded-lg border border-border">
+                    <div className="flex items-center gap-2 min-w-0 text-left">
+                      <FileCheck2 className="size-4 text-teal-600 shrink-0" />
+                      <div className="min-w-0 text-xs">
+                        <span className="font-semibold block truncate">{anexoAtual.nomeArquivo}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {formatarTamanhoArquivo(anexoAtual.tamanho)} · Anexo cadastrado
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-6 px-2 text-[10px] gap-1"
+                        onClick={() => {
+                          setDocParaVisualizar({ anexo: anexoAtual, titulo: docNome || 'Licença' })
+                          setModalVisualizarDoc(true)
+                        }}
+                      >
+                        <Eye className="size-3" /> Ver
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-6 text-muted-foreground hover:text-rose-600"
+                        onClick={() => setRemoverAnexoExistente(true)}
+                        title="Remover anexo"
+                      >
+                        <X className="size-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".pdf,image/*,.doc,.docx"
+                      className="hidden"
+                      id="input-alvara-doc"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          setArquivoSelecionado(e.target.files[0])
+                          setRemoverAnexoExistente(false)
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor="input-alvara-doc"
+                      className="cursor-pointer flex flex-col items-center justify-center gap-1.5 py-2 hover:opacity-80 transition-opacity"
+                    >
+                      <UploadCloud className="size-6 text-teal-600" />
+                      <span className="text-xs font-semibold text-foreground">
+                        Clique para anexar arquivo PDF ou foto do Alvará
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        Aceita PDF, JPG, PNG e DOCX (até 15MB)
+                      </span>
+                    </label>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -1205,6 +1478,14 @@ export default function Gestao() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal Visualizador de Documento Anexo */}
+      <VisualizadorDocumentoModal
+        anexo={docParaVisualizar?.anexo ?? null}
+        tituloDocumento={docParaVisualizar?.titulo}
+        aberto={modalVisualizarDoc}
+        onClose={() => setModalVisualizarDoc(false)}
+      />
     </div>
   )
 }

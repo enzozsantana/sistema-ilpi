@@ -446,12 +446,22 @@ export function mapDocumentoInst(row: {
   nome: string
   orgao?: string | null
   validade?: string | null
+  arquivo_url?: string | null
+  arquivo_nome?: string | null
+  arquivo_tipo?: string | null
+  arquivo_tamanho?: number | null
+  arquivo_data?: string | null
 }): DocumentoInstituicao {
   return {
     id: row.id,
     nome: row.nome,
     orgao: row.orgao ?? '',
     validade: row.validade ?? '',
+    arquivo_url: row.arquivo_url ?? undefined,
+    arquivo_nome: row.arquivo_nome ?? undefined,
+    arquivo_tipo: row.arquivo_tipo ?? undefined,
+    arquivo_tamanho: row.arquivo_tamanho ? Number(row.arquivo_tamanho) : undefined,
+    arquivo_data: row.arquivo_data ?? undefined,
   }
 }
 
@@ -460,12 +470,22 @@ export function mapPop(row: {
   titulo: string
   tipo: string
   revisao?: string | null
+  arquivo_url?: string | null
+  arquivo_nome?: string | null
+  arquivo_tipo?: string | null
+  arquivo_tamanho?: number | null
+  arquivo_data?: string | null
 }): PopDocumento {
   return {
     id: row.id,
     titulo: row.titulo,
     tipo: row.tipo,
     revisao: row.revisao ?? '',
+    arquivo_url: row.arquivo_url ?? undefined,
+    arquivo_nome: row.arquivo_nome ?? undefined,
+    arquivo_tipo: row.arquivo_tipo ?? undefined,
+    arquivo_tamanho: row.arquivo_tamanho ? Number(row.arquivo_tamanho) : undefined,
+    arquivo_data: row.arquivo_data ?? undefined,
   }
 }
 

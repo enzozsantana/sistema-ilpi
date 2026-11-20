@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { PopDocumento } from '../types/ilpi'
 import { diffDays, fmt, iso } from '../lib/business/dates'
 import { can } from '../lib/permissions'
@@ -27,18 +27,31 @@ import {
 } from './ui/select'
 import {
   AlertTriangle,
+  Download,
   Edit,
   Eye,
   FileCheck2,
   FileText,
+  Paperclip,
   Plus,
   Printer,
   RotateCw,
   Search,
   Trash2,
+  UploadCloud,
+  X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import {
+  type AnexoDocumento,
+  carregarTodosAnexosLocais,
+  processarArquivoParaAnexo,
+  removerAnexoLocal,
+  formatarTamanhoArquivo,
+  baixarDocumento,
+} from '../lib/documentosStorage'
+import { VisualizadorDocumentoModal } from './VisualizadorDocumentoModal'
 
 const T = iso(new Date())
 
@@ -197,6 +210,21 @@ export function SecaoPops({ className, mostrarApenasConsulta = false }: SecaoPop
   // Modal de Leitura / Detalhes do Procedimento
   const [popVisualizando, setPopVisualizando] = useState<PopDocumento | null>(null)
 
+  // Anexos de POPs e Manuais (PDFs e Documentos Escaneados)
+  const [anexosPops, setAnexosPops] = useState<Record<string, AnexoDocumento>>({})
+  const [arquivoSelecionado, setArquivoSelecionado] = useState<File | null>(null)
+  const [anexoAtual, setAnexoAtual] = useState<AnexoDocumento | null>(null)
+  const [removerAnexoExistente, setRemoverAnexoExistente] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Visualizador de Documento
+  const [modalVisualizarDoc, setModalVisualizarDoc] = useState(false)
+  const [docParaVisualizar, setDocParaVisualizar] = useState<{ anexo: AnexoDocumento; titulo: string } | null>(null)
+
+  useEffect(() => {
+    carregarTodosAnexosLocais('pop').then(setAnexosPops)
+  }, [])
+
   const popsFiltrados = useMemo(() => {
     return pops.filter((p) => {
       // Filtro de texto
@@ -228,6 +256,10 @@ export function SecaoPops({ className, mostrarApenasConsulta = false }: SecaoPop
     setPopTitulo('')
     setPopTipo('POP')
     setPopRevisao(T)
+    setArquivoSelecionado(null)
+    setAnexoAtual(null)
+    setRemoverAnexoExistente(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
     setDialogPopOpen(true)
   }
 
@@ -236,6 +268,20 @@ export function SecaoPops({ className, mostrarApenasConsulta = false }: SecaoPop
     setPopTitulo(p.titulo)
     setPopTipo(p.tipo)
     setPopRevisao(p.revisao)
+    setArquivoSelecionado(null)
+    setRemoverAnexoExistente(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+
+    const anexoExistente = anexosPops[p.id] || (p.arquivo_url ? {
+      id: p.id,
+      tipoDocumento: 'pop' as const,
+      nomeArquivo: p.arquivo_nome || 'pop.pdf',
+      tipoMime: p.arquivo_tipo || 'application/pdf',
+      tamanho: p.arquivo_tamanho || 0,
+      dataUpload: p.arquivo_data || '',
+      url: p.arquivo_url,
+    } : null)
+    setAnexoAtual(anexoExistente)
     setDialogPopOpen(true)
   }
 
@@ -246,16 +292,62 @@ export function SecaoPops({ className, mostrarApenasConsulta = false }: SecaoPop
     }
 
     setSalvandoPop(true)
+    const popId = popEditando ? popEditando.id : `pop_${Date.now()}`
+
+    let anexoSalvo: AnexoDocumento | null = null
+    if (arquivoSelecionado) {
+      try {
+        anexoSalvo = await processarArquivoParaAnexo('pop', popId, arquivoSelecionado)
+        setAnexosPops((prev) => ({ ...prev, [popId]: anexoSalvo! }))
+      } catch (err) {
+        console.error('Erro ao processar anexo:', err)
+        toast.error('Falha ao processar arquivo anexo.')
+      }
+    } else if (removerAnexoExistente) {
+      await removerAnexoLocal('pop', popId)
+      setAnexosPops((prev) => {
+        const copy = { ...prev }
+        delete copy[popId]
+        return copy
+      })
+    }
+
+    const payloadBase = {
+      titulo: popTitulo.trim(),
+      tipo: popTipo,
+      revisao: popRevisao,
+    }
+
+    const payloadComArquivo = {
+      ...payloadBase,
+      ...(anexoSalvo ? {
+        arquivo_url: anexoSalvo.url,
+        arquivo_nome: anexoSalvo.nomeArquivo,
+        arquivo_tipo: anexoSalvo.tipoMime,
+        arquivo_tamanho: anexoSalvo.tamanho,
+        arquivo_data: anexoSalvo.dataUpload,
+      } : removerAnexoExistente ? {
+        arquivo_url: null,
+        arquivo_nome: null,
+        arquivo_tipo: null,
+        arquivo_tamanho: null,
+        arquivo_data: null,
+      } : {}),
+    }
 
     if (popEditando) {
-      const { error } = await supabase
+      let { error } = await supabase
         .from('pops')
-        .update({
-          titulo: popTitulo.trim(),
-          tipo: popTipo,
-          revisao: popRevisao,
-        })
+        .update(payloadComArquivo)
         .eq('id', popEditando.id)
+
+      if (error && error.message?.includes('column')) {
+        const fallback = await supabase
+          .from('pops')
+          .update(payloadBase)
+          .eq('id', popEditando.id)
+        error = fallback.error
+      }
 
       setSalvandoPop(false)
       if (error) {
@@ -264,13 +356,18 @@ export function SecaoPops({ className, mostrarApenasConsulta = false }: SecaoPop
       }
       toast.success('Procedimento atualizado com sucesso!')
     } else {
-      const id = `pop_${Date.now()}`
-      const { error } = await supabase.from('pops').insert({
-        id,
-        titulo: popTitulo.trim(),
-        tipo: popTipo,
-        revisao: popRevisao,
+      let { error } = await supabase.from('pops').insert({
+        id: popId,
+        ...payloadComArquivo,
       })
+
+      if (error && error.message?.includes('column')) {
+        const fallback = await supabase.from('pops').insert({
+          id: popId,
+          ...payloadBase,
+        })
+        error = fallback.error
+      }
 
       setSalvandoPop(false)
       if (error) {
@@ -286,7 +383,14 @@ export function SecaoPops({ className, mostrarApenasConsulta = false }: SecaoPop
 
   async function handleExcluirPop() {
     if (!popParaExcluir) return
-    const { error } = await supabase.from('pops').delete().eq('id', popParaExcluir.id)
+    const id = popParaExcluir.id
+    await removerAnexoLocal('pop', id)
+    setAnexosPops((prev) => {
+      const copy = { ...prev }
+      delete copy[id]
+      return copy
+    })
+    const { error } = await supabase.from('pops').delete().eq('id', id)
     if (error) {
       toast.error(`Erro ao excluir POP: ${error.message}`)
       return
@@ -528,83 +632,154 @@ export function SecaoPops({ className, mostrarApenasConsulta = false }: SecaoPop
           {popsFiltrados.map((p) => {
             const v = p.revisao ? diffDays(p.revisao, T) : 0
             const precisaRevisao = v < -365
+            const anexo = anexosPops[p.id] || (p.arquivo_url ? {
+              id: p.id,
+              tipoDocumento: 'pop' as const,
+              nomeArquivo: p.arquivo_nome || 'procedimento.pdf',
+              tipoMime: p.arquivo_tipo || 'application/pdf',
+              tamanho: p.arquivo_tamanho || 0,
+              dataUpload: p.arquivo_data || '',
+              url: p.arquivo_url,
+            } : null)
 
             return (
               <div
                 key={p.id}
                 onClick={() => setPopVisualizando(p)}
-                className="p-3.5 rounded-xl border border-border/60 bg-card hover:bg-muted/30 transition-all flex items-center justify-between gap-3 text-xs shadow-2xs cursor-pointer group"
+                className="p-3.5 rounded-xl border border-border/60 bg-card hover:bg-muted/30 transition-all flex flex-col justify-between gap-2.5 text-xs shadow-2xs cursor-pointer group"
               >
-                <div className="min-w-0 flex items-start gap-2.5">
-                  <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
-                    <FileCheck2 className="size-4" />
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex items-start gap-2.5">
+                    <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
+                      <FileCheck2 className="size-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="font-bold text-foreground block truncate group-hover:text-primary transition-colors">
+                        {p.titulo}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground block mt-0.5">
+                        Tipo: <strong className="text-foreground/90">{p.tipo}</strong> · Última revisão: {fmt(p.revisao)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <span className="font-bold text-foreground block truncate group-hover:text-primary transition-colors">
-                      {p.titulo}
-                    </span>
-                    <span className="text-[11px] text-muted-foreground block mt-0.5">
-                      Tipo: <strong className="text-foreground/90">{p.tipo}</strong> · Última revisão: {fmt(p.revisao)}
-                    </span>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                  {precisaRevisao ? (
-                    <Badge variant="destructive" className="text-[10px] gap-1">
-                      <AlertTriangle className="size-2.5" />
-                      Revisão pendente
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20">
-                      Vigente
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                    {precisaRevisao ? (
+                      <Badge variant="destructive" className="text-[10px] gap-1">
+                        <AlertTriangle className="size-2.5" />
+                        Revisão pendente
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20">
+                        Vigente
+                      </Badge>
+                    )}
 
-                  {/* Ação rápida de leitura para qualquer usuário */}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-7 text-muted-foreground hover:text-foreground"
-                    onClick={() => setPopVisualizando(p)}
-                    title="Visualizar Procedimento e Diretrizes"
-                  >
-                    <Eye className="size-3.5" />
-                  </Button>
+                    {/* Ação rápida de leitura para qualquer usuário */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-7 text-muted-foreground hover:text-foreground"
+                      onClick={() => setPopVisualizando(p)}
+                      title="Visualizar Procedimento e Diretrizes"
+                    >
+                      <Eye className="size-3.5" />
+                    </Button>
 
-                  {/* Ações de Gestão: Restritas a Enfermeiro e RT */}
-                  {podeEditar && (
-                    <div className="flex items-center gap-0.5">
-                      {precisaRevisao && (
+                    {/* Ações de Gestão: Restritas a Enfermeiro e RT */}
+                    {podeEditar && (
+                      <div className="flex items-center gap-0.5">
+                        {precisaRevisao && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-7 text-amber-600 hover:bg-amber-500/10"
+                            onClick={(e) => handleMarcarRevisadoHoje(p, e)}
+                            title="Marcar como revisado na data de hoje"
+                          >
+                            <RotateCw className="size-3.5" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="size-7 text-amber-600 hover:bg-amber-500/10"
-                          onClick={(e) => handleMarcarRevisadoHoje(p, e)}
-                          title="Marcar como revisado na data de hoje"
+                          className="size-7 text-muted-foreground hover:text-foreground"
+                          onClick={() => abrirEditarPop(p)}
+                          title="Editar POP e anexos"
                         >
-                          <RotateCw className="size-3.5" />
+                          <Edit className="size-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-7 text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10"
+                          onClick={() => setPopParaExcluir(p)}
+                          title="Excluir POP"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Linha do Anexo Digitalizado para Fiscalização */}
+                <div
+                  className="pt-2 border-t border-border/50 flex items-center justify-between gap-2 text-[11px]"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {anexo ? (
+                    <>
+                      <div className="flex items-center gap-1.5 text-teal-800 dark:text-teal-300 font-medium min-w-0">
+                        <Paperclip className="size-3.5 shrink-0 text-teal-600" />
+                        <span className="truncate max-w-[150px] sm:max-w-[210px]">{anexo.nomeArquivo}</span>
+                        <span className="text-[10px] text-muted-foreground hidden sm:inline">
+                          ({formatarTamanhoArquivo(anexo.tamanho)})
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-6 px-2 text-[10px] rounded-lg gap-1 border-teal-500/30 text-teal-700 dark:text-teal-300 hover:bg-teal-500/10"
+                          onClick={() => {
+                            setDocParaVisualizar({ anexo, titulo: p.titulo })
+                            setModalVisualizarDoc(true)
+                          }}
+                          title="Visualizar documento anexo"
+                        >
+                          <Eye className="size-3" /> Ver Anexo
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="size-6 p-0 text-muted-foreground hover:text-foreground"
+                          onClick={() => baixarDocumento(anexo)}
+                          title="Baixar arquivo original"
+                        >
+                          <Download className="size-3" />
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-muted-foreground flex items-center gap-1 text-[11px] italic">
+                        Sem via digitalizada anexada
+                      </span>
+                      {podeEditar && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-[10px] text-teal-700 dark:text-teal-400 hover:underline hover:bg-teal-500/10 rounded-lg"
+                          onClick={() => abrirEditarPop(p)}
+                        >
+                          + Anexar via original
                         </Button>
                       )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-7 text-muted-foreground hover:text-foreground"
-                        onClick={() => abrirEditarPop(p)}
-                        title="Editar POP"
-                      >
-                        <Edit className="size-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-7 text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10"
-                        onClick={() => setPopParaExcluir(p)}
-                        title="Excluir POP"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </Button>
-                    </div>
+                    </>
                   )}
                 </div>
               </div>
@@ -626,6 +801,15 @@ export function SecaoPops({ className, mostrarApenasConsulta = false }: SecaoPop
             const dir = obterDiretrizes(popVisualizando)
             const v = popVisualizando.revisao ? diffDays(popVisualizando.revisao, T) : 0
             const precisaRevisao = v < -365
+            const anexo = anexosPops[popVisualizando.id] || (popVisualizando.arquivo_url ? {
+              id: popVisualizando.id,
+              tipoDocumento: 'pop' as const,
+              nomeArquivo: popVisualizando.arquivo_nome || 'procedimento_oficial.pdf',
+              tipoMime: popVisualizando.arquivo_tipo || 'application/pdf',
+              tamanho: popVisualizando.arquivo_tamanho || 0,
+              dataUpload: popVisualizando.arquivo_data || '',
+              url: popVisualizando.arquivo_url,
+            } : null)
 
             return (
               <>
@@ -655,6 +839,74 @@ export function SecaoPops({ className, mostrarApenasConsulta = false }: SecaoPop
                 </DialogHeader>
 
                 <div className="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs">
+                  {/* Via Digitalizada Oficial (Para Vigilância Sanitária e Fiscalização) */}
+                  <div className="p-3.5 rounded-xl border border-teal-500/30 bg-teal-500/5 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <FileCheck2 className="size-4 text-teal-600" />
+                        <span className="font-bold text-foreground text-xs">
+                          Via Digitalizada Oficial (Vigilância Sanitária / RDC 502)
+                        </span>
+                      </div>
+                      {anexo && (
+                        <Badge variant="outline" className="bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/20 text-[10px]">
+                          {formatarTamanhoArquivo(anexo.tamanho)}
+                        </Badge>
+                      )}
+                    </div>
+
+                    {anexo ? (
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 border-t border-teal-500/20">
+                        <div className="min-w-0 flex items-center gap-1.5 text-xs">
+                          <Paperclip className="size-3.5 text-teal-600 shrink-0" />
+                          <span className="font-medium text-foreground truncate">{anexo.nomeArquivo}</span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setDocParaVisualizar({ anexo, titulo: popVisualizando.titulo })
+                              setModalVisualizarDoc(true)
+                            }}
+                            className="text-xs h-7 px-2.5 rounded-xl gap-1 border-teal-500/30 text-teal-700 dark:text-teal-300 hover:bg-teal-500/10"
+                          >
+                            <Eye className="size-3.5" /> Visualizar Documento
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => baixarDocumento(anexo)}
+                            className="text-xs h-7 px-2.5 rounded-xl gap-1"
+                          >
+                            <Download className="size-3.5" /> Baixar
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between pt-1 border-t border-teal-500/20 text-[11px] text-muted-foreground">
+                        <span className="italic">Nenhuma via digitalizada escaneada anexada. Apenas diretrizes textuais.</span>
+                        {podeEditar && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-[10px] text-teal-700 dark:text-teal-400 hover:underline"
+                            onClick={() => {
+                              const pop = popVisualizando
+                              setPopVisualizando(null)
+                              abrirEditarPop(pop)
+                            }}
+                          >
+                            + Anexar via original
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
                   <div className="p-3.5 rounded-xl bg-muted/30 border border-border/60 space-y-2">
                     <div>
                       <strong className="text-foreground block">🎯 Objetivo do Procedimento:</strong>
@@ -768,6 +1020,107 @@ export function SecaoPops({ className, mostrarApenasConsulta = false }: SecaoPop
                 className="h-8 text-xs rounded-xl"
               />
             </div>
+
+            {/* Upload de Documento Digitalizado (PDF ou Imagem) */}
+            <div className="space-y-1 pt-1">
+              <Label className="text-xs font-semibold flex items-center justify-between">
+                <span>Via Digitalizada Original (PDF ou Imagem)</span>
+                <span className="text-[10px] text-muted-foreground font-normal">Exigência Vigilância</span>
+              </Label>
+
+              <div className="border border-dashed border-border/80 rounded-xl p-3 bg-muted/10 text-center">
+                {arquivoSelecionado ? (
+                  <div className="flex items-center justify-between gap-2 bg-card p-2 rounded-lg border border-border">
+                    <div className="flex items-center gap-2 min-w-0 text-left">
+                      <FileCheck2 className="size-4 text-teal-600 shrink-0" />
+                      <div className="min-w-0 text-xs">
+                        <span className="font-semibold block truncate">{arquivoSelecionado.name}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {formatarTamanhoArquivo(arquivoSelecionado.size)} (Novo arquivo selecionado)
+                        </span>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-6 text-muted-foreground hover:text-rose-600"
+                      onClick={() => {
+                        setArquivoSelecionado(null)
+                        if (fileInputRef.current) fileInputRef.current.value = ''
+                      }}
+                      title="Descartar seleção"
+                    >
+                      <X className="size-3.5" />
+                    </Button>
+                  </div>
+                ) : anexoAtual && !removerAnexoExistente ? (
+                  <div className="flex items-center justify-between gap-2 bg-card p-2 rounded-lg border border-border">
+                    <div className="flex items-center gap-2 min-w-0 text-left">
+                      <FileCheck2 className="size-4 text-teal-600 shrink-0" />
+                      <div className="min-w-0 text-xs">
+                        <span className="font-semibold block truncate">{anexoAtual.nomeArquivo}</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {formatarTamanhoArquivo(anexoAtual.tamanho)} · Anexo cadastrado
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-6 px-2 text-[10px] gap-1"
+                        onClick={() => {
+                          setDocParaVisualizar({ anexo: anexoAtual, titulo: popTitulo || 'POP' })
+                          setModalVisualizarDoc(true)
+                        }}
+                      >
+                        <Eye className="size-3" /> Ver
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-6 text-muted-foreground hover:text-rose-600"
+                        onClick={() => setRemoverAnexoExistente(true)}
+                        title="Remover anexo"
+                      >
+                        <X className="size-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".pdf,image/*,.doc,.docx"
+                      className="hidden"
+                      id="input-pop-doc"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          setArquivoSelecionado(e.target.files[0])
+                          setRemoverAnexoExistente(false)
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor="input-pop-doc"
+                      className="cursor-pointer flex flex-col items-center justify-center gap-1.5 py-2 hover:opacity-80 transition-opacity"
+                    >
+                      <UploadCloud className="size-6 text-teal-600" />
+                      <span className="text-xs font-semibold text-foreground">
+                        Clique para anexar o PDF ou documento original do POP
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        Aceita PDF, fotos escaneadas e DOCX (até 15MB)
+                      </span>
+                    </label>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
@@ -813,6 +1166,14 @@ export function SecaoPops({ className, mostrarApenasConsulta = false }: SecaoPop
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal Visualizador de Documento Anexo */}
+      <VisualizadorDocumentoModal
+        anexo={docParaVisualizar?.anexo ?? null}
+        tituloDocumento={docParaVisualizar?.titulo}
+        aberto={modalVisualizarDoc}
+        onClose={() => setModalVisualizarDoc(false)}
+      />
     </Card>
   )
 }

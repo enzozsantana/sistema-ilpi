@@ -80,4 +80,36 @@ describe('SecaoPops Component (POPs & Protocolos)', () => {
     // Não deve exibir o badge de restrição de modo consulta
     expect(screen.queryByText(/Modo Consulta/i)).not.toBeInTheDocument()
   })
+
+  it('exibe anexo digitalizado no procedimento quando disponível para a fiscalização', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      profissional: { id: 'prof_cuid', nome: 'Débora Silva', cat: 'cuid' },
+    } as any)
+
+    vi.mocked(useIlpiData).mockReturnValue({
+      pops: [
+        {
+          id: 'pop_anexo',
+          titulo: 'Prevenção de lesão por pressão',
+          tipo: 'POP',
+          revisao: '2026-11-20',
+          arquivo_url: 'https://exemplo.com/pop_lpp_assinado.pdf',
+          arquivo_nome: 'pop_lpp_assinado.pdf',
+          arquivo_tipo: 'application/pdf',
+          arquivo_tamanho: 1048576,
+        },
+      ],
+      refresh: vi.fn(),
+    } as any)
+
+    render(<SecaoPops />)
+
+    // O anexo deve aparecer no card
+    expect(screen.getByText('pop_lpp_assinado.pdf')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Ver Anexo/i })).toBeInTheDocument()
+
+    // Ao clicar para abrir o procedimento completo, exibe a seção de via oficial da Vigilância
+    fireEvent.click(screen.getByText('Prevenção de lesão por pressão'))
+    expect(screen.getByText(/Via Digitalizada Oficial \(Vigilância Sanitária/i)).toBeInTheDocument()
+  })
 })

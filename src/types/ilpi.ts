@@ -288,6 +288,11 @@ export interface DocumentoInstituicao {
   nome: string
   orgao: string
   validade: string
+  arquivo_url?: string
+  arquivo_nome?: string
+  arquivo_tipo?: string
+  arquivo_tamanho?: number
+  arquivo_data?: string
 }
 
 export interface PopDocumento {
@@ -295,6 +300,11 @@ export interface PopDocumento {
   titulo: string
   tipo: string
   revisao: string
+  arquivo_url?: string
+  arquivo_nome?: string
+  arquivo_tipo?: string
+  arquivo_tamanho?: number
+  arquivo_data?: string
 }
 
 export interface Treinamento {
