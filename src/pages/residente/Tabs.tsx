@@ -525,7 +525,7 @@ export function TabFicha({ r, cat }: Ctx) {
             <div className="space-y-3 py-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label htmlFor="eq" className="text-[11px] font-semibold">Quarto / Leito</Label>
+                  <Label htmlFor="eq" className="text-[11px] font-semibold">Quarto / Leito *</Label>
                   <Input id="eq" value={quarto} onChange={(e) => setQuarto(e.target.value)} required className="h-8 text-xs" />
                 </div>
                 <div className="space-y-1">
@@ -4046,7 +4046,7 @@ export function TabEvol({ r, cat, area }: Ctx) {
             <div className="space-y-3 py-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label htmlFor="evArea" className="text-[11px] font-semibold">Área Técnica</Label>
+                  <Label htmlFor="evArea" className="text-[11px] font-semibold">Área Técnica *</Label>
                   <select
                     id="evArea"
                     value={areaEscolhida}
@@ -4340,7 +4340,7 @@ export function TabArquivos({ r }: Ctx) {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs">Categoria</Label>
+                <Label className="text-xs">Categoria *</Label>
                 <select
                   value={categoria}
                   onChange={(e) => setCategoria(e.target.value)}

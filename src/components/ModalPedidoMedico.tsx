@@ -450,7 +450,7 @@ export function ModalPedidoMedico({
           <div className="no-print p-6 space-y-6 text-xs">
             {/* 1. SELETOR DE TIPO DE DOCUMENTO */}
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-foreground">Tipo de Solicitação Médica</Label>
+              <Label className="text-xs font-semibold text-foreground">Tipo de Solicitação Médica *</Label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 <button
                   type="button"
@@ -600,7 +600,7 @@ export function ModalPedidoMedico({
                 {/* Indicação Clínica & Hipótese Diagnóstica */}
                 <div className="space-y-2 pt-2">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs font-semibold">Indicação Clínica / Hipótese Diagnóstica</Label>
+                    <Label className="text-xs font-semibold">Indicação Clínica / Hipótese Diagnóstica *</Label>
                     <span className="text-[10px] text-muted-foreground">Sugestões rápidas abaixo:</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5 mb-1.5">
@@ -688,7 +688,7 @@ export function ModalPedidoMedico({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-xs">Tipo de Receituário</Label>
+                    <Label className="text-xs">Tipo de Receituário *</Label>
                     <select
                       value={tipoReceita}
                       onChange={(e) => setTipoReceita(e.target.value as 'simples' | 'controle_especial')}

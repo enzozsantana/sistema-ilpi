@@ -1021,7 +1021,7 @@ export function SecaoPops({ className, mostrarApenasConsulta = false }: SecaoPop
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-semibold">Tipo de Documento</Label>
+              <Label className="text-xs font-semibold">Tipo de Documento *</Label>
               <Select value={popTipo} onValueChange={(val) => setPopTipo(val)}>
                 <SelectTrigger className="h-8 text-xs rounded-xl">
                   <SelectValue />

@@ -147,7 +147,7 @@ export default function Login() {
               <form onSubmit={onSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-xs font-semibold">
-                    E-mail institucional
+                    E-mail institucional *
                   </Label>
                   <Input
                     id="email"
@@ -164,7 +164,7 @@ export default function Login() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password" className="text-xs font-semibold">
-                      Senha de acesso
+                      Senha de acesso *
                     </Label>
                   </div>
                   <div className="relative">

@@ -342,7 +342,7 @@ export default function Perfil() {
             <form onSubmit={(e) => void onTrocarSenha(e)} className="space-y-4 md:col-span-2">
               <div className="space-y-1.5">
                 <Label htmlFor="senhaAtual" className="text-xs font-semibold">
-                  Senha atual
+                  Senha atual *
                 </Label>
                 <div className="relative">
                   <Input
@@ -368,7 +368,7 @@ export default function Perfil() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="senhaNova" className="text-xs font-semibold">
-                  Nova senha (mínimo de 6 caracteres)
+                  Nova senha (mínimo de 6 caracteres) *
                 </Label>
                 <div className="relative">
                   <Input
@@ -395,7 +395,7 @@ export default function Perfil() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="senhaConf" className="text-xs font-semibold">
-                  Confirmar nova senha
+                  Confirmar nova senha *
                 </Label>
                 <div className="relative">
                   <Input
