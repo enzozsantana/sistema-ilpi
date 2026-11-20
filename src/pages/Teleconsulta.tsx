@@ -1010,9 +1010,10 @@ export default function Teleconsulta() {
         </DialogContent>
       </Dialog>
 
-      {/* SALA DE TELECONSULTA AO VIVO COM PRONTUÁRIO INTEGRADO (Jitsi Meet Gratuito) */}
+      {/* SALA DE TELECONSULTA AO VIVO COM PRONTUÁRIO INTEGRADO */}
       <Dialog open={!!salaAberta} onOpenChange={(open) => !open && setSalaAberta(null)}>
         <DialogContent
+          showCloseButton={false}
           className={cn(
             'flex flex-col p-0 overflow-hidden bg-background transition-all duration-200 border-border/80 shadow-2xl',
             modoTelaCheia
