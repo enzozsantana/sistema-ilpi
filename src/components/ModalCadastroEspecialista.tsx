@@ -21,6 +21,8 @@ import {
   Stethoscope,
 } from 'lucide-react'
 import { PasswordInput } from './ui/password-input'
+import { CurrencyInput } from './ui/currency-input'
+import { parseMoeda } from '../lib/currency'
 import { toast } from 'sonner'
 
 interface ModalCadastroEspecialistaProps {
@@ -79,7 +81,7 @@ export function ModalCadastroEspecialista({
         registro: registro.trim(),
         titulo: titulo.trim() || 'Especialista em Telemedicina',
         consultorio: consultorio.trim() || 'Consultório Virtual',
-        preco: Number(preco) || 180,
+        preco: parseMoeda(preco) || 180,
         bio: bio.trim(),
       })
 
@@ -261,12 +263,9 @@ export function ModalCadastroEspecialista({
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs sm:text-sm font-semibold">Valor da Consulta (R$) *</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="5"
-                  placeholder="200"
+                <Label className="text-xs sm:text-sm font-semibold">Valor da Consulta *</Label>
+                <CurrencyInput
+                  placeholder="R$ 0,00"
                   value={preco}
                   onChange={(e) => setPreco(e.target.value)}
                   required

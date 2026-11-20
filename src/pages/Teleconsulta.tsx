@@ -37,6 +37,7 @@ import { ModalConectarMercadoPago } from '../components/ModalConectarMercadoPago
 import { ModalCadastroEspecialista } from '../components/ModalCadastroEspecialista'
 import { salvarRascunho, obterRascunho, limparRascunho, temRascunho } from '../lib/draftStorage'
 import { calcularSplit, processarPagamentoSplit, gerarPixCopiaECola } from '../lib/mercadopagoService'
+import { formatarMoeda } from '../lib/currency'
 import {
   ArrowRightLeft,
   Building2,
@@ -738,7 +739,7 @@ export default function Teleconsulta() {
                   <div>
                     <span className="text-[10px] text-muted-foreground block">Valor da Consulta</span>
                     <span className="text-base font-extrabold text-foreground">
-                      R$ {prof.preco.toFixed(2).replace('.', ',')}
+                      {formatarMoeda(prof.preco)}
                     </span>
                   </div>
 
@@ -924,7 +925,7 @@ export default function Teleconsulta() {
                     <div className="p-3 rounded-xl bg-muted/30 border border-border/60 flex items-center justify-between text-xs">
                       <span className="text-muted-foreground">Valor do Atendimento Virtual:</span>
                       <strong className="text-foreground text-sm">
-                        R$ {profSelecionado.preco.toFixed(2).replace('.', ',')}
+                        {formatarMoeda(profSelecionado.preco)}
                       </strong>
                     </div>
                   </div>
@@ -953,7 +954,7 @@ export default function Teleconsulta() {
                       Pagamento da Consulta
                     </DialogTitle>
                     <DialogDescription className="text-xs">
-                      Valor total: <strong>R$ {profSelecionado.preco.toFixed(2).replace('.', ',')}</strong> · Atendimento em {diaSelecionado} às {horarioSelecionado}
+                      Valor total: <strong>{formatarMoeda(profSelecionado.preco)}</strong> · Atendimento em {diaSelecionado} às {horarioSelecionado}
                     </DialogDescription>
                   </DialogHeader>
 
@@ -982,7 +983,7 @@ export default function Teleconsulta() {
                               Repasse Direto ao Especialista ({100 - split.taxaComissaoPercentual}%):
                             </span>
                             <strong className="text-teal-700 dark:text-teal-300 font-bold">
-                              R$ {split.valorLiquidoProfissional.toFixed(2).replace('.', ',')}
+                              {formatarMoeda(split.valorLiquidoProfissional)}
                             </strong>
                           </div>
                           <div>
@@ -990,7 +991,7 @@ export default function Teleconsulta() {
                               Comissão da Plataforma SaaS ({split.taxaComissaoPercentual}%):
                             </span>
                             <strong className="text-primary font-bold">
-                              R$ {split.valorComissaoSaaS.toFixed(2).replace('.', ',')}
+                              {formatarMoeda(split.valorComissaoSaaS)}
                             </strong>
                           </div>
                         </div>
@@ -1108,7 +1109,7 @@ export default function Teleconsulta() {
                       disabled={processandoPagamento}
                       className="rounded-xl text-xs bg-teal-600 hover:bg-teal-700 text-white font-semibold"
                     >
-                      {processandoPagamento ? 'Processando...' : `Confirmar Pagamento (R$ ${profSelecionado.preco.toFixed(2).replace('.', ',')})`}
+                      {processandoPagamento ? 'Processando...' : `Confirmar Pagamento (${formatarMoeda(profSelecionado.preco)})`}
                     </Button>
                   </DialogFooter>
                 </div>

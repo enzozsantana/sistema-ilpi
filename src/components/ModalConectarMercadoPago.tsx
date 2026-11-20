@@ -30,6 +30,7 @@ import {
   trocarCodePorToken,
   atualizarTaxaComissao,
 } from '../lib/mercadopagoService'
+import { formatarMoeda } from '../lib/currency'
 import type { ProfissionalVirtual } from '../types/teleconsulta'
 import type { ProfissionalMercadoPagoAccount, TransacaoSplitRegistrada } from '../types/mercadopago'
 
@@ -306,7 +307,7 @@ export function ModalConectarMercadoPago({
               <div className="p-2 rounded-md bg-muted/30">
                 <span className="text-[10px] text-muted-foreground block">Valor da Consulta</span>
                 <strong className="text-sm font-extrabold text-foreground">
-                  R$ {splitExemplo.valorTotal.toFixed(2).replace('.', ',')}
+                  {formatarMoeda(splitExemplo.valorTotal)}
                 </strong>
               </div>
 
@@ -315,7 +316,7 @@ export function ModalConectarMercadoPago({
                   Repasse Direto ao Especialista ({100 - splitExemplo.taxaComissaoPercentual}%)
                 </span>
                 <strong className="text-sm font-extrabold text-teal-700 dark:text-teal-300">
-                  R$ {splitExemplo.valorLiquidoProfissional.toFixed(2).replace('.', ',')}
+                  {formatarMoeda(splitExemplo.valorLiquidoProfissional)}
                 </strong>
               </div>
 
@@ -324,7 +325,7 @@ export function ModalConectarMercadoPago({
                   Comissão Plataforma SaaS ({splitExemplo.taxaComissaoPercentual}%)
                 </span>
                 <strong className="text-sm font-extrabold text-primary">
-                  R$ {splitExemplo.valorComissaoSaaS.toFixed(2).replace('.', ',')}
+                  {formatarMoeda(splitExemplo.valorComissaoSaaS)}
                 </strong>
               </div>
             </div>
@@ -353,10 +354,10 @@ export function ModalConectarMercadoPago({
 
                     <div className="text-right">
                       <span className="text-xs font-extrabold text-foreground block">
-                        R$ {t.valorTotal.toFixed(2).replace('.', ',')}
+                        {formatarMoeda(t.valorTotal)}
                       </span>
                       <span className="text-[10px] text-emerald-600 dark:text-emerald-400">
-                        Médico: R$ {t.valorLiquidoProfissional.toFixed(2).replace('.', ',')} | SaaS: R$ {t.valorComissaoSaaS.toFixed(2).replace('.', ',')}
+                        Médico: {formatarMoeda(t.valorLiquidoProfissional)} | SaaS: {formatarMoeda(t.valorComissaoSaaS)}
                       </span>
                     </div>
                   </div>
