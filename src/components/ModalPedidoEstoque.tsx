@@ -14,6 +14,8 @@ import { Input } from './ui/input'
 import { Badge } from './ui/badge'
 import { Label } from './ui/label'
 import { StatusBadge } from './Ui'
+import { OrigemItemSelect } from './OrigemItemSelect'
+import { getOrigemItem } from '../lib/business/origemEstoque'
 import {
   Building2,
   Check,
@@ -152,6 +154,31 @@ export function ModalPedidoEstoque({
         const baixo = nivelEst(c, it) !== 'ok'
         draft[it.id] = {
           check: baixo,
+          qtd: draft[it.id]?.qtd || 1,
+        }
+      })
+      return draft
+    })
+  }
+
+  function selecionarPorCanal(canalAlvo: CanalPedido) {
+    setSelecao((prev) => {
+      const draft = { ...prev }
+      residente?.estoque.forEach((it) => {
+        const o = getOrigemItem(it.id, it.nome).toLowerCase()
+        let match = false
+        if (canalAlvo === 'popular') {
+          match = o.includes('popular')
+        } else if (canalAlvo === 'comercial') {
+          match = o.includes('comercial') || o.includes('farmácia') || o.includes('farmacia')
+        } else if (canalAlvo === 'familia') {
+          match = o.includes('familiar') || o.includes('família')
+        } else {
+          match = true
+        }
+
+        draft[it.id] = {
+          check: match,
           qtd: draft[it.id]?.qtd || 1,
         }
       })
@@ -458,10 +485,20 @@ export function ModalPedidoEstoque({
                     type="button"
                     size="xs"
                     variant="outline"
+                    onClick={() => selecionarPorCanal(canal)}
+                    className="h-6 text-[11px] rounded-lg text-primary font-semibold border-primary/40 bg-primary/5"
+                    title="Selecionar apenas os medicamentos/materiais vinculados a este canal"
+                  >
+                    Marcar deste Canal
+                  </Button>
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="outline"
                     onClick={() => selecionarTodos(true)}
                     className="h-6 text-[11px] rounded-lg"
                   >
-                    Marcar Todos
+                    Todos
                   </Button>
                   <Button
                     type="button"
@@ -470,7 +507,7 @@ export function ModalPedidoEstoque({
                     onClick={selecionarApenasBaixos}
                     className="h-6 text-[11px] rounded-lg text-rose-700 dark:text-rose-300 font-medium"
                   >
-                    Apenas em Falta
+                    Em Falta
                   </Button>
                   <Button
                     type="button"
@@ -521,9 +558,12 @@ export function ModalPedidoEstoque({
                           className="rounded border-border text-primary focus:ring-primary size-4 cursor-pointer shrink-0"
                         />
                         <label htmlFor={`chk_${it.id}`} className="cursor-pointer min-w-0">
-                          <span className="font-semibold text-xs sm:text-sm text-foreground block truncate">
-                            {it.nome}
-                          </span>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-xs sm:text-sm text-foreground block truncate">
+                              {it.nome}
+                            </span>
+                            <OrigemItemSelect itemId={it.id} nomeItem={it.nome} />
+                          </div>
                           <span className="text-[11px] text-muted-foreground flex items-center gap-2 flex-wrap">
                             <span>Saldo: <strong>{it.qtd} {it.unid}</strong></span>
                             <span>· Mín: {it.min} {it.unid}</span>

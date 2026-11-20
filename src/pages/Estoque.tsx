@@ -8,6 +8,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { useIlpiData } from '../contexts/IlpiDataContext'
 import { Avatar, EmptyState, PageHeader, StatusBadge } from '../components/Ui'
 import { ModalPedidoEstoque } from '../components/ModalPedidoEstoque'
+import { OrigemItemSelect } from '../components/OrigemItemSelect'
+import { salvarOrigemItem } from '../lib/business/origemEstoque'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
@@ -81,6 +83,7 @@ export default function Estoque() {
   const [novoQtd, setNovoQtd] = useState('0')
   const [novoMin, setNovoMin] = useState('7')
   const [novoConsumoDia, setNovoConsumoDia] = useState('')
+  const [novoOrigem, setNovoOrigem] = useState('Farmácia Comercial')
 
   // Estados de Ajuste
   const [ajusteQtd, setAjusteQtd] = useState('')
@@ -276,11 +279,13 @@ export default function Estoque() {
       return
     }
 
+    salvarOrigemItem(id, novoOrigem)
     toast.success('Item cadastrado com sucesso no estoque individual!')
     setModalNovoItem(false)
     setNovoNome('')
     setNovoQtd('0')
     setNovoConsumoDia('')
+    setNovoOrigem('Farmácia Comercial')
     await data.refresh()
   }
 
@@ -548,7 +553,10 @@ export default function Estoque() {
                             />
                           </TableCell>
                           <TableCell className="font-bold text-xs text-foreground">
-                            {it.nome}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span>{it.nome}</span>
+                              <OrigemItemSelect itemId={it.id} nomeItem={it.nome} />
+                            </div>
                           </TableCell>
                           <TableCell className="text-xs font-semibold text-foreground">
                             {it.qtd} {it.unid}
@@ -820,6 +828,21 @@ export default function Estoque() {
                   placeholder="Ex: 4 (para fraldas) ou 0.1 (para shampoo)"
                   className="h-8 text-xs"
                 />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="novoOrigem" className="text-[11px] font-semibold">Origem / Onde é Adquirido *</Label>
+                <select
+                  id="novoOrigem"
+                  value={novoOrigem}
+                  onChange={(e) => setNovoOrigem(e.target.value)}
+                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
+                >
+                  <option value="Farmácia Comercial">Farmácia Comercial (Compra / Cotação)</option>
+                  <option value="Farmácia Popular">Farmácia Popular (Retirada SUS)</option>
+                  <option value="Familiar">Familiar (Entregue pela família)</option>
+                  <option value="Instituição">Instituição (Uso geral da casa)</option>
+                </select>
               </div>
             </div>
 

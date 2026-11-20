@@ -88,6 +88,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { ModalPedidoMedico } from '../../components/ModalPedidoMedico'
 import { ModalPedidoEstoque } from '../../components/ModalPedidoEstoque'
+import { OrigemItemSelect } from '../../components/OrigemItemSelect'
 import {
   getPedidosLocais,
   removerPedidoLocal,
@@ -4302,7 +4303,12 @@ export function TabEstoque({ r, profNome }: Ctx) {
                       className="rounded border-border text-primary focus:ring-primary size-3.5 cursor-pointer align-middle"
                     />
                   </TableCell>
-                  <TableCell className="font-bold text-foreground text-xs">{it.nome}</TableCell>
+                  <TableCell className="font-bold text-foreground text-xs">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span>{it.nome}</span>
+                      <OrigemItemSelect itemId={it.id} nomeItem={it.nome} />
+                    </div>
+                  </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {it.qtd} {it.unid} (mín. {it.min})
                   </TableCell>
