@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { iso, addD, parse, fmt, agoraHM } from '../lib/business/dates'
 import { DIAS } from '../lib/constants'
 import { useIlpiData } from '../contexts/IlpiDataContext'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { EmptyState, PageHeader, StatusBadge } from '../components/Ui'
+import { SecaoPops } from '../components/SecaoPops'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
@@ -39,14 +41,31 @@ import {
   ShieldCheck,
   ThermometerSnowflake,
   Trash2,
+  FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import type { TemperaturaGeladeira } from '../types/ilpi'
 
 export default function Rotinas() {
-  const { temperaturas, tarefas, tarefasFeitas, equipe, profissionalPorId, refresh } = useIlpiData()
+  const { temperaturas, tarefas, tarefasFeitas, equipe, profissionalPorId, pops, refresh } = useIlpiData()
   const { profissional } = useAuth()
+
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tabParam = searchParams.get('tab')
+  const [abaAtiva, setAbaAtiva] = useState<'todas' | 'rotinas' | 'geladeira' | 'pops'>(
+    tabParam === 'pops' ? 'pops' : tabParam === 'geladeira' ? 'geladeira' : tabParam === 'rotinas' ? 'rotinas' : 'todas'
+  )
+
+  function mudarAba(novaAba: 'todas' | 'rotinas' | 'geladeira' | 'pops') {
+    setAbaAtiva(novaAba)
+    if (novaAba === 'todas') {
+      searchParams.delete('tab')
+      setSearchParams(searchParams, { replace: true })
+    } else {
+      setSearchParams({ tab: novaAba }, { replace: true })
+    }
+  }
 
   const hojeIso = useMemo(() => iso(new Date()), [])
   const [dataSel, setDataSel] = useState<string>(hojeIso)
@@ -275,61 +294,132 @@ export default function Rotinas() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <PageHeader
-          title="Rotinas & Controle Diário"
-          lede="Monitoramento de temperatura da cadeia de frio (geladeira) e checklist de tarefas organizacionais."
+          title="Rotinas, Geladeira & POPs"
+          lede="Monitoramento de cadeia de frio, rotinas operacionais diárias e procedimentos operacionais padrão (POPs)."
         />
 
-        {/* Date Selector Navigation */}
-        <div className="flex items-center gap-2 bg-card border border-border/70 p-1.5 rounded-xl shadow-xs self-start sm:self-auto">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8"
-            onClick={() => navegarData(-1)}
-            title="Dia anterior"
-          >
-            <ChevronLeft className="size-4" />
-          </Button>
+        {/* Date Selector Navigation (exibido para rotinas diárias e geladeira) */}
+        {abaAtiva !== 'pops' && (
+          <div className="flex items-center gap-2 bg-card border border-border/70 p-1.5 rounded-xl shadow-xs self-start sm:self-auto">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              onClick={() => navegarData(-1)}
+              title="Dia anterior"
+            >
+              <ChevronLeft className="size-4" />
+            </Button>
 
-          <div className="flex items-center gap-2 px-2 text-xs font-semibold">
-            <Calendar className="size-3.5 text-primary" />
-            <Input
-              type="date"
-              value={dataSel}
-              onChange={(e) => e.target.value && setDataSel(e.target.value)}
-              className="h-7 text-xs px-2 py-0 border-none bg-transparent font-medium cursor-pointer shadow-none focus-visible:ring-0"
-            />
-            {isHoje && (
-              <Badge variant="secondary" className="text-[10px] uppercase font-bold py-0 h-5">
-                Hoje
-              </Badge>
+            <div className="flex items-center gap-2 px-2 text-xs font-semibold">
+              <Calendar className="size-3.5 text-primary" />
+              <Input
+                type="date"
+                value={dataSel}
+                onChange={(e) => e.target.value && setDataSel(e.target.value)}
+                className="h-7 text-xs px-2 py-0 border-none bg-transparent font-medium cursor-pointer shadow-none focus-visible:ring-0"
+              />
+              {isHoje && (
+                <Badge variant="secondary" className="text-[10px] uppercase font-bold py-0 h-5">
+                  Hoje
+                </Badge>
+              )}
+            </div>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              onClick={() => navegarData(1)}
+              title="Próximo dia"
+            >
+              <ChevronRight className="size-4" />
+            </Button>
+
+            {!isHoje && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs ml-1"
+                onClick={() => setDataSel(hojeIso)}
+              >
+                Voltar p/ Hoje
+              </Button>
             )}
           </div>
+        )}
+      </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8"
-            onClick={() => navegarData(1)}
-            title="Próximo dia"
-          >
-            <ChevronRight className="size-4" />
-          </Button>
-
-          {!isHoje && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs ml-1"
-              onClick={() => setDataSel(hojeIso)}
-            >
-              Voltar p/ Hoje
-            </Button>
+      {/* Navegação por Abas Principais de Rotinas */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-border/60">
+        <button
+          type="button"
+          onClick={() => mudarAba('todas')}
+          className={cn(
+            'px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shrink-0 cursor-pointer',
+            abaAtiva === 'todas'
+              ? 'bg-[#123F4A] text-white shadow-xs'
+              : 'bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground'
           )}
-        </div>
+        >
+          <CalendarCheck2 className="size-3.5" />
+          <span>Visão Geral</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => mudarAba('rotinas')}
+          className={cn(
+            'px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shrink-0 cursor-pointer',
+            abaAtiva === 'rotinas'
+              ? 'bg-[#123F4A] text-white shadow-xs'
+              : 'bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground'
+          )}
+        >
+          <ListChecks className="size-3.5" />
+          <span>Rotinas Diárias</span>
+          <Badge variant="secondary" className="text-[10px] py-0 px-1.5 h-4 ml-0.5">
+            {concluidasCount}/{tarefasHoje.length}
+          </Badge>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => mudarAba('geladeira')}
+          className={cn(
+            'px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shrink-0 cursor-pointer',
+            abaAtiva === 'geladeira'
+              ? 'bg-[#123F4A] text-white shadow-xs'
+              : 'bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground'
+          )}
+        >
+          <ThermometerSnowflake className="size-3.5" />
+          <span>Geladeira de Medicamentos</span>
+          <Badge variant="secondary" className="text-[10px] py-0 px-1.5 h-4 ml-0.5">
+            {leiturasDia.length}/2
+          </Badge>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => mudarAba('pops')}
+          className={cn(
+            'px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shrink-0 cursor-pointer',
+            abaAtiva === 'pops'
+              ? 'bg-[#123F4A] text-white shadow-xs ring-2 ring-primary/20'
+              : 'bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground'
+          )}
+        >
+          <FileText className="size-3.5 text-primary" />
+          <span className="font-bold">POPs & Protocolos</span>
+          <Badge variant="secondary" className="text-[10px] py-0 px-1.5 h-4 ml-0.5 font-bold">
+            {pops.length}
+          </Badge>
+        </button>
       </div>
 
       {/* Geladeira de Medicamentos Section */}
+      {(abaAtiva === 'todas' || abaAtiva === 'geladeira') && (
       <Card className="border border-border/70 shadow-xs rounded-2xl overflow-hidden">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-border/40 bg-muted/20 px-5 pt-4">
           <div className="flex items-center gap-2.5">
@@ -398,8 +488,10 @@ export default function Rotinas() {
           </div>
         </CardContent>
       </Card>
+      )}
 
       {/* Escala de Organização do Dia */}
+      {(abaAtiva === 'todas' || abaAtiva === 'rotinas') && (
       <Card className="border border-border/70 shadow-xs rounded-2xl overflow-hidden">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-border/40 bg-muted/20 px-5 pt-4">
           <div className="flex items-center gap-2.5">
@@ -593,6 +685,12 @@ export default function Rotinas() {
           )}
         </CardContent>
       </Card>
+      )}
+
+      {/* Procedimentos Operacionais Padrão (POPs & Protocolos) */}
+      {(abaAtiva === 'todas' || abaAtiva === 'pops') && (
+        <SecaoPops />
+      )}
 
       {/* Dialog: Registrar Temperatura */}
       <Dialog open={dialogTempOpen} onOpenChange={setDialogTempOpen}>

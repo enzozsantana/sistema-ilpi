@@ -17,6 +17,8 @@ export const CAN: Record<AcaoPermissao, Categoria[]> = {
   estoque: ['rt'],
   aval: ['rt', 'enf'],
   evol: ['rt', 'enf', 'med', 'multi'],
+  pop_ver: ['rt', 'enf', 'tec', 'estag', 'cuid', 'med', 'multi', 'apoio'],
+  pop_editar: ['rt', 'enf'],
 }
 
 /** Acesso às views principais (NAV_ACESSO). */
@@ -24,7 +26,7 @@ export const NAV_ACESSO: Record<NavView, '*' | Categoria[]> = {
   plantao: '*',
   residentes: [...NURSE, 'cuid', 'med', 'multi'],
   estoque: ['rt'],
-  rotinas: [...NURSE, 'cuid', 'apoio'],
+  rotinas: '*',
   equipe: [...NURSE, 'cuid'],
   gestao: ['rt', 'enf'],
 }

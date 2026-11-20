@@ -35,7 +35,7 @@ function tituloRota(pathname: string) {
   if (pathname.startsWith('/residentes/')) return 'Prontuário do Residente'
   if (pathname.startsWith('/residentes')) return 'Residentes'
   if (pathname.startsWith('/estoque')) return 'Controle de Estoque'
-  if (pathname.startsWith('/rotinas')) return 'Rotinas & Geladeira'
+  if (pathname.startsWith('/rotinas')) return 'Rotinas & POPs'
   if (pathname.startsWith('/equipe')) return 'Quadro de Equipe'
   if (pathname.startsWith('/gestao')) return 'Gestão & Conformidade'
   if (pathname.startsWith('/perfil')) return 'Meu Perfil'
@@ -46,7 +46,7 @@ const LABELS: Record<NavView, string> = {
   plantao: 'Plantão',
   residentes: 'Residentes',
   estoque: 'Estoque',
-  rotinas: 'Rotinas',
+  rotinas: 'Rotinas & POPs',
   equipe: 'Equipe',
   gestao: 'Gestão',
 }

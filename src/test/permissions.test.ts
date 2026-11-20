@@ -49,6 +49,28 @@ describe('RBAC & Permission Matrix', () => {
       expect(can('enf', 'evol')).toBe(true)
       expect(can('cuid', 'evol')).toBe(false)
     })
+
+    it('pop_ver: todos os profissionais podem visualizar POPs e protocolos', () => {
+      expect(can('rt', 'pop_ver')).toBe(true)
+      expect(can('enf', 'pop_ver')).toBe(true)
+      expect(can('tec', 'pop_ver')).toBe(true)
+      expect(can('estag', 'pop_ver')).toBe(true)
+      expect(can('cuid', 'pop_ver')).toBe(true)
+      expect(can('med', 'pop_ver')).toBe(true)
+      expect(can('multi', 'pop_ver')).toBe(true)
+      expect(can('apoio', 'pop_ver')).toBe(true)
+    })
+
+    it('pop_editar: somente RT e Enfermeiro podem criar, editar e excluir POPs', () => {
+      expect(can('rt', 'pop_editar')).toBe(true)
+      expect(can('enf', 'pop_editar')).toBe(true)
+      expect(can('tec', 'pop_editar')).toBe(false)
+      expect(can('estag', 'pop_editar')).toBe(false)
+      expect(can('cuid', 'pop_editar')).toBe(false)
+      expect(can('med', 'pop_editar')).toBe(false)
+      expect(can('multi', 'pop_editar')).toBe(false)
+      expect(can('apoio', 'pop_editar')).toBe(false)
+    })
   })
 
   describe('canNav (Navegação nas views principais)', () => {

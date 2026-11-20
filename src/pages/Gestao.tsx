@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { can } from '../lib/permissions'
 import { supabase } from '../lib/supabase'
 import { PageHeader, StatusBadge } from '../components/Ui'
+import { SecaoPops } from '../components/SecaoPops'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
@@ -56,7 +57,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import type { DocumentoInstituicao, EventoTipo, EventoVigilancia, PopDocumento } from '../types/ilpi'
+import type { DocumentoInstituicao, EventoTipo, EventoVigilancia } from '../types/ilpi'
 
 const T = iso(new Date())
 const MK_ATUAL = mesKey(new Date())
@@ -89,17 +90,8 @@ export default function Gestao() {
   const [docOrgao, setDocOrgao] = useState('')
   const [docValidade, setDocValidade] = useState('')
 
-  // Dialog State: Novo / Editar POP
-  const [dialogPopOpen, setDialogPopOpen] = useState(false)
-  const [popEditando, setPopEditando] = useState<PopDocumento | null>(null)
-  const [salvandoPop, setSalvandoPop] = useState(false)
-  const [popTitulo, setPopTitulo] = useState('')
-  const [popTipo, setPopTipo] = useState('POP')
-  const [popRevisao, setPopRevisao] = useState(T)
-
-  // Dialog State: Exclusão
+  // Dialog State: Exclusão de Documento
   const [docParaExcluir, setDocParaExcluir] = useState<DocumentoInstituicao | null>(null)
-  const [popParaExcluir, setPopParaExcluir] = useState<PopDocumento | null>(null)
 
   // Ocorrências do Mês Selecionado (Vigilância Sanitária)
   const [anoInd, mesIndNum] = mesInd.split('-').map(Number)
@@ -347,80 +339,6 @@ export default function Gestao() {
     }
     toast.success('Licença removida.')
     setDocParaExcluir(null)
-    await refresh()
-  }
-
-  function abrirNovoPop() {
-    setPopEditando(null)
-    setPopTitulo('')
-    setPopTipo('POP')
-    setPopRevisao(T)
-    setDialogPopOpen(true)
-  }
-
-  function abrirEditarPop(p: PopDocumento) {
-    setPopEditando(p)
-    setPopTitulo(p.titulo)
-    setPopTipo(p.tipo)
-    setPopRevisao(p.revisao || T)
-    setDialogPopOpen(true)
-  }
-
-  async function handleSalvarPop() {
-    if (!popTitulo.trim()) {
-      toast.error('Informe o título do POP ou protocolo.')
-      return
-    }
-
-    setSalvandoPop(true)
-    if (popEditando) {
-      // UPDATE
-      const { error } = await supabase
-        .from('pops')
-        .update({
-          titulo: popTitulo.trim(),
-          tipo: popTipo,
-          revisao: popRevisao,
-        })
-        .eq('id', popEditando.id)
-
-      setSalvandoPop(false)
-      if (error) {
-        toast.error(`Erro ao atualizar POP: ${error.message}`)
-        return
-      }
-      toast.success('POP / Protocolo atualizado!')
-    } else {
-      // INSERT
-      const id = `pop_${Date.now()}`
-      const { error } = await supabase.from('pops').insert({
-        id,
-        titulo: popTitulo.trim(),
-        tipo: popTipo,
-        revisao: popRevisao,
-      })
-
-      setSalvandoPop(false)
-      if (error) {
-        toast.error(`Erro ao cadastrar POP: ${error.message}`)
-        return
-      }
-      toast.success('Novo POP / Protocolo cadastrado com sucesso!')
-    }
-
-    setDialogPopOpen(false)
-    await refresh()
-  }
-
-  async function handleExcluirPop() {
-    if (!popParaExcluir) return
-    const { error } = await supabase.from('pops').delete().eq('id', popParaExcluir.id)
-    if (error) {
-      toast.error(`Erro ao excluir POP: ${error.message}`)
-      return
-    }
-    toast.success('Procedimento removido.')
-    setPopParaExcluir(null)
     await refresh()
   }
 
@@ -674,90 +592,8 @@ export default function Gestao() {
         </CardContent>
       </Card>
 
-      {/* Protocolos e POPs */}
-      <Card className="border border-border/70 shadow-xs rounded-2xl overflow-hidden">
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/40 bg-muted/20 px-5 pt-4">
-          <div className="flex items-center gap-2">
-            <FileText className="size-4 text-primary" />
-            <CardTitle className="text-sm font-bold font-heading">
-              Procedimentos Operacionais Padrão (POPs)
-            </CardTitle>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="text-xs">
-              {pops.length} protocolos
-            </Badge>
-            {podeGerir && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={abrirNovoPop}
-                className="rounded-xl gap-1 text-xs h-8"
-              >
-                <Plus className="size-3.5" /> Novo POP
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="p-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {pops.map((p) => {
-              const v = p.revisao ? diffDays(p.revisao, T) : 0
-              const precisaRevisao = v < -365
-
-              return (
-                <div
-                  key={p.id}
-                  className="p-3.5 rounded-xl border border-border/60 bg-card flex items-center justify-between gap-3 text-xs shadow-2xs"
-                >
-                  <div className="min-w-0">
-                    <span className="font-bold text-foreground block truncate">{p.titulo}</span>
-                    <span className="text-[11px] text-muted-foreground block mt-0.5">
-                      Área/Tipo: <strong>{p.tipo}</strong> · Última revisão: {fmt(p.revisao)}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    {precisaRevisao ? (
-                      <Badge variant="destructive" className="text-[10px]">
-                        Revisão pendente
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                        Vigente
-                      </Badge>
-                    )}
-
-                    {podeGerir && (
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-7 text-muted-foreground hover:text-foreground"
-                          onClick={() => abrirEditarPop(p)}
-                          title="Editar POP"
-                        >
-                          <Edit className="size-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-7 text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10"
-                          onClick={() => setPopParaExcluir(p)}
-                          title="Excluir POP"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Protocolos e POPs (Visualização para todos, edição restrita a Enfermeiro e RT) */}
+      <SecaoPops />
 
       {/* Indicadores de Qualidade da Vigilância Sanitária */}
       <Card className="border border-border/70 shadow-xs rounded-2xl overflow-hidden">
@@ -1036,76 +872,6 @@ export default function Gestao() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog: Novo / Editar POP */}
-      <Dialog open={dialogPopOpen} onOpenChange={setDialogPopOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileText className="size-5 text-primary" />
-              {popEditando ? 'Editar Procedimento Padrão' : 'Novo POP / Protocolo'}
-            </DialogTitle>
-            <DialogDescription className="text-xs">
-              Procedimentos operacionais padronizados exigidos pela RDC 502/2021.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3 py-2 text-xs">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Título do Protocolo *</Label>
-              <Input
-                placeholder="ex: Prevenção e Tratamento de Lesões por Pressão (LPP)"
-                value={popTitulo}
-                onChange={(e) => setPopTitulo(e.target.value)}
-                className="text-xs"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs">Tipo de Documento</Label>
-              <Select value={popTipo} onValueChange={(val) => setPopTipo(val)}>
-                <SelectTrigger className="text-xs">
-                  <SelectValue placeholder="Selecione o tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="POP">POP (Procedimento Operacional Padrão)</SelectItem>
-                  <SelectItem value="Protocolo">Protocolo Clínico</SelectItem>
-                  <SelectItem value="Manual">Manual de Boas Práticas</SelectItem>
-                  <SelectItem value="Fluxograma">Fluxograma de Atendimento</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs">Data da Última Revisão *</Label>
-              <Input
-                type="date"
-                value={popRevisao}
-                onChange={(e) => setPopRevisao(e.target.value)}
-                className="text-xs"
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setDialogPopOpen(false)}
-              disabled={salvandoPop}
-            >
-              Cancelar
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleSalvarPop}
-              disabled={salvandoPop}
-            >
-              {salvandoPop ? 'Salvando...' : popEditando ? 'Atualizar POP' : 'Cadastrar POP'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Dialog: Confirmar Exclusão de Licença */}
       <Dialog open={!!docParaExcluir} onOpenChange={(open) => !open && setDocParaExcluir(null)}>
         <DialogContent className="max-w-sm">
@@ -1122,28 +888,6 @@ export default function Gestao() {
               Cancelar
             </Button>
             <Button variant="destructive" size="sm" onClick={handleExcluirDoc}>
-              Excluir
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog: Confirmar Exclusão de POP */}
-      <Dialog open={!!popParaExcluir} onOpenChange={(open) => !open && setPopParaExcluir(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-rose-600 flex items-center gap-2">
-              <Trash2 className="size-4" /> Excluir POP
-            </DialogTitle>
-            <DialogDescription className="text-xs">
-              Deseja remover o procedimento <strong>&quot;{popParaExcluir?.titulo}&quot;</strong>?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setPopParaExcluir(null)}>
-              Cancelar
-            </Button>
-            <Button variant="destructive" size="sm" onClick={handleExcluirPop}>
               Excluir
             </Button>
           </DialogFooter>

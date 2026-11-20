@@ -39,6 +39,8 @@ export type AcaoPermissao =
   | 'estoque'
   | 'aval'
   | 'evol'
+  | 'pop_ver'
+  | 'pop_editar'
 
 export type TipoPrescricao = 'fixo' | 'semanal' | 'intervalo' | 'sn'
 
