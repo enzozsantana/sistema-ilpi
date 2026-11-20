@@ -291,7 +291,9 @@ export function ModalPedidoMedico({
     window.print()
   }
 
-  const idadeAnos = idade(residente.nasc)
+  if (!residente) return null
+
+  const idadeAnos = residente.nasc ? idade(residente.nasc) : ''
   const dataExtenso = formatarDataExtenso(dataEmissao)
   const nomeInstituicao = inst || 'Instituição de Longa Permanência para Idosos'
 

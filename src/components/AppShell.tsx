@@ -20,6 +20,7 @@ import {
   PackageCheck,
   UserCheck,
   Users,
+  Video,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -38,6 +39,7 @@ function tituloRota(pathname: string) {
   if (pathname.startsWith('/rotinas')) return 'Rotinas & POPs'
   if (pathname.startsWith('/equipe')) return 'Quadro de Equipe'
   if (pathname.startsWith('/gestao')) return 'Gestão & Conformidade'
+  if (pathname.startsWith('/teleconsulta')) return 'Teleconsulta & Especialistas Virtuais'
   if (pathname.startsWith('/perfil')) return 'Meu Perfil'
   return 'Painel de Plantão'
 }
@@ -49,6 +51,7 @@ const LABELS: Record<NavView, string> = {
   rotinas: 'Rotinas & POPs',
   equipe: 'Equipe',
   gestao: 'Gestão',
+  teleconsulta: 'Teleconsulta',
 }
 
 const PATHS: Record<NavView, string> = {
@@ -58,6 +61,7 @@ const PATHS: Record<NavView, string> = {
   rotinas: '/rotinas',
   equipe: '/equipe',
   gestao: '/gestao',
+  teleconsulta: '/teleconsulta',
 }
 
 function getNavIcon(view: NavView | 'perfil') {
@@ -74,6 +78,8 @@ function getNavIcon(view: NavView | 'perfil') {
       return UserCheck
     case 'gestao':
       return BarChart3
+    case 'teleconsulta':
+      return Video
     default:
       return Activity
   }

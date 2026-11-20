@@ -17,6 +17,7 @@ export type NavView =
   | 'rotinas'
   | 'equipe'
   | 'gestao'
+  | 'teleconsulta'
 
 export type AbaResidente =
   | 'pasta'

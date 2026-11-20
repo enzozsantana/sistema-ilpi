@@ -12,6 +12,7 @@ import Estoque from './pages/Estoque'
 import Rotinas from './pages/Rotinas'
 import Equipe from './pages/Equipe'
 import Gestao from './pages/Gestao'
+import Teleconsulta from './pages/Teleconsulta'
 import Perfil from './pages/Perfil'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -95,6 +96,14 @@ function AuthedRoutes() {
             element={
               <GuardView view="gestao">
                 <Gestao />
+              </GuardView>
+            }
+          />
+          <Route
+            path="teleconsulta"
+            element={
+              <GuardView view="teleconsulta">
+                <Teleconsulta />
               </GuardView>
             }
           />
