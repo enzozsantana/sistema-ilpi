@@ -350,39 +350,8 @@ export default function Rotinas() {
         )}
       </div>
 
-      {/* Navegação por Abas Principais de Rotinas */}
+      {/* Navegação por Abas Principais de Rotinas em Ordem Alfabética */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-border/60">
-        <button
-          type="button"
-          onClick={() => mudarAba('todas')}
-          className={cn(
-            'px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shrink-0 cursor-pointer',
-            abaAtiva === 'todas'
-              ? 'bg-[#123F4A] text-white shadow-xs'
-              : 'bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground'
-          )}
-        >
-          <CalendarCheck2 className="size-3.5" />
-          <span>Visão Geral</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => mudarAba('rotinas')}
-          className={cn(
-            'px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shrink-0 cursor-pointer',
-            abaAtiva === 'rotinas'
-              ? 'bg-[#123F4A] text-white shadow-xs'
-              : 'bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground'
-          )}
-        >
-          <ListChecks className="size-3.5" />
-          <span>Rotinas Diárias</span>
-          <Badge variant="secondary" className="text-[10px] py-0 px-1.5 h-4 ml-0.5">
-            {concluidasCount}/{tarefasHoje.length}
-          </Badge>
-        </button>
-
         <button
           type="button"
           onClick={() => mudarAba('geladeira')}
@@ -415,6 +384,37 @@ export default function Rotinas() {
           <Badge variant="secondary" className="text-[10px] py-0 px-1.5 h-4 ml-0.5 font-bold">
             {pops.length}
           </Badge>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => mudarAba('rotinas')}
+          className={cn(
+            'px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shrink-0 cursor-pointer',
+            abaAtiva === 'rotinas'
+              ? 'bg-[#123F4A] text-white shadow-xs'
+              : 'bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground'
+          )}
+        >
+          <ListChecks className="size-3.5" />
+          <span>Rotinas Diárias</span>
+          <Badge variant="secondary" className="text-[10px] py-0 px-1.5 h-4 ml-0.5">
+            {concluidasCount}/{tarefasHoje.length}
+          </Badge>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => mudarAba('todas')}
+          className={cn(
+            'px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shrink-0 cursor-pointer',
+            abaAtiva === 'todas'
+              ? 'bg-[#123F4A] text-white shadow-xs'
+              : 'bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground'
+          )}
+        >
+          <CalendarCheck2 className="size-3.5" />
+          <span>Visão Geral</span>
         </button>
       </div>
 

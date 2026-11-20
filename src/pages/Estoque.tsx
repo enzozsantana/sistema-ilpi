@@ -470,19 +470,19 @@ export default function Estoque() {
         <div className="flex items-center gap-1.5 p-1 bg-muted/60 rounded-xl border border-border/40">
           <Button
             size="xs"
-            variant={!apenasEmFalta ? 'default' : 'ghost'}
-            onClick={() => setApenasEmFalta(false)}
-            className="text-xs rounded-lg h-7 px-3 font-semibold"
-          >
-            Todos os Residentes
-          </Button>
-          <Button
-            size="xs"
             variant={apenasEmFalta ? 'default' : 'ghost'}
             onClick={() => setApenasEmFalta(true)}
             className="text-xs rounded-lg h-7 px-3 font-semibold"
           >
             Apenas com Itens em Falta {criticos + alertas > 0 && `(${criticos + alertas})`}
+          </Button>
+          <Button
+            size="xs"
+            variant={!apenasEmFalta ? 'default' : 'ghost'}
+            onClick={() => setApenasEmFalta(false)}
+            className="text-xs rounded-lg h-7 px-3 font-semibold"
+          >
+            Todos os Residentes
           </Button>
         </div>
 

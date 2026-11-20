@@ -550,20 +550,8 @@ export default function Teleconsulta() {
             <span>Mercado Pago & Split</span>
           </Button>
 
-          {/* Seletor de Abas */}
+          {/* Seletor de Abas em Ordem Alfabética */}
           <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-xl border border-border/60 shadow-2xs">
-            <button
-              type="button"
-              onClick={() => setAbaAtiva('especialistas')}
-              className={cn(
-                'px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all',
-                abaAtiva === 'especialistas'
-                  ? 'bg-background text-foreground shadow-2xs'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              Especialistas Disponíveis
-            </button>
             <button
               type="button"
               onClick={() => setAbaAtiva('consultas')}
@@ -578,6 +566,18 @@ export default function Teleconsulta() {
               <Badge variant="secondary" className="text-[10px] h-4.5 px-1.5 font-bold">
                 {consultas.length}
               </Badge>
+            </button>
+            <button
+              type="button"
+              onClick={() => setAbaAtiva('especialistas')}
+              className={cn(
+                'px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all',
+                abaAtiva === 'especialistas'
+                  ? 'bg-background text-foreground shadow-2xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              Especialistas Disponíveis
             </button>
           </div>
         </div>
@@ -624,7 +624,7 @@ export default function Teleconsulta() {
           {/* Barra de Filtros e Busca */}
           <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-              {(['todas', 'medica', 'estomaterapia', 'nutricao', 'psicologia'] as const).map((esp) => (
+              {(['todas', 'estomaterapia', 'fisioterapia', 'medica', 'nutricao', 'psicologia'] as const).map((esp) => (
                 <button
                   key={esp}
                   type="button"

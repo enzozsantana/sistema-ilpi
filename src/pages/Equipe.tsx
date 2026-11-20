@@ -458,11 +458,11 @@ export default function Equipe() {
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-2">
           <TabsList className="bg-muted/70 p-1 rounded-xl">
-            <TabsTrigger value="diretorio" className="rounded-lg text-xs font-semibold gap-1.5">
-              <Users className="size-3.5" /> Quadro & Diretório
-            </TabsTrigger>
             <TabsTrigger value="escala" className="rounded-lg text-xs font-semibold gap-1.5">
               <CalendarDays className="size-3.5" /> Grade Mensal de Plantões
+            </TabsTrigger>
+            <TabsTrigger value="diretorio" className="rounded-lg text-xs font-semibold gap-1.5">
+              <Users className="size-3.5" /> Quadro & Diretório
             </TabsTrigger>
             <TabsTrigger value="treinamentos" className="rounded-lg text-xs font-semibold gap-1.5">
               <Award className="size-3.5" /> Treinamentos Continuados

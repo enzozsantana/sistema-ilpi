@@ -108,25 +108,27 @@ type Ctx = {
 }
 
 const RTABS: Record<AbaResidente, string> = {
-  pasta: 'Resumo Clínico',
-  ficha: 'Ficha Cadastral',
+  anot: 'Anotações & Sinais',
   aval: 'Escalas & Avaliações',
+  estoque: 'Estoque do Residente',
+  evol: 'Evolução Multiprofissional',
+  arquivos: 'Exames & Documentos',
+  ficha: 'Ficha Cadastral',
   pia: 'PIA Enfermagem',
   cuidados: 'Plano de Cuidados',
   presc: 'Prescrição Médica',
-  anot: 'Anotações & Sinais',
-  evol: 'Evolução Multiprofissional',
-  arquivos: 'Exames & Documentos',
-  estoque: 'Estoque do Residente',
   tudo: 'Prontuário Completo',
+  pasta: 'Resumo Clínico',
 }
 
 export function tabsVisiveis(cat: Categoria, area?: string): AbaResidente[] {
-  return (Object.keys(RTABS) as AbaResidente[]).filter((k) => {
-    if (!canTab(cat, k)) return false
-    if (k === 'aval' && cat === 'multi' && escalasVisiveis(cat, area).length === 0) return false
-    return true
-  })
+  return (Object.keys(RTABS) as AbaResidente[])
+    .filter((k) => {
+      if (!canTab(cat, k)) return false
+      if (k === 'aval' && cat === 'multi' && escalasVisiveis(cat, area).length === 0) return false
+      return true
+    })
+    .sort((a, b) => RTABS[a].localeCompare(RTABS[b], 'pt-BR'))
 }
 
 export { RTABS }

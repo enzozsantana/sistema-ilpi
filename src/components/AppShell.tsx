@@ -45,22 +45,22 @@ function tituloRota(pathname: string) {
 }
 
 const LABELS: Record<NavView, string> = {
+  equipe: 'Equipe',
+  estoque: 'Estoque',
+  gestao: 'Gestão',
   plantao: 'Plantão',
   residentes: 'Residentes',
-  estoque: 'Estoque',
   rotinas: 'Rotinas & POPs',
-  equipe: 'Equipe',
-  gestao: 'Gestão',
   teleconsulta: 'Teleconsulta',
 }
 
 const PATHS: Record<NavView, string> = {
+  equipe: '/equipe',
+  estoque: '/estoque',
+  gestao: '/gestao',
   plantao: '/plantao',
   residentes: '/residentes',
-  estoque: '/estoque',
   rotinas: '/rotinas',
-  equipe: '/equipe',
-  gestao: '/gestao',
   teleconsulta: '/teleconsulta',
 }
 
@@ -93,7 +93,9 @@ export function AppShell() {
 
   if (!profissional) return null
 
-  const views = navVisivel(profissional.cat)
+  const views = [...navVisivel(profissional.cat)].sort((a, b) =>
+    LABELS[a].localeCompare(LABELS[b], 'pt-BR'),
+  )
   const instNome = inst || 'Instituição'
   const ativosCount = residentes.filter((r) => r.status !== 'obito').length
 

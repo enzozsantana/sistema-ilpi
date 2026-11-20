@@ -36,12 +36,12 @@ export const CAN: Record<AcaoPermissao, Categoria[]> = {
 
 /** Acesso às views principais (NAV_ACESSO). */
 export const NAV_ACESSO: Record<NavView, '*' | Categoria[]> = {
+  equipe: [...NURSE, 'cuid', 'gestao'],
+  estoque: ['rt'],
+  gestao: ['rt', 'enf', 'gestao'],
   plantao: TODAS_CATEGORIAS_ILPI,
   residentes: [...NURSE, 'cuid', 'med', 'multi', 'gestao'],
-  estoque: ['rt'],
   rotinas: TODAS_CATEGORIAS_ILPI,
-  equipe: [...NURSE, 'cuid', 'gestao'],
-  gestao: ['rt', 'enf', 'gestao'],
   teleconsulta: '*',
 }
 
