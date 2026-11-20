@@ -41,6 +41,8 @@ import {
   CreditCard,
   ExternalLink,
   FileText,
+  Maximize2,
+  Minimize2,
   Pill,
   QrCode,
   Search,
@@ -100,6 +102,7 @@ export default function Teleconsulta() {
   // Sala de Teleconsulta ao Vivo (Jitsi Meet gratuito)
   const [salaAberta, setSalaAberta] = useState<ConsultaVirtual | null>(null)
   const [painelProntuarioAberto, setPainelProntuarioAberto] = useState(true)
+  const [modoTelaCheia, setModoTelaCheia] = useState(false)
 
   // Evolução clínica durante a consulta
   const [textoEvolucao, setTextoEvolucao] = useState('')
@@ -510,7 +513,7 @@ export default function Teleconsulta() {
 
       {/* MODAL DE AGENDAMENTO & PAGAMENTO EM ETAPAS */}
       <Dialog open={modalAgendamentoOpen} onOpenChange={setModalAgendamentoOpen}>
-        <DialogContent className="max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl">
+        <DialogContent className="sm:max-w-xl max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl">
           {profSelecionado && (
             <>
               {/* ETAPA 1: SELEÇÃO DE HORÁRIO E RESIDENTE */}
@@ -806,13 +809,20 @@ export default function Teleconsulta() {
 
       {/* SALA DE TELECONSULTA AO VIVO COM PRONTUÁRIO INTEGRADO (Jitsi Meet Gratuito) */}
       <Dialog open={!!salaAberta} onOpenChange={(open) => !open && setSalaAberta(null)}>
-        <DialogContent className="max-w-[96vw] w-[1400px] h-[92vh] max-h-[92vh] flex flex-col p-0 overflow-hidden rounded-2xl">
+        <DialogContent
+          className={cn(
+            'flex flex-col p-0 overflow-hidden bg-background transition-all duration-200 border-border/80 shadow-2xl',
+            modoTelaCheia
+              ? '!fixed !inset-0 !w-screen !h-screen !max-w-none sm:!max-w-none !max-h-none !translate-x-0 !translate-y-0 !top-0 !left-0 rounded-none border-none'
+              : '!w-[96vw] !max-w-[96vw] sm:!max-w-[96vw] lg:!max-w-[96vw] xl:!max-w-[1600px] !h-[94vh] !max-h-[94vh] rounded-2xl'
+          )}
+        >
           {salaAberta && (
             <>
               {/* Topo da Sala Virtual */}
               <div className="p-3 sm:px-6 border-b border-border/60 bg-muted/30 flex items-center justify-between gap-3 shrink-0">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <span className="size-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="size-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                   <div className="min-w-0">
                     <h2 className="font-bold text-sm text-foreground truncate">
                       Teleconsulta: {salaAberta.profissionalNome} · {salaAberta.residenteNome}
@@ -830,6 +840,7 @@ export default function Teleconsulta() {
                     variant={painelProntuarioAberto ? 'default' : 'outline'}
                     onClick={() => setPainelProntuarioAberto(!painelProntuarioAberto)}
                     className="text-xs rounded-xl gap-1.5"
+                    title={painelProntuarioAberto ? 'Ocultar prontuário para expandir o vídeo' : 'Exibir Prontuário & Evolução'}
                   >
                     <FileText className="size-3.5" />
                     <span className="hidden sm:inline">Prontuário & Evolução</span>
@@ -839,9 +850,21 @@ export default function Teleconsulta() {
                     type="button"
                     size="xs"
                     variant="outline"
+                    onClick={() => setModoTelaCheia(!modoTelaCheia)}
+                    className="text-xs rounded-xl gap-1.5"
+                    title={modoTelaCheia ? 'Restaurar tamanho da janela' : 'Expandir para Tela Cheia (100%)'}
+                  >
+                    {modoTelaCheia ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
+                    <span className="hidden sm:inline">{modoTelaCheia ? 'Restaurar' : 'Tela Cheia'}</span>
+                  </Button>
+
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="outline"
                     onClick={() => window.open(salaAberta.linkSala, '_blank')}
                     className="text-xs rounded-xl gap-1"
-                    title="Abrir em tela cheia / janela separada"
+                    title="Abrir em tela cheia / janela separada em nova aba"
                   >
                     <ExternalLink className="size-3.5" />
                     <span className="hidden sm:inline">Nova Aba</span>
@@ -853,6 +876,7 @@ export default function Teleconsulta() {
                     variant="ghost"
                     onClick={() => setSalaAberta(null)}
                     className="size-7 p-0 rounded-full"
+                    title="Fechar chamada"
                   >
                     <X className="size-4" />
                   </Button>
@@ -862,7 +886,7 @@ export default function Teleconsulta() {
               {/* Corpo da Sala: Vídeo Jitsi + Prontuário Lateral */}
               <div className="flex-1 flex flex-col lg:flex-row overflow-hidden bg-slate-950">
                 {/* Janela de Vídeo Jitsi Meet */}
-                <div className="flex-1 h-full min-h-[300px] relative bg-black">
+                <div className="flex-1 h-full min-h-[350px] relative bg-black">
                   <iframe
                     src={`${salaAberta.linkSala}#config.prejoinPageEnabled=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false`}
                     allow="camera; microphone; display-capture; autoplay; clipboard-write"
@@ -873,7 +897,7 @@ export default function Teleconsulta() {
 
                 {/* Painel Clínico Lateral: Prontuário, Evolução e Prescrição */}
                 {painelProntuarioAberto && (
-                  <div className="w-full lg:w-96 border-t lg:border-t-0 lg:border-l border-border/70 bg-card flex flex-col max-h-[50vh] lg:max-h-full overflow-y-auto p-4 space-y-4 text-xs">
+                  <div className="w-full lg:w-[420px] xl:w-[450px] border-t lg:border-t-0 lg:border-l border-border/70 bg-card flex flex-col max-h-[50vh] lg:max-h-full overflow-y-auto p-4 sm:p-5 space-y-4 text-xs">
                     {/* Header do Residente */}
                     {residenteEscolhido ? (
                       <div className="p-3 rounded-xl bg-muted/30 border border-border/60 space-y-1">
