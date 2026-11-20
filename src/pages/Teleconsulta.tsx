@@ -913,14 +913,45 @@ export default function Teleconsulta() {
                 </div>
               </div>
 
+              {/* Barra de Instruções Acolhedoras em PT-BR */}
+              <div className="bg-emerald-500/10 border-b border-emerald-500/20 px-3 sm:px-6 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2 text-emerald-950 dark:text-emerald-200">
+                  <span className="size-2 rounded-full bg-emerald-500 animate-ping shrink-0" />
+                  <span className="font-medium">
+                    <strong>Sala Pronta em Português (PT-BR)</strong> · Conexão direta sem exigência de login ou senha. Permita câmera e microfone se o navegador solicitar.
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="outline"
+                    onClick={() => compartilharWhatsApp(salaAberta)}
+                    className="h-6 text-[11px] gap-1 rounded-lg border-emerald-600/40 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-500/20"
+                    title="Convidar a família ou especialista pelo WhatsApp"
+                  >
+                    <Share2 className="size-3 text-emerald-600" />
+                    <span>Convidar via WhatsApp</span>
+                  </Button>
+                </div>
+              </div>
+
               {/* Corpo da Sala: Vídeo Jitsi + Prontuário Lateral */}
               <div className="flex-1 flex flex-col lg:flex-row overflow-hidden bg-slate-950">
                 {/* Janela de Vídeo Jitsi Meet */}
                 <div className="flex-1 h-full min-h-[350px] relative bg-black">
+                  {/* Backdrop de Carregamento Acolhedor em Português */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 text-slate-300 pointer-events-none z-0">
+                    <div className="size-9 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin mb-3" />
+                    <p className="font-semibold text-sm text-white">Carregando Sala Virtual em Português...</p>
+                    <p className="text-xs text-slate-400 mt-1 max-w-sm">
+                      Sem exigência de login de moderador. A transmissão de vídeo iniciará automaticamente.
+                    </p>
+                  </div>
                   <iframe
                     src={urlSalaLogado}
                     allow="camera; microphone; display-capture; autoplay; clipboard-write"
-                    className="w-full h-full border-none"
+                    className="w-full h-full border-none relative z-10"
                     title="Sala de Vídeo Teleconsulta"
                   />
                 </div>

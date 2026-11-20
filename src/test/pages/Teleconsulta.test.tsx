@@ -119,14 +119,17 @@ describe('Teleconsulta Page', () => {
     const botaoEntrar = screen.getByRole('button', { name: /Entrar na Sala Virtual/i })
     fireEvent.click(botaoEntrar)
 
-    // Verifica que exibe "Identificado como: Helena Prado"
+    // Verifica que exibe "Identificado como: Helena Prado" e a mensagem acolhedora em PT-BR
     expect(screen.getByText(/Identificado como:/i)).toBeInTheDocument()
     expect(screen.getByText(/Helena Prado/i)).toBeInTheDocument()
+    expect(screen.getByText(/Sala Pronta em Português/i)).toBeInTheDocument()
 
-    // Verifica o iframe gerado com parâmetros para ignorar prejoin e passar userInfo.displayName
+    // Verifica o iframe gerado com parâmetros para ignorar prejoin, definir pt-BR e servidor livre
     const iframe = screen.getByTitle('Sala de Vídeo Teleconsulta')
     expect(iframe).toBeInTheDocument()
     const src = iframe.getAttribute('src') || ''
+    expect(src).toContain('meet.ffmuc.net')
+    expect(src).toContain('lang=ptBR')
     expect(src).toContain('userInfo.displayName=%22Helena%20Prado%22')
     expect(src).toContain('config.prejoinConfig.enabled=false')
     expect(src).toContain('config.prejoinPageEnabled=false')

@@ -65,9 +65,12 @@ export const PROFISSIONAIS_VIRTUAIS: ProfissionalVirtual[] = [
 
 const STORAGE_KEY = 'ilpi_consultas_virtuais'
 
+// Servidor Jitsi público comunitário sem exigência de login de moderador e com suporte nativo a PT-BR
+export const JITSI_SERVER = 'https://meet.ffmuc.net'
+
 export function gerarLinkSalaJitsi(codigoSala: string, displayName?: string): string {
-  // Jitsi Meet é 100% gratuito, open source e não requer login
-  const base = `https://meet.jit.si/${codigoSala}`
+  // Instância pública comunitária que não bloqueia sala exigindo login de moderador
+  const base = `${JITSI_SERVER}/${codigoSala}?lang=ptBR`
   return displayName ? buildJitsiUrl(base, displayName) : base
 }
 
@@ -76,11 +79,23 @@ export function buildJitsiUrl(
   displayName?: string,
   options?: { audioMuted?: boolean; videoMuted?: boolean }
 ): string {
-  const [cleanBase] = linkBase.split('#')
+  // Migra automaticamente links legados do meet.jit.si para o servidor livre sem barreira de login
+  let urlTratada = linkBase.replace('https://meet.jit.si', JITSI_SERVER)
+  const [cleanBase] = urlTratada.split('#')
+
+  // Garante que o idioma seja português do Brasil (PT-BR)
+  const urlComIdioma = cleanBase.includes('lang=')
+    ? cleanBase
+    : cleanBase.includes('?')
+    ? `${cleanBase}&lang=ptBR`
+    : `${cleanBase}?lang=ptBR`
+
   const params: string[] = [
+    'config.defaultLanguage="ptBR"',
     'config.prejoinConfig.enabled=false',
     'config.prejoinPageEnabled=false',
     'config.requireDisplayName=false',
+    'config.enableWelcomePage=false',
     `config.startWithAudioMuted=${options?.audioMuted ? 'true' : 'false'}`,
     `config.startWithVideoMuted=${options?.videoMuted ? 'true' : 'false'}`,
     'config.disableDeepLinking=true',
@@ -90,7 +105,7 @@ export function buildJitsiUrl(
     params.unshift(`userInfo.displayName=${encodeURIComponent(`"${displayName.trim()}"`)}`)
   }
 
-  return `${cleanBase}#${params.join('&')}`
+  return `${urlComIdioma}#${params.join('&')}`
 }
 
 export function obterConsultasVirtuais(): ConsultaVirtual[] {
