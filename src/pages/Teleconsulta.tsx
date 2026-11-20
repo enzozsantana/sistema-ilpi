@@ -6,6 +6,7 @@ import { iso } from '../lib/business/dates'
 import {
   PROFISSIONAIS_VIRTUAIS,
   gerarLinkSalaJitsi,
+  buildJitsiUrl,
   obterConsultasVirtuais,
   salvarConsultaVirtual,
   marcarEvolucaoConsulta,
@@ -103,6 +104,21 @@ export default function Teleconsulta() {
   const [salaAberta, setSalaAberta] = useState<ConsultaVirtual | null>(null)
   const [painelProntuarioAberto, setPainelProntuarioAberto] = useState(true)
   const [modoTelaCheia, setModoTelaCheia] = useState(false)
+
+  // Nome do usuário logado para identificação automática na sala do Jitsi
+  const nomeUsuarioLogado = useMemo(() => {
+    if (profissional?.nome) {
+      const funcao = profissional.funcao ? ` (${profissional.funcao})` : ''
+      return `${profissional.nome}${funcao}`
+    }
+    return 'Equipe ILPI'
+  }, [profissional])
+
+  // Link da sala para a iframe atual (com identificação automática do usuário logado e bypass de pré-sala)
+  const urlSalaLogado = useMemo(() => {
+    if (!salaAberta) return ''
+    return buildJitsiUrl(salaAberta.linkSala, nomeUsuarioLogado)
+  }, [salaAberta, nomeUsuarioLogado])
 
   // Evolução clínica durante a consulta
   const [textoEvolucao, setTextoEvolucao] = useState('')
@@ -202,13 +218,18 @@ export default function Teleconsulta() {
     toast.success('Código PIX Copia e Cola copiado para a área de transferência!')
   }
 
-  function copiarLinkConsulta(link: string) {
-    navigator.clipboard.writeText(link)
-    toast.success('Link da sala de teleconsulta copiado!')
+  function copiarLinkConsulta(linkOuConsulta: string | ConsultaVirtual) {
+    const url =
+      typeof linkOuConsulta === 'string'
+        ? buildJitsiUrl(linkOuConsulta, 'Familiar')
+        : buildJitsiUrl(linkOuConsulta.linkSala, `Familiar / ${linkOuConsulta.residenteNome}`)
+    navigator.clipboard.writeText(url)
+    toast.success('Link da sala copiado (com identificação automática)!')
   }
 
   function compartilharWhatsApp(c: ConsultaVirtual) {
-    const texto = `Olá! Segue o link da consulta virtual com ${c.profissionalNome} (${c.especialidade}) para o residente ${c.residenteNome} agendada para ${c.data} às ${c.horario}:\n\n${c.linkSala}\n\n(Acesso direto sem necessidade de cadastro pelo celular ou computador)`
+    const linkFamiliar = buildJitsiUrl(c.linkSala, `Familiar / ${c.residenteNome}`)
+    const texto = `Olá! Segue o link da consulta virtual com ${c.profissionalNome} (${c.especialidade}) para o residente ${c.residenteNome} agendada para ${c.data} às ${c.horario}:\n\n${linkFamiliar}\n\n(Acesso direto sem necessidade de cadastro pelo celular ou computador)`
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank')
   }
 
@@ -833,6 +854,15 @@ export default function Teleconsulta() {
                   </div>
                 </div>
 
+                {/* Identificação Automática do Usuário Logado */}
+                <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-background/80 border border-border/60 text-xs shadow-2xs shrink-0">
+                  <span className="text-muted-foreground text-[11px]">Identificado como:</span>
+                  <span className="font-semibold text-foreground text-xs flex items-center gap-1.5">
+                    <span className="size-2 rounded-full bg-emerald-500 shrink-0" />
+                    <span className="truncate max-w-[220px]">{nomeUsuarioLogado}</span>
+                  </span>
+                </div>
+
                 <div className="flex items-center gap-2 shrink-0">
                   <Button
                     type="button"
@@ -862,9 +892,9 @@ export default function Teleconsulta() {
                     type="button"
                     size="xs"
                     variant="outline"
-                    onClick={() => window.open(salaAberta.linkSala, '_blank')}
+                    onClick={() => window.open(urlSalaLogado, '_blank')}
                     className="text-xs rounded-xl gap-1"
-                    title="Abrir em tela cheia / janela separada em nova aba"
+                    title="Abrir em tela cheia / janela separada em nova aba já identificado"
                   >
                     <ExternalLink className="size-3.5" />
                     <span className="hidden sm:inline">Nova Aba</span>
@@ -888,7 +918,7 @@ export default function Teleconsulta() {
                 {/* Janela de Vídeo Jitsi Meet */}
                 <div className="flex-1 h-full min-h-[350px] relative bg-black">
                   <iframe
-                    src={`${salaAberta.linkSala}#config.prejoinPageEnabled=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false`}
+                    src={urlSalaLogado}
                     allow="camera; microphone; display-capture; autoplay; clipboard-write"
                     className="w-full h-full border-none"
                     title="Sala de Vídeo Teleconsulta"

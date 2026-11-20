@@ -65,9 +65,32 @@ export const PROFISSIONAIS_VIRTUAIS: ProfissionalVirtual[] = [
 
 const STORAGE_KEY = 'ilpi_consultas_virtuais'
 
-export function gerarLinkSalaJitsi(codigoSala: string): string {
+export function gerarLinkSalaJitsi(codigoSala: string, displayName?: string): string {
   // Jitsi Meet é 100% gratuito, open source e não requer login
-  return `https://meet.jit.si/${codigoSala}`
+  const base = `https://meet.jit.si/${codigoSala}`
+  return displayName ? buildJitsiUrl(base, displayName) : base
+}
+
+export function buildJitsiUrl(
+  linkBase: string,
+  displayName?: string,
+  options?: { audioMuted?: boolean; videoMuted?: boolean }
+): string {
+  const [cleanBase] = linkBase.split('#')
+  const params: string[] = [
+    'config.prejoinConfig.enabled=false',
+    'config.prejoinPageEnabled=false',
+    'config.requireDisplayName=false',
+    `config.startWithAudioMuted=${options?.audioMuted ? 'true' : 'false'}`,
+    `config.startWithVideoMuted=${options?.videoMuted ? 'true' : 'false'}`,
+    'config.disableDeepLinking=true',
+  ]
+
+  if (displayName && displayName.trim()) {
+    params.unshift(`userInfo.displayName=${encodeURIComponent(`"${displayName.trim()}"`)}`)
+  }
+
+  return `${cleanBase}#${params.join('&')}`
 }
 
 export function obterConsultasVirtuais(): ConsultaVirtual[] {

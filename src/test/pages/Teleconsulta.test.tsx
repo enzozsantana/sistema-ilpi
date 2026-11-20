@@ -107,4 +107,29 @@ describe('Teleconsulta Page', () => {
       expect(screen.getByRole('button', { name: /Entrar na Sala Virtual Agora/i })).toBeInTheDocument()
     }, { timeout: 3000 })
   })
+
+  it('preenche automaticamente a identificação do usuário logado e remove tela de "enter your name" no Jitsi', async () => {
+    render(<Teleconsulta />)
+
+    // Vai para a aba de consultas agendadas
+    const abaConsultas = screen.getByRole('button', { name: /Consultas Agendadas/i })
+    fireEvent.click(abaConsultas)
+
+    // Entra na sala virtual da consulta existente
+    const botaoEntrar = screen.getByRole('button', { name: /Entrar na Sala Virtual/i })
+    fireEvent.click(botaoEntrar)
+
+    // Verifica que exibe "Identificado como: Helena Prado"
+    expect(screen.getByText(/Identificado como:/i)).toBeInTheDocument()
+    expect(screen.getByText(/Helena Prado/i)).toBeInTheDocument()
+
+    // Verifica o iframe gerado com parâmetros para ignorar prejoin e passar userInfo.displayName
+    const iframe = screen.getByTitle('Sala de Vídeo Teleconsulta')
+    expect(iframe).toBeInTheDocument()
+    const src = iframe.getAttribute('src') || ''
+    expect(src).toContain('userInfo.displayName=%22Helena%20Prado%22')
+    expect(src).toContain('config.prejoinConfig.enabled=false')
+    expect(src).toContain('config.prejoinPageEnabled=false')
+    expect(src).toContain('config.requireDisplayName=false')
+  })
 })
