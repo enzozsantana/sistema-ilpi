@@ -42,7 +42,6 @@ import {
   Clock,
   Copy,
   CreditCard,
-  ExternalLink,
   FileText,
   Maximize2,
   Mic,
@@ -123,12 +122,6 @@ export default function Teleconsulta() {
     }
     return 'Equipe ILPI'
   }, [profissional])
-
-  // Link da sala para a iframe atual (com identificação automática do usuário logado e bypass de pré-sala)
-  const urlSalaLogado = useMemo(() => {
-    if (!salaAberta) return ''
-    return buildJitsiUrl(salaAberta.linkSala, nomeUsuarioLogado)
-  }, [salaAberta, nomeUsuarioLogado])
 
   // Evolução clínica durante a consulta
   const [textoEvolucao, setTextoEvolucao] = useState('')
@@ -1106,18 +1099,6 @@ export default function Teleconsulta() {
                   >
                     {modoTelaCheia ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
                     <span className="hidden sm:inline">{modoTelaCheia ? 'Restaurar' : 'Tela Cheia'}</span>
-                  </Button>
-
-                  <Button
-                    type="button"
-                    size="xs"
-                    variant="outline"
-                    onClick={() => window.open(urlSalaLogado, '_blank')}
-                    className="text-xs rounded-xl gap-1"
-                    title="Abrir em tela cheia / janela separada em nova aba já identificado"
-                  >
-                    <ExternalLink className="size-3.5" />
-                    <span className="hidden sm:inline">Nova Aba</span>
                   </Button>
 
                   <Button
