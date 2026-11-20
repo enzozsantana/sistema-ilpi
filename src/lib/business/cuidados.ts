@@ -20,31 +20,31 @@ export interface DadosMudancaDecubito {
 }
 
 export const COBERTURAS_CURATIVO = [
-  'Placa de Hidrocolóide',
-  'Óleo Cicatrizante (AGE)',
-  'Sulfadiazina de Prata 1%',
+  'Alginato de Cálcio',
+  'Bota de Unna',
+  'Colagenase',
+  'Curativo Simples (SF 0,9% + Gaze Estéril)',
   'Espuma de Poliuretano / Silicone',
   'Hidrogel com Alginato',
-  'Alginato de Cálcio',
-  'Película / Filme Transparente',
-  'Bota de Unna',
-  'Curativo Simples (SF 0,9% + Gaze Estéril)',
-  'Colagenase',
+  'Óleo Cicatrizante (AGE)',
   'Outra Cobertura / Especial',
+  'Película / Filme Transparente',
+  'Placa de Hidrocolóide',
+  'Sulfadiazina de Prata 1%',
 ] as const
 
 export const LOCAIS_ANATOMICOS = [
+  'Calcâneo Direito',
+  'Calcâneo Esquerdo',
+  'Escápulas / Ombros',
+  'Glúteos / Região Isquiática',
+  'Maléolo Lateral / Medial',
+  'Membros Inferiores (MMII)',
+  'Outro Local',
+  'Região Occipital',
   'Região Sacra / Cóccix',
   'Trocânter Direito',
   'Trocânter Esquerdo',
-  'Calcâneo Direito',
-  'Calcâneo Esquerdo',
-  'Maléolo Lateral / Medial',
-  'Glúteos / Região Isquiática',
-  'Membros Inferiores (MMII)',
-  'Escápulas / Ombros',
-  'Região Occipital',
-  'Outro Local',
 ] as const
 
 export const GRAUS_LESAO_LPP = [
@@ -60,10 +60,10 @@ export const GRAUS_LESAO_LPP = [
 export const FREQUENCIAS_CURATIVO = [
   '1x ao dia (no banho)',
   '2x ao dia (manhã e tarde)',
-  'A cada troca de fralda se houver sujidade',
   'A cada 48h a 72h ou se saturar/vazar',
-  'Em dias alternados',
+  'A cada troca de fralda se houver sujidade',
   'Avaliação a cada plantão',
+  'Em dias alternados',
 ] as const
 
 export const PALAVRAS_CHAVE_LPP = [

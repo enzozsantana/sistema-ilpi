@@ -864,11 +864,13 @@ export default function Rotinas() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Geral (Qualquer plantonista)</SelectItem>
-                  {equipe.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.nome} ({p.funcao})
-                    </SelectItem>
-                  ))}
+                  {[...equipe]
+                    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+                    .map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.nome} ({p.funcao})
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>

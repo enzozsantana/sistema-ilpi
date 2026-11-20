@@ -865,11 +865,13 @@ export default function Teleconsulta() {
                         onChange={(e) => setResidenteId(e.target.value)}
                         className="w-full h-9 text-xs rounded-xl border border-input bg-background px-3"
                       >
-                        {residentes.map((r) => (
-                          <option key={r.id} value={r.id}>
-                            {r.nome} {r.quarto ? `(Quarto ${r.quarto})` : ''}
-                          </option>
-                        ))}
+                        {[...residentes]
+                          .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+                          .map((r) => (
+                            <option key={r.id} value={r.id}>
+                              {r.nome} {r.quarto ? `(Quarto ${r.quarto})` : ''}
+                            </option>
+                          ))}
                       </select>
                     </div>
 

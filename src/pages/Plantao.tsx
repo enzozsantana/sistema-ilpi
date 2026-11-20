@@ -1769,7 +1769,7 @@ export default function Plantao() {
                   }}
                   className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                 >
-                  {ativos(data.residentes).map((r) => (
+                  {[...ativos(data.residentes)].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')).map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.nome} (Quarto {r.quarto})
                     </option>
@@ -1786,7 +1786,7 @@ export default function Plantao() {
                   className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                 >
                   <option value="">Selecione o medicamento...</option>
-                  {(data.getResidente(snResId)?.presc ?? []).map((p) => (
+                  {[...(data.getResidente(snResId)?.presc ?? [])].sort((a, b) => a.med.localeCompare(b.med, 'pt-BR')).map((p) => (
                     <option key={p.id} value={p.id}>
                       {isMedicamentoControlado(p) ? '⚠️ [CONTROLADO] ' : ''}{p.med} ({p.dose} - {p.via}) [{p.tipo.toUpperCase()}]
                     </option>
@@ -1847,7 +1847,7 @@ export default function Plantao() {
                   onChange={(e) => setOcoResId(e.target.value)}
                   className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                 >
-                  {ativos(data.residentes).map((r) => (
+                  {[...ativos(data.residentes)].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')).map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.nome} (Quarto {r.quarto})
                     </option>
@@ -1863,13 +1863,13 @@ export default function Plantao() {
                   onChange={(e) => setOcoTipo(e.target.value as EventoTipo)}
                   className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                 >
-                  <option value="queda">Queda da própria altura / leito</option>
-                  <option value="lpp">Lesão por Pressão (LPP)</option>
-                  <option value="desidratacao">Desidratação clínica</option>
-                  <option value="dda">Doença Diarreica Aguda (DDA)</option>
-                  <option value="escabiose">Surto / Suspeita de Escabiose</option>
-                  <option value="desnutricao">Desnutrição moderada / grave</option>
                   <option value="obito">Declaração de Óbito</option>
+                  <option value="desidratacao">Desidratação clínica</option>
+                  <option value="desnutricao">Desnutrição moderada / grave</option>
+                  <option value="dda">Doença Diarreica Aguda (DDA)</option>
+                  <option value="lpp">Lesão por Pressão (LPP)</option>
+                  <option value="queda">Queda da própria altura / leito</option>
+                  <option value="escabiose">Surto / Suspeita de Escabiose</option>
                 </select>
               </div>
 
@@ -2203,8 +2203,9 @@ export default function Plantao() {
                     className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                   >
                     <option value="">Equipe Geral do Próximo Turno</option>
-                    {data.equipe
+                    {[...data.equipe]
                       .filter((p) => p.id !== profissional?.id)
+                      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
                       .map((p) => (
                         <option key={p.id} value={p.id}>
                           {p.nome} ({p.funcao || p.cat})

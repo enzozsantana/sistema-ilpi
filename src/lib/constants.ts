@@ -16,32 +16,32 @@ export const CATS: Record<Categoria, string> = {
 export const NURSE: Categoria[] = ['rt', 'enf', 'tec', 'estag']
 
 export const CATS_ARQ = [
-  'Exame',
-  'Pedido Médico',
-  'Laudo',
-  'Receita',
   'Documento pessoal',
-  'Termo assinado',
+  'Exame',
+  'Laudo',
   'Outro',
+  'Pedido Médico',
+  'Receita',
+  'Termo assinado',
 ] as const
 
 export const SETORES = [
-  'Responsável técnica',
-  'Enfermeiros',
   'Diurno 12h',
-  'Noturno 12h',
+  'Enfermeiros',
   'Estágio',
+  'Noturno 12h',
+  'Responsável técnica',
 ] as const
 
 export const AREAS = [
   'Enfermagem',
-  'Medicina',
-  'Nutrição',
   'Fisioterapia',
-  'Psicologia',
-  'Terapia ocupacional',
+  'Medicina',
   'Musicoterapia',
+  'Nutrição',
+  'Psicologia',
   'Serviço social',
+  'Terapia ocupacional',
 ] as const
 
 export const COD: Record<string, string> = {
@@ -68,29 +68,29 @@ export const ESCOL = [
 ] as const
 
 export const CIVIL = [
-  'Solteiro(a)',
   'Casado(a)',
-  'União estável',
   'Divorciado(a)',
+  'Solteiro(a)',
+  'União estável',
   'Viúvo(a)',
 ] as const
 
 export const DOENCAS = [
-  'HAS',
-  'Diabetes',
-  'HIV',
-  'IRC',
-  'Hiper/Hipotireoidismo',
-  'Hepatites',
   'AVE',
   'Demência',
-  'DPOC',
   'Depressão',
+  'Diabetes',
+  'DPOC',
+  'HAS',
+  'Hepatites',
+  'Hiper/Hipotireoidismo',
+  'HIV',
+  'IRC',
 ] as const
 
 export const ENTRADA = [
-  'Família',
   'Assistência social',
+  'Família',
   'Ministério Público',
   'Poder Judiciário',
 ] as const
@@ -107,16 +107,16 @@ export const DOCS: [string, string][] = [
 ]
 
 export const VIAS = [
-  'VO',
-  'SL',
-  'Ocular',
-  'Tópica',
-  'SC',
-  'IM',
   'EV',
+  'IM',
   'Inalatória',
-  'SNE',
+  'Ocular',
   'Retal',
+  'SC',
+  'SL',
+  'SNE',
+  'Tópica',
+  'VO',
 ] as const
 
 export const TIPOS_PRESC = {
@@ -127,16 +127,16 @@ export const TIPOS_PRESC = {
 } as const
 
 export const EVENTOS: Record<string, string> = {
-  obito: 'Óbito',
   dda: 'Doença diarreica aguda',
-  escabiose: 'Escabiose',
   desidratacao: 'Desidratação',
-  lpp: 'Lesão por pressão',
   desnutricao: 'Desnutrição',
+  escabiose: 'Escabiose',
+  lpp: 'Lesão por pressão',
+  obito: 'Óbito',
   queda: 'Queda',
 }
 
-export const TIPOS_DOC = ['POP', 'Protocolo', 'Manual', 'Fluxograma'] as const
+export const TIPOS_DOC = ['Fluxograma', 'Manual', 'POP', 'Protocolo'] as const
 
 export const MODELOS_ANOT = [
   'Residente calmo(a), comunicativo(a), orientado(a).',

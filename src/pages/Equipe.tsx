@@ -984,11 +984,13 @@ export default function Equipe() {
                     <SelectValue placeholder="Selecione categoria" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(CATS).map(([k, label]) => (
-                      <SelectItem key={k} value={k}>
-                        {label}
-                      </SelectItem>
-                    ))}
+                    {Object.entries(CATS)
+                      .sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'))
+                      .map(([k, label]) => (
+                        <SelectItem key={k} value={k}>
+                          {label}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>

@@ -1,7 +1,7 @@
 export const CANAIS_ORIGEM = [
+  'Familiar',
   'Farmácia Comercial',
   'Farmácia Popular',
-  'Familiar',
   'Instituição',
 ] as const
 

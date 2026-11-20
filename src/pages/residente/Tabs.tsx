@@ -1305,15 +1305,15 @@ export function TabAval({ r, cat, area, profNome }: Ctx) {
                   className="w-full h-8 px-2 text-xs rounded-md border border-input bg-background"
                 >
                   <option value="Geral">Geral (Multiprofissional)</option>
-                  <option value="Enfermagem">Enfermagem</option>
-                  <option value="Médico">Médico</option>
-                  <option value="Fisioterapia">Fisioterapia</option>
-                  <option value="Nutrição">Nutrição</option>
-                  <option value="Psicologia">Psicologia</option>
-                  <option value="Odontologia">Odontologia</option>
                   <option value="Educação Física">Educação Física</option>
-                  <option value="Terapia Ocupacional">Terapia Ocupacional</option>
+                  <option value="Enfermagem">Enfermagem</option>
+                  <option value="Fisioterapia">Fisioterapia</option>
+                  <option value="Médico">Médico</option>
+                  <option value="Nutrição">Nutrição</option>
+                  <option value="Odontologia">Odontologia</option>
+                  <option value="Psicologia">Psicologia</option>
                   <option value="Serviço Social">Serviço Social</option>
+                  <option value="Terapia Ocupacional">Terapia Ocupacional</option>
                 </select>
               </div>
 
@@ -1526,8 +1526,8 @@ export function TabAval({ r, cat, area, profNome }: Ctx) {
                       }}
                       className="h-7 px-2 text-xs rounded border border-input bg-background font-medium"
                     >
-                      <option value="ok">Verde (Normal / Seguro)</option>
                       <option value="warn">Amarelo (Atenção / Moderado)</option>
+                      <option value="ok">Verde (Normal / Seguro)</option>
                       <option value="danger">Vermelho (Alto Risco / Grave)</option>
                     </select>
 
@@ -2172,9 +2172,9 @@ export function TabPia({ r, cat }: Ctx) {
                     className="w-full h-8 px-2 text-xs rounded-md border border-input bg-background"
                   >
                     <option value="Alcançado">Alcançado</option>
-                    <option value="Parcialmente alcançado">Parcialmente alcançado</option>
                     <option value="Não alcançado">Não alcançado</option>
                     <option value="Necessidade de ajuste do Plano">Necessidade de ajuste do Plano</option>
+                    <option value="Parcialmente alcançado">Parcialmente alcançado</option>
                   </select>
                 </div>
 
@@ -2683,9 +2683,9 @@ export function TabCuidados({ r, cat }: Ctx) {
                   onChange={(e) => setQuem(e.target.value as 'todos' | 'enfermagem' | 'cuidador')}
                   className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                 >
-                  <option value="todos">Toda a equipe (Cuidadores e Enfermagem)</option>
-                  <option value="cuidador">Cuidadores</option>
                   <option value="enfermagem">Auxiliar / Técnico / Enfermeiro</option>
+                  <option value="cuidador">Cuidadores</option>
+                  <option value="todos">Toda a equipe (Cuidadores e Enfermagem)</option>
                 </select>
               </div>
             </div>
@@ -2776,9 +2776,9 @@ export function TabCuidados({ r, cat }: Ctx) {
                   onChange={(e) => setCurativoQuem(e.target.value as 'todos' | 'enfermagem' | 'cuidador')}
                   className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                 >
-                  <option value="todos">Toda a equipe (Cuidadores e Auxiliares de Enfermagem)</option>
-                  <option value="cuidador">Cuidadores</option>
                   <option value="enfermagem">Auxiliar / Técnico / Enfermeiro RT</option>
+                  <option value="cuidador">Cuidadores</option>
+                  <option value="todos">Toda a equipe (Cuidadores e Auxiliares de Enfermagem)</option>
                 </select>
               </div>
 
@@ -2827,10 +2827,10 @@ export function TabCuidados({ r, cat }: Ctx) {
                     onChange={(e) => setDecubitoHoras(e.target.value)}
                     className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                   >
+                    <option value={1}>A cada 1 hora (Cadeira/Poltrona)</option>
                     <option value={2}>A cada 2 horas (Padrão LPP)</option>
                     <option value={3}>A cada 3 horas</option>
                     <option value={4}>A cada 4 horas</option>
-                    <option value={1}>A cada 1 hora (Cadeira/Poltrona)</option>
                   </select>
                 </div>
                 <div className="space-y-1">
@@ -2841,8 +2841,8 @@ export function TabCuidados({ r, cat }: Ctx) {
                     className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                   >
                     <option value="24h">24 Horas (Dia e Noite)</option>
-                    <option value="noturno">Somente Noturno</option>
                     <option value="diurno">Somente Diurno</option>
+                    <option value="noturno">Somente Noturno</option>
                   </select>
                 </div>
               </div>
@@ -2891,9 +2891,9 @@ export function TabCuidados({ r, cat }: Ctx) {
                   onChange={(e) => setDecubitoQuem(e.target.value as 'todos' | 'enfermagem' | 'cuidador')}
                   className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                 >
-                  <option value="todos">Toda a equipe (Cuidadores e Enfermagem)</option>
-                  <option value="cuidador">Cuidadores</option>
                   <option value="enfermagem">Auxiliar / Técnico / Enfermeiro</option>
+                  <option value="cuidador">Cuidadores</option>
+                  <option value="todos">Toda a equipe (Cuidadores e Enfermagem)</option>
                 </select>
               </div>
             </div>
@@ -3322,14 +3322,14 @@ export function TabPresc({ r, cat }: Ctx) {
                     onChange={(e) => setVia(e.target.value)}
                     className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                   >
-                    <option value="VO">Oral (VO)</option>
-                    <option value="SC">Subcutânea (SC)</option>
-                    <option value="IM">Intramuscular (IM)</option>
                     <option value="EV">Endovenosa (EV)</option>
-                    <option value="VR">Retal (VR)</option>
-                    <option value="Tópico">Tópica</option>
-                    <option value="Ocular">Ocular</option>
                     <option value="Inalatório">Inalatória</option>
+                    <option value="IM">Intramuscular (IM)</option>
+                    <option value="Ocular">Ocular</option>
+                    <option value="VO">Oral (VO)</option>
+                    <option value="VR">Retal (VR)</option>
+                    <option value="SC">Subcutânea (SC)</option>
+                    <option value="Tópico">Tópica</option>
                   </select>
                 </div>
               </div>
@@ -3343,8 +3343,8 @@ export function TabPresc({ r, cat }: Ctx) {
                     className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                   >
                     <option value="diario">Diário (horários fixos)</option>
-                    <option value="sn">Se Necessário (SN)</option>
                     <option value="intervalo">Intervalado</option>
+                    <option value="sn">Se Necessário (SN)</option>
                   </select>
                 </div>
                 <div className="space-y-1">
@@ -4054,8 +4054,8 @@ export function TabEvol({ r, cat, area }: Ctx) {
                     className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                   >
                     <option value="Enfermagem">Enfermagem</option>
-                    <option value="Medicina">Medicina</option>
                     <option value="Fisioterapia">Fisioterapia</option>
+                    <option value="Medicina">Medicina</option>
                     <option value="Nutrição">Nutrição</option>
                     <option value="Psicologia">Psicologia</option>
                   </select>

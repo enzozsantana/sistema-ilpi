@@ -36,7 +36,7 @@ export function ModalCadastroEspecialista({
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
-  const [especialidade, setEspecialidade] = useState<EspecialidadeVirtual>('medica')
+  const [especialidade, setEspecialidade] = useState<EspecialidadeVirtual>('estomaterapia')
   const [registro, setRegistro] = useState('')
   const [titulo, setTitulo] = useState('')
   const [consultorio, setConsultorio] = useState('')
@@ -190,11 +190,11 @@ export function ModalCadastroEspecialista({
                   onChange={(e) => setEspecialidade(e.target.value as EspecialidadeVirtual)}
                   className="w-full h-10.5 px-3 rounded-xl border border-input bg-background text-xs sm:text-sm font-medium focus:ring-2 focus:ring-ring"
                 >
-                  <option value="medica">Medicina Geriátrica</option>
                   <option value="estomaterapia">Estomaterapia & Feridas (Enfermagem)</option>
+                  <option value="fisioterapia">Fisioterapia Geriátrica</option>
+                  <option value="medica">Medicina Geriátrica</option>
                   <option value="nutricao">Nutrição Clínica Geriátrica</option>
                   <option value="psicologia">Psicologia & Demências</option>
-                  <option value="fisioterapia">Fisioterapia Geriátrica</option>
                 </select>
               </div>
 

@@ -697,11 +697,13 @@ export default function Estoque() {
                   }}
                   className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                 >
-                  {residentesAtivos.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.nome} (Quarto {r.quarto})
-                    </option>
-                  ))}
+                  {[...residentesAtivos]
+                    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+                    .map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.nome} (Quarto {r.quarto})
+                      </option>
+                    ))}
                 </select>
               </div>
 
@@ -715,11 +717,13 @@ export default function Estoque() {
                   className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                 >
                   <option value="">Selecione o item...</option>
-                  {(data.getResidente(entradaResId)?.estoque ?? []).map((it) => (
-                    <option key={it.id} value={it.id}>
-                      {it.nome} (Saldo atual: {it.qtd} {it.unid})
-                    </option>
-                  ))}
+                  {[...(data.getResidente(entradaResId)?.estoque ?? [])]
+                    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+                    .map((it) => (
+                      <option key={it.id} value={it.id}>
+                        {it.nome} (Saldo atual: {it.qtd} {it.unid})
+                      </option>
+                    ))}
                 </select>
               </div>
 
@@ -791,11 +795,13 @@ export default function Estoque() {
                   onChange={(e) => setNovoResId(e.target.value)}
                   className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                 >
-                  {residentesAtivos.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.nome} (Quarto {r.quarto})
-                    </option>
-                  ))}
+                  {[...residentesAtivos]
+                    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+                    .map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.nome} (Quarto {r.quarto})
+                      </option>
+                    ))}
                 </select>
               </div>
 
@@ -820,13 +826,13 @@ export default function Estoque() {
                     onChange={(e) => setNovoUnidade(e.target.value)}
                     className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                   >
-                    <option value="un">unidade (un)</option>
+                    <option value="cx">caixa (cx)</option>
                     <option value="frasco">frasco</option>
                     <option value="pacote">pacote (pct)</option>
-                    <option value="tubo">tubo / bisnaga</option>
-                    <option value="cx">caixa (cx)</option>
-                    <option value="sachê">sachê</option>
                     <option value="rolo">rolo</option>
+                    <option value="sachê">sachê</option>
+                    <option value="tubo">tubo / bisnaga</option>
+                    <option value="un">unidade (un)</option>
                   </select>
                 </div>
                 <div className="space-y-1">
@@ -877,9 +883,9 @@ export default function Estoque() {
                   onChange={(e) => setNovoOrigem(e.target.value)}
                   className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
                 >
+                  <option value="Familiar">Familiar (Entregue pela família)</option>
                   <option value="Farmácia Comercial">Farmácia Comercial (Compra / Cotação)</option>
                   <option value="Farmácia Popular">Farmácia Popular (Retirada SUS)</option>
-                  <option value="Familiar">Familiar (Entregue pela família)</option>
                   <option value="Instituição">Instituição (Uso geral da casa)</option>
                 </select>
               </div>

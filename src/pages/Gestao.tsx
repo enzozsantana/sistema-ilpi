@@ -1363,13 +1363,13 @@ export default function Gestao() {
                   <SelectValue placeholder="Selecione o indicador" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="lpp">Prevalência de lesão por pressão (LPP)</SelectItem>
-                  <SelectItem value="escabiose">Incidência de escabiose</SelectItem>
                   <SelectItem value="dda">Incidência de DDA (Doença Diarreica Aguda)</SelectItem>
                   <SelectItem value="desidratacao">Incidência de desidratação</SelectItem>
+                  <SelectItem value="escabiose">Incidência de escabiose</SelectItem>
                   <SelectItem value="desnutricao">Prevalência de desnutrição</SelectItem>
-                  <SelectItem value="obito">Taxa de mortalidade (Óbito)</SelectItem>
+                  <SelectItem value="lpp">Prevalência de lesão por pressão (LPP)</SelectItem>
                   <SelectItem value="queda">Queda da própria altura / leito</SelectItem>
+                  <SelectItem value="obito">Taxa de mortalidade (Óbito)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1384,11 +1384,13 @@ export default function Gestao() {
                   <SelectValue placeholder="Selecione o residente" />
                 </SelectTrigger>
                 <SelectContent>
-                  {residentes.map((r) => (
-                    <SelectItem key={r.id} value={r.id}>
-                      {r.nome} {r.quarto ? `(Quarto ${r.quarto})` : ''}
-                    </SelectItem>
-                  ))}
+                  {[...residentes]
+                    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+                    .map((r) => (
+                      <SelectItem key={r.id} value={r.id}>
+                        {r.nome} {r.quarto ? `(Quarto ${r.quarto})` : ''}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>

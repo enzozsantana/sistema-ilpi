@@ -694,8 +694,8 @@ export function ModalPedidoMedico({
                       onChange={(e) => setTipoReceita(e.target.value as 'simples' | 'controle_especial')}
                       className="w-full h-8 rounded-lg border border-input bg-transparent px-2.5 text-xs shadow-2xs outline-none"
                     >
-                      <option value="simples">Receituário Simples (Branco)</option>
                       <option value="controle_especial">Receita de Controle Especial (Portaria 344/98 - 2 vias)</option>
+                      <option value="simples">Receituário Simples (Branco)</option>
                     </select>
                   </div>
                 </div>

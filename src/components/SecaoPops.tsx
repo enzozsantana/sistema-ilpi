@@ -1027,10 +1027,10 @@ export function SecaoPops({ className, mostrarApenasConsulta = false }: SecaoPop
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="Fluxograma">Fluxograma Obrigatório</SelectItem>
+                  <SelectItem value="Manual">Manual de Boas Práticas</SelectItem>
                   <SelectItem value="POP">POP (Procedimento Operacional Padrão)</SelectItem>
                   <SelectItem value="Protocolo">Protocolo Clínico</SelectItem>
-                  <SelectItem value="Manual">Manual de Boas Práticas</SelectItem>
-                  <SelectItem value="Fluxograma">Fluxograma Obrigatório</SelectItem>
                 </SelectContent>
               </Select>
             </div>
