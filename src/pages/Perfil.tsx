@@ -51,6 +51,7 @@ export default function Perfil() {
   const [senhaConf, setSenhaConf] = useState('')
   const [showAtual, setShowAtual] = useState(false)
   const [showNova, setShowNova] = useState(false)
+  const [showConf, setShowConf] = useState(false)
   const [erroSenha, setErroSenha] = useState('')
   const [busySenha, setBusySenha] = useState(false)
 
@@ -396,16 +397,28 @@ export default function Perfil() {
                 <Label htmlFor="senhaConf" className="text-xs font-semibold">
                   Confirmar nova senha
                 </Label>
-                <Input
-                  id="senhaConf"
-                  type="password"
-                  value={senhaConf}
-                  onChange={(e) => setSenhaConf(e.target.value)}
-                  required
-                  minLength={6}
-                  autoComplete="new-password"
-                  className="h-9 text-xs rounded-xl"
-                />
+                <div className="relative">
+                  <Input
+                    id="senhaConf"
+                    type={showConf ? 'text' : 'password'}
+                    value={senhaConf}
+                    onChange={(e) => setSenhaConf(e.target.value)}
+                    required
+                    minLength={6}
+                    autoComplete="new-password"
+                    className="h-9 text-xs pr-10 rounded-xl"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowConf((v) => !v)}
+                    className="absolute right-0 top-0 h-9 w-9 text-muted-foreground hover:text-foreground"
+                    aria-label={showConf ? 'Ocultar confirmação de senha' : 'Exibir confirmação de senha'}
+                  >
+                    {showConf ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                  </Button>
+                </div>
               </div>
 
               {erroSenha && (

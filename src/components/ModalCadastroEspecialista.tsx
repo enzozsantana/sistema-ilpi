@@ -20,6 +20,7 @@ import {
   Sparkles,
   Stethoscope,
 } from 'lucide-react'
+import { PasswordInput } from './ui/password-input'
 import { toast } from 'sonner'
 
 interface ModalCadastroEspecialistaProps {
@@ -36,6 +37,7 @@ export function ModalCadastroEspecialista({
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
+  const [confirmaSenha, setConfirmaSenha] = useState('')
   const [especialidade, setEspecialidade] = useState<EspecialidadeVirtual>('estomaterapia')
   const [registro, setRegistro] = useState('')
   const [titulo, setTitulo] = useState('')
@@ -50,12 +52,16 @@ export function ModalCadastroEspecialista({
     e.preventDefault()
     setErro('')
 
-    if (!nome.trim() || !email.trim() || !senha.trim()) {
-      setErro('Preencha seu nome, e-mail e senha de acesso.')
+    if (!nome.trim() || !email.trim() || !senha.trim() || !confirmaSenha.trim()) {
+      setErro('Preencha seu nome, e-mail, senha e confirmação de senha.')
       return
     }
     if (senha.length < 6) {
       setErro('A senha deve conter pelo menos 6 caracteres.')
+      return
+    }
+    if (senha !== confirmaSenha) {
+      setErro('As senhas não coincidem. Digite a mesma senha nos dois campos.')
       return
     }
     if (!registro.trim()) {
@@ -162,15 +168,31 @@ export function ModalCadastroEspecialista({
                 />
               </div>
 
-              <div className="space-y-1.5 sm:col-span-2">
+              <div className="space-y-1.5">
                 <Label className="text-xs sm:text-sm font-semibold">Senha de Acesso *</Label>
-                <Input
-                  type="password"
+                <PasswordInput
                   placeholder="Mínimo 6 caracteres"
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
                   required
+                  minLength={6}
                   className="h-10.5 text-xs sm:text-sm rounded-xl px-3.5"
+                  showPasswordLabel="Exibir senha de acesso"
+                  hidePasswordLabel="Ocultar senha de acesso"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs sm:text-sm font-semibold">Confirmar Senha *</Label>
+                <PasswordInput
+                  placeholder="Repita a senha de acesso"
+                  value={confirmaSenha}
+                  onChange={(e) => setConfirmaSenha(e.target.value)}
+                  required
+                  minLength={6}
+                  className="h-10.5 text-xs sm:text-sm rounded-xl px-3.5"
+                  showPasswordLabel="Exibir confirmação de senha"
+                  hidePasswordLabel="Ocultar confirmação de senha"
                 />
               </div>
             </div>
