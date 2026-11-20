@@ -391,8 +391,9 @@ export function ModalPedidoMedico({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        overlayClassName="!z-[75]"
         className={cn(
-          '!w-[96vw] !max-w-[96vw] sm:!max-w-[96vw] lg:!max-w-[96vw] xl:!max-w-[1600px] !max-h-[94vh] overflow-y-auto overflow-x-hidden p-0 gap-0 border-border/80 shadow-2xl',
+          '!z-[80] !w-[96vw] !max-w-[96vw] sm:!max-w-[96vw] lg:!max-w-[96vw] xl:!max-w-[1600px] !max-h-[94vh] overflow-y-auto overflow-x-hidden p-0 gap-0 border-border/80 shadow-2xl',
           className
         )}
       >

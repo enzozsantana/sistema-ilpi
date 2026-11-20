@@ -119,6 +119,7 @@ export default function Teleconsulta() {
   // Sala de Teleconsulta ao Vivo (Jitsi Meet gratuito)
   const [salaAberta, setSalaAberta] = useState<ConsultaVirtual | null>(null)
   const [painelProntuarioAberto, setPainelProntuarioAberto] = useState(true)
+  const [modalProntuarioOpen, setModalProntuarioOpen] = useState(false)
   const [modoTelaCheia, setModoTelaCheia] = useState(false)
 
   // Nome do usuário logado para identificação automática na sala do Jitsi
@@ -1182,10 +1183,13 @@ export default function Teleconsulta() {
                   <Button
                     type="button"
                     size="xs"
-                    variant={painelProntuarioAberto ? 'default' : 'outline'}
-                    onClick={() => setPainelProntuarioAberto(!painelProntuarioAberto)}
+                    variant={modalProntuarioOpen || painelProntuarioAberto ? 'default' : 'outline'}
+                    onClick={() => {
+                      setModalProntuarioOpen(true)
+                      setPainelProntuarioAberto(true)
+                    }}
                     className="text-xs rounded-xl gap-1.5"
-                    title={painelProntuarioAberto ? 'Ocultar prontuário para expandir o vídeo' : 'Exibir Prontuário & Evolução'}
+                    title="Exibir Prontuário & Evolução Clínica em Modal"
                   >
                     <FileText className="size-3.5" />
                     <span className="hidden sm:inline">Prontuário & Evolução</span>
@@ -1694,12 +1698,146 @@ export default function Teleconsulta() {
           onOpenChange={setModalReceitaOpen}
           residente={residenteParaReceita}
           tipoInicial="receituario"
-          className="!w-[96vw] !max-w-[96vw] sm:!max-w-[96vw] lg:!max-w-[96vw] xl:!max-w-[1600px] !max-h-[94vh] overflow-y-auto overflow-x-hidden"
+          className="!z-[80] !w-[96vw] !max-w-[96vw] sm:!max-w-[96vw] lg:!max-w-[96vw] xl:!max-w-[1600px] !max-h-[94vh] overflow-y-auto overflow-x-hidden"
           onPedidoSalvo={() => {
             toast.success('Receita / pedido médico gravado e assinado no prontuário!')
           }}
         />
       )}
+
+      {/* MODAL DE PRONTUÁRIO & EVOLUÇÃO (Acessível em Tela Cheia, Sala de Espera ou Chamada ao Vivo) */}
+      <Dialog open={modalProntuarioOpen} onOpenChange={setModalProntuarioOpen}>
+        <DialogContent
+          overlayClassName="!z-[60]"
+          className="!z-[65] max-w-2xl max-h-[92vh] overflow-y-auto rounded-2xl p-5 space-y-4"
+        >
+          <DialogHeader className="border-b border-border/60 pb-3">
+            <div className="flex items-center gap-2">
+              <div className="size-8 rounded-lg bg-teal-500/15 text-teal-700 dark:text-teal-300 flex items-center justify-center font-bold">
+                <FileText className="size-4.5" />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-bold text-foreground">
+                  Prontuário & Evolução Clínica
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  {salaAberta ? `Consulta com ${salaAberta.profissionalNome} (${salaAberta.especialidade})` : 'Atendimento Virtual'}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          {/* Dados do Residente */}
+          {residenteEscolhido ? (
+            <div className="p-3.5 rounded-xl bg-muted/30 border border-border/60 space-y-2 text-xs">
+              <div className="flex items-center justify-between">
+                <div>
+                  <strong className="text-sm font-bold text-foreground">{residenteEscolhido.nome}</strong>
+                  <p className="text-[11px] text-muted-foreground">
+                    {residenteEscolhido.nasc ? `Nascimento: ${String(residenteEscolhido.nasc)}` : ''} · Convênio: {String(residenteEscolhido.convenio || 'Particular')}
+                  </p>
+                </div>
+                <Badge variant="outline" className="text-xs font-semibold">
+                  Quarto {residenteEscolhido.quarto || '-'}
+                </Badge>
+              </div>
+
+              {residenteEscolhido.alergias && (
+                <div className="p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300">
+                  <span className="font-bold text-[11px] block">⚠️ Alergias Conhecidas:</span>
+                  <span className="text-[11px]">
+                    {Array.isArray(residenteEscolhido.alergias)
+                      ? (residenteEscolhido.alergias as string[]).join(', ')
+                      : String(residenteEscolhido.alergias)}
+                  </span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground italic">Residente da ILPI</p>
+          )}
+
+          {/* Ação: Emissão de Pedido Médico / Receituário */}
+          <div className="p-3.5 rounded-xl bg-card border border-border/70 flex items-center justify-between gap-3 text-xs">
+            <div>
+              <span className="font-bold text-foreground block">Prescrição & Pedido de Exames</span>
+              <span className="text-[11px] text-muted-foreground">
+                Gere guias timbradas A4 para farmácia e laboratório durante o atendimento
+              </span>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                if (residenteEscolhido) {
+                  setResidenteParaReceita(residenteEscolhido)
+                  setModalReceitaOpen(true)
+                } else {
+                  toast.error('Residente não identificado nesta consulta.')
+                }
+              }}
+              className="rounded-xl text-xs gap-1.5 shrink-0 border-teal-500/40 text-teal-700 dark:text-teal-300 hover:bg-teal-500/10 font-semibold"
+            >
+              <Pill className="size-3.5" />
+              <span>Emitir Receita & Exames</span>
+            </Button>
+          </div>
+
+          {/* Formulário de Evolução da Teleconsulta com Auto-Save */}
+          <div className="space-y-2 p-3.5 rounded-xl border border-border/70 bg-card text-xs">
+            <Label className="text-xs font-bold text-foreground flex items-center justify-between">
+              <span>Evolução Clínica da Consulta</span>
+              <div className="flex items-center gap-1.5">
+                {salaAberta && temRascunho(`teleconsulta_evolucao_${salaAberta.id}`) && textoEvolucao.trim() && (
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                    ✓ Rascunho salvo
+                  </span>
+                )}
+                <span className="text-[10px] text-muted-foreground font-normal">Grava no Prontuário</span>
+              </div>
+            </Label>
+            <textarea
+              value={textoEvolucao}
+              onChange={(e) => setTextoEvolucao(e.target.value)}
+              placeholder="Descreva o atendimento, conduta terapêutica, orientações aos cuidadores..."
+              rows={6}
+              className="w-full text-xs rounded-xl border border-input bg-background p-2.5 focus-visible:outline-ring resize-none leading-relaxed"
+            />
+            <Button
+              type="button"
+              size="sm"
+              disabled={salvandoEvolucao}
+              onClick={handleSalvarEvolucaoConsulta}
+              className="rounded-xl text-xs bg-[#123F4A] hover:bg-[#123F4A]/90 text-white font-semibold w-full sm:w-auto"
+            >
+              {salvandoEvolucao ? 'Salvando...' : 'Salvar Evolução no Prontuário'}
+            </Button>
+          </div>
+
+          {/* Prescrições / Medicamentos em uso do Residente */}
+          {residenteEscolhido && residenteEscolhido.presc && residenteEscolhido.presc.length > 0 && (
+            <div className="space-y-2 p-3.5 rounded-xl border border-border/60 bg-muted/20 text-xs">
+              <span className="font-bold text-foreground block">Medicamentos em Uso (Prescrições Vigentes)</span>
+              <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                {residenteEscolhido.presc.map((p, idx) => (
+                  <div key={p.id || idx} className="p-2 rounded-lg bg-background border border-border/50 flex items-center justify-between text-[11px]">
+                    <div>
+                      <strong className="text-foreground">{p.med}</strong>
+                      <span className="text-[10px] text-muted-foreground block">
+                        {p.dose} · {p.via}{p.horarios?.length ? ` · Horários: ${p.horarios.join(', ')}` : ''}
+                      </span>
+                    </div>
+                    <Badge variant="outline" className="text-[10px]">
+                      {p.tipo || 'Uso contínuo'}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       {/* MODAL DE CONEXÃO MERCADO PAGO MARKETPLACE & SPLIT */}
       <ModalConectarMercadoPago
         open={modalMercadoPagoOpen}
