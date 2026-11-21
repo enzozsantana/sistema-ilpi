@@ -71,4 +71,8 @@ export interface ConsultaVirtual {
   evolucaoRealizada?: boolean
   receitaEmitida?: boolean
   criadoEm: string
+  solicitanteId?: string
+  solicitanteNome?: string
+  solicitanteFuncao?: string
+  responsavelFinanceiroResidente?: string
 }

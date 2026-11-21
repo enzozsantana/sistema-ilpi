@@ -274,5 +274,23 @@ export function extrairAlertasCriticosRT({
     })
   }
 
+  // 6. Suspensões de medicamentos aguardando validação técnica da Enfermagem
+  residentes.forEach((r) => {
+    (r.presc ?? []).forEach((p) => {
+      if (p.suspensao?.status === 'pendente_enfermagem') {
+        criticos.push({
+          id: `susp_pendente_${p.id}`,
+          tipo: 'suspensao_pendente',
+          gravidade: 'alta',
+          titulo: `Suspensão a validar: ${p.med}`,
+          descricao: `${primeiro(r.nome)} (Q.${r.quarto}) — solicitada por ${p.suspensao.solicitadoPor?.nome || 'Médico'}. Justificativa: ${p.suspensao.justificativa}`,
+          residenteId: r.id,
+          residenteNome: r.nome,
+          link: `/residentes/${r.id}?tab=presc`,
+        })
+      }
+    })
+  })
+
   return criticos
 }

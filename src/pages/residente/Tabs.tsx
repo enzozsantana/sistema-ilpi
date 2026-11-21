@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { AREAS, CATS_ARQ, DOCS, MODELOS_ANOT, NURSE, TIPOS_PRESC } from '../../lib/constants'
 import { agoraHM, fmt, idade, iso } from '../../lib/business/dates'
 import { consumoDia, diasRest, nivelEst } from '../../lib/business/estoque'
@@ -11,7 +11,7 @@ import { supabase } from '../../lib/supabase'
 import { useIlpiData } from '../../contexts/IlpiDataContext'
 import { useAuth } from '../../contexts/AuthContext'
 import { PROCESSO_ENFERMAGEM_PADRAO, type ItemProcessoEnfermagem } from '../../lib/constants/processoEnfermagem'
-import type { AbaResidente, Categoria, EscalaCategoria, EscalaCustomizada, NivelBadge, PiaItemNanda, Prescricao, Residente, StatusResidente } from '../../types/ilpi'
+import type { AbaResidente, Categoria, EscalaCategoria, EscalaCustomizada, NivelBadge, PiaItemNanda, Prescricao, Residente, StatusResidente, SuspensaoPrescricao } from '../../types/ilpi'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { Badge } from '../../components/ui/badge'
 import { Button } from '../../components/ui/button'
@@ -20,7 +20,7 @@ import { Label } from '../../components/ui/label'
 import { Checkbox } from '../../components/ui/checkbox'
 import { Switch } from '../../components/ui/switch'
 import { SearchableSelect } from '../../components/ui/select'
-import { StatusBadge, Allergy } from '../../components/Ui'
+import { StatusBadge, Allergy, Avatar } from '../../components/Ui'
 import {
   Dialog,
   DialogContent,
@@ -39,7 +39,9 @@ import {
 } from '../../components/ui/table'
 import {
   Activity,
+  AlertTriangle,
   Bandage,
+  Calendar,
   Camera,
   CheckCircle2,
   ChevronDown,
@@ -72,6 +74,7 @@ import {
   Target,
   Trash2,
   User,
+  UserCheck,
   X,
 } from 'lucide-react'
 import { processarEUploadFoto } from '../../lib/image'
@@ -2937,7 +2940,20 @@ export function TabPresc({ r, cat }: Ctx) {
 
   // Prescrição sendo editada (null se for novo cadastro)
   const [prescEditando, setPrescEditando] = useState<Prescricao | null>(null)
-  const [reativarAoSalvar, setReativarAoSalvar] = useState(true)
+
+  // Estados do fluxo de suspensão / desprescrição justificada
+  const [modalSuspender, setModalSuspender] = useState(false)
+  const [prescParaSuspender, setPrescParaSuspender] = useState<Prescricao | null>(null)
+  const [justificativaSuspensao, setJustificativaSuspensao] = useState('')
+  const [salvandoSuspensao, setSalvandoSuspensao] = useState(false)
+
+  // Estados para validação técnica da Enfermagem
+  const [modalValidar, setModalValidar] = useState(false)
+  const [prescParaValidar, setPrescParaValidar] = useState<Prescricao | null>(null)
+  const [salvandoValidacao, setSalvandoValidacao] = useState(false)
+
+  // Histórico de desprescrições
+  const [expandirHistorico, setExpandirHistorico] = useState(false)
 
   // Form states
   const [med, setMed] = useState('')
@@ -2949,6 +2965,21 @@ export function TabPresc({ r, cat }: Ctx) {
   const [controlado, setControlado] = useState(false)
   const [controladoManual, setControladoManual] = useState(false)
 
+  // Separação clínica das prescrições: vigentes ativas vs aguardando validação vs suspensas definitivas
+  const prescricoesVigentes = useMemo(() => {
+    return (r.presc ?? []).filter((p) => !p.suspensa && p.suspensao?.status !== 'validada')
+  }, [r.presc])
+
+  const prescricoesPendentes = useMemo(() => {
+    return (r.presc ?? []).filter((p) => p.suspensao?.status === 'pendente_enfermagem')
+  }, [r.presc])
+
+  const prescricoesSuspensas = useMemo(() => {
+    return (r.presc ?? []).filter((p) => p.suspensa || p.suspensao?.status === 'validada')
+  }, [r.presc])
+
+  const ehEnfermagem = cat === 'rt' || cat === 'enf'
+
   function handleAbrirModal() {
     setPrescEditando(null)
     setMed('')
@@ -2959,7 +2990,6 @@ export function TabPresc({ r, cat }: Ctx) {
     setObs('')
     setControlado(false)
     setControladoManual(false)
-    setReativarAoSalvar(true)
     setModalNova(true)
   }
 
@@ -2973,8 +3003,167 @@ export function TabPresc({ r, cat }: Ctx) {
     setObs(p.obs || '')
     setControlado(isMedicamentoControlado(p))
     setControladoManual(true)
-    setReativarAoSalvar(true)
     setModalNova(true)
+  }
+
+  function handleAbrirSuspender(p: Prescricao) {
+    setPrescParaSuspender(p)
+    setJustificativaSuspensao('')
+    setModalSuspender(true)
+  }
+
+  async function handleConfirmarSuspensao(e: React.FormEvent) {
+    e.preventDefault()
+    if (!prescParaSuspender || !profissional) return
+    if (!justificativaSuspensao.trim()) {
+      toast.error('Informe a justificativa clínica da suspensão.')
+      return
+    }
+
+    setSalvandoSuspensao(true)
+    const sigOriginal = (prescParaSuspender.sig as unknown as Record<string, unknown>) || {}
+
+    if (ehEnfermagem) {
+      // Enfermagem suspendendo diretamente: valida tecnicamente e retira da prescrição ativa
+      const suspensaoObj: SuspensaoPrescricao = {
+        justificativa: justificativaSuspensao.trim(),
+        solicitadoPor: {
+          id: profissional.id,
+          nome: profissional.nome,
+          funcao: profissional.funcao,
+          cat: profissional.cat,
+          conselho: profissional.conselho,
+          d: T,
+          h: agoraHM(),
+        },
+        validadoPor: {
+          id: profissional.id,
+          nome: profissional.nome,
+          funcao: profissional.funcao,
+          cat: profissional.cat,
+          conselho: profissional.conselho,
+          d: T,
+          h: agoraHM(),
+        },
+        status: 'validada',
+      }
+
+      const { error } = await supabase
+        .from('prescricoes')
+        .update({
+          suspensa: true,
+          fim: T,
+          obs: prescParaSuspender.obs
+            ? `${prescParaSuspender.obs} | [DESPRESCRIÇÃO VALIDADA: ${justificativaSuspensao.trim()}]`
+            : `[DESPRESCRIÇÃO VALIDADA: ${justificativaSuspensao.trim()}]`,
+          assinatura: {
+            ...sigOriginal,
+            suspensao: suspensaoObj,
+          },
+        })
+        .eq('id', prescParaSuspender.id)
+
+      setSalvandoSuspensao(false)
+      if (error) {
+        toast.error('Erro ao suspender prescrição: ' + error.message)
+        return
+      }
+
+      toast.success(`${prescParaSuspender.med} suspenso e retirado da prescrição ativa.`)
+    } else {
+      // Médico: envia com justificativa para a Enfermagem validar
+      const suspensaoObj: SuspensaoPrescricao = {
+        justificativa: justificativaSuspensao.trim(),
+        solicitadoPor: {
+          id: profissional.id,
+          nome: profissional.nome,
+          funcao: profissional.funcao,
+          cat: profissional.cat,
+          conselho: profissional.conselho,
+          d: T,
+          h: agoraHM(),
+        },
+        status: 'pendente_enfermagem',
+      }
+
+      const { error } = await supabase
+        .from('prescricoes')
+        .update({
+          obs: prescParaSuspender.obs
+            ? `${prescParaSuspender.obs} | [SUSPENSÃO SOLICITADA: ${justificativaSuspensao.trim()}]`
+            : `[SUSPENSÃO SOLICITADA: ${justificativaSuspensao.trim()}]`,
+          assinatura: {
+            ...sigOriginal,
+            suspensao: suspensaoObj,
+          },
+        })
+        .eq('id', prescParaSuspender.id)
+
+      setSalvandoSuspensao(false)
+      if (error) {
+        toast.error('Erro ao solicitar suspensão: ' + error.message)
+        return
+      }
+
+      toast.success('Suspensão solicitada! Encaminhada com justificativa para validação da Enfermagem.')
+    }
+
+    setModalSuspender(false)
+    setPrescParaSuspender(null)
+    setJustificativaSuspensao('')
+    await data.refresh()
+  }
+
+  async function handleExecutarValidacao(p: Prescricao) {
+    if (!profissional) return
+    setSalvandoValidacao(true)
+
+    const sigOriginal = (p.sig as unknown as Record<string, unknown>) || {}
+    const suspensaoAtual = p.suspensao || {
+      justificativa: 'Suspensão solicitada pelo médico',
+      solicitadoPor: { id: '', nome: 'Médico', d: T, h: agoraHM() },
+      status: 'pendente_enfermagem' as const,
+    }
+
+    const suspensaoValidada: SuspensaoPrescricao = {
+      ...suspensaoAtual,
+      validadoPor: {
+        id: profissional.id,
+        nome: profissional.nome,
+        funcao: profissional.funcao,
+        cat: profissional.cat,
+        conselho: profissional.conselho,
+        d: T,
+        h: agoraHM(),
+      },
+      status: 'validada',
+    }
+
+    const { error } = await supabase
+      .from('prescricoes')
+      .update({
+        suspensa: true,
+        fim: T,
+        obs: p.obs
+          ? `${p.obs} | [VALIDADA ENFERMAGEM: ${profissional.nome}]`
+          : `[VALIDADA ENFERMAGEM: ${profissional.nome}]`,
+        assinatura: {
+          ...sigOriginal,
+          suspensao: suspensaoValidada,
+        },
+      })
+      .eq('id', p.id)
+
+    setSalvandoValidacao(false)
+    if (error) {
+      toast.error('Erro ao validar suspensão: ' + error.message)
+      return
+    }
+
+    toast.success(`Suspensão de ${p.med} validada! Medicamento retirado definitivamente da prescrição ativa.`)
+    setModalValidar(false)
+    setPrescParaValidar(null)
+    await data.refresh()
   }
 
   async function handleSalvarPrescricao(e: React.FormEvent) {
@@ -2993,7 +3182,6 @@ export function TabPresc({ r, cat }: Ctx) {
         tipo,
         horarios,
         obs: obs.trim(),
-        ...(prescEditando.suspensa && reativarAoSalvar ? { suspensa: false } : {}),
       }
 
       let { error } = await supabase
@@ -3019,11 +3207,7 @@ export function TabPresc({ r, cat }: Ctx) {
         return
       }
 
-      const msgSucesso = prescEditando.suspensa && reativarAoSalvar
-        ? 'Prescrição médica corrigida e reativada com sucesso!'
-        : 'Prescrição médica atualizada com sucesso!'
-      toast.success(msgSucesso)
-
+      toast.success('Prescrição médica atualizada com sucesso!')
       setModalNova(false)
       setPrescEditando(null)
       await data.refresh()
@@ -3083,124 +3267,455 @@ export function TabPresc({ r, cat }: Ctx) {
     await data.refresh()
   }
 
-  async function handleToggleSuspender(prescId: string, suspensa: boolean) {
-    const { error } = await supabase
-      .from('prescricoes')
-      .update({ suspensa: !suspensa })
-      .eq('id', prescId)
-    if (error) {
-      toast.error('Erro ao alterar status da prescrição: ' + error.message)
-      return
-    }
-    toast.success(!suspensa ? 'Prescrição suspensa!' : 'Prescrição reativada!')
-    await data.refresh()
-  }
-
   return (
-    <Card className="border border-border/70 shadow-2xs overflow-hidden">
-      <CardHeader className="pb-3 border-b border-border/40 bg-muted/20 flex flex-row items-center justify-between gap-2">
-        <CardTitle className="text-sm font-bold flex items-center gap-2">
-          <Pill className="size-4 text-primary" />
-          Prescrições Médicas Vigentes
-        </CardTitle>
-        <div className="flex items-center gap-2">
-          <Button
-            size="xs"
-            variant="outline"
-            onClick={() => setModalReceita(true)}
-            className="gap-1.5 rounded-lg text-xs font-semibold text-foreground border-border/70 hover:bg-muted"
-          >
-            <Printer className="size-3 text-emerald-600 dark:text-emerald-400" />
-            Imprimir Receituário
-          </Button>
-          {can(cat, 'presc') && (
+    <div className="space-y-4">
+      {/* Banner de Suspensões Pendentes de Validação pela Enfermagem */}
+      {prescricoesPendentes.length > 0 && (
+        <div className="p-3.5 rounded-xl border border-amber-500/40 bg-amber-500/10 space-y-2.5 shadow-2xs">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-bold text-xs text-amber-950 dark:text-amber-200 flex items-center gap-1.5">
+              <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
+              Suspensões de Medicamentos Aguardando Validação da Enfermagem ({prescricoesPendentes.length})
+            </span>
+            <Badge variant="outline" className="text-[10px] bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-500/40">
+              Validação Técnica Obrigatória
+            </Badge>
+          </div>
+          <div className="space-y-2">
+            {prescricoesPendentes.map((p) => (
+              <div
+                key={p.id}
+                className="p-2.5 rounded-lg border border-amber-500/30 bg-background/90 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5"
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-bold text-xs text-foreground">{p.med}</span>
+                    <span className="text-[11px] text-muted-foreground font-medium">{p.dose} ({p.via})</span>
+                    <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[9px] px-1.5 py-0 h-4 border-amber-500/30">
+                      Pendente de Validação
+                    </Badge>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    <span className="font-semibold text-foreground">Solicitante:</span> {p.suspensao?.solicitadoPor?.nome || 'Médico(a)'} ({p.suspensao?.solicitadoPor?.conselho || 'CRM'}) em {p.suspensao?.solicitadoPor?.d} às {p.suspensao?.solicitadoPor?.h}
+                  </div>
+                  <div className="text-[11px] text-amber-900 dark:text-amber-200 bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">
+                    <strong>Justificativa clínica:</strong> {p.suspensao?.justificativa || 'Desprescrição médica informada.'}
+                  </div>
+                </div>
+                {ehEnfermagem ? (
+                  <Button
+                    size="xs"
+                    onClick={() => {
+                      setPrescParaValidar(p)
+                      setModalValidar(true)
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shrink-0 gap-1.5 shadow-xs"
+                  >
+                    <CheckCircle2 className="size-3.5" />
+                    Validar e Retirar da Prescrição
+                  </Button>
+                ) : (
+                  <span className="text-[11px] text-amber-700 dark:text-amber-400 italic">
+                    Aguardando validação do Enfermeiro(a) / RT
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Card Principal: Prescrições Médicas Vigentes */}
+      <Card className="border border-border/70 shadow-2xs overflow-hidden">
+        <CardHeader className="pb-3 border-b border-border/40 bg-muted/20 flex flex-row items-center justify-between gap-2">
+          <CardTitle className="text-sm font-bold flex items-center gap-2">
+            <Pill className="size-4 text-primary" />
+            Prescrições Médicas Vigentes
+            <Badge variant="outline" className="text-[10px] ml-1">
+              {prescricoesVigentes.length} {prescricoesVigentes.length === 1 ? 'ativo' : 'ativos'}
+            </Badge>
+          </CardTitle>
+          <div className="flex items-center gap-2">
             <Button
               size="xs"
-              onClick={handleAbrirModal}
-              className="gap-1.5 rounded-lg text-xs font-semibold bg-[#123F4A] hover:bg-[#123F4A]/90 text-white"
+              variant="outline"
+              onClick={() => setModalReceita(true)}
+              className="gap-1.5 rounded-lg text-xs font-semibold text-foreground border-border/70 hover:bg-muted"
             >
-              <Plus className="size-3" />
-              Nova Prescrição
+              <Printer className="size-3 text-emerald-600 dark:text-emerald-400" />
+              Imprimir Receituário
             </Button>
+            {can(cat, 'presc') && (
+              <Button
+                size="xs"
+                onClick={handleAbrirModal}
+                className="gap-1.5 rounded-lg text-xs font-semibold bg-[#123F4A] hover:bg-[#123F4A]/90 text-white"
+              >
+                <Plus className="size-3" />
+                Nova Prescrição
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {prescricoesVigentes.length === 0 ? (
+            <div className="py-12 text-center text-xs text-muted-foreground space-y-1">
+              <Pill className="size-7 mx-auto text-muted-foreground/40 mb-2" />
+              <p className="font-semibold text-foreground">Nenhuma prescrição médica ativa no momento.</p>
+              <p>Os medicamentos suspensos ou descontinuados constam no histórico abaixo.</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader className="bg-muted/30">
+                <TableRow>
+                  <TableHead className="text-xs font-semibold">Medicamento</TableHead>
+                  <TableHead className="text-xs font-semibold">Posologia & Via</TableHead>
+                  <TableHead className="text-xs font-semibold">Frequência / Horários</TableHead>
+                  <TableHead className="text-xs font-semibold">Tipo</TableHead>
+                  <TableHead className="text-xs font-semibold text-right">Ação</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {prescricoesVigentes.map((p) => {
+                  const pendenteValidacao = p.suspensao?.status === 'pendente_enfermagem'
+                  return (
+                    <TableRow key={p.id}>
+                      <TableCell className="text-xs">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-bold text-foreground">{p.med}</span>
+                          {isMedicamentoControlado(p) && (
+                            <Badge
+                              variant="outline"
+                              className="text-[9px] px-1.5 py-0 h-4 bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/35 font-semibold gap-1 inline-flex items-center"
+                              title="Medicamento sujeito a controle especial (Portaria 344/98)"
+                            >
+                              <ShieldAlert className="size-2.5 text-amber-600 dark:text-amber-400" />
+                              Controlado
+                            </Badge>
+                          )}
+                          {pendenteValidacao && (
+                            <Badge
+                              variant="outline"
+                              className="text-[9px] px-1.5 py-0 h-4 bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/35 font-semibold gap-1 inline-flex items-center"
+                            >
+                              <Clock className="size-2.5" />
+                              Aguardando Validação Enfermagem
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{p.dose} ({p.via})</TableCell>
+                      <TableCell className="text-xs font-medium">{freqTxtMed(p)}</TableCell>
+                      <TableCell className="text-xs">
+                        <Badge variant="outline" className="text-[10px]">
+                          {TIPOS_PRESC[p.tipo] || p.tipo}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {can(cat, 'presc') ? (
+                          <div className="flex items-center justify-end gap-1.5">
+                            {pendenteValidacao && ehEnfermagem ? (
+                              <Button
+                                size="xs"
+                                onClick={() => {
+                                  setPrescParaValidar(p)
+                                  setModalValidar(true)
+                                }}
+                                className="text-[11px] font-semibold h-6 px-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md"
+                              >
+                                <CheckCircle2 className="size-3 mr-1" />
+                                Validar Suspensão
+                              </Button>
+                            ) : (
+                              <>
+                                <Button
+                                  size="xs"
+                                  variant="ghost"
+                                  onClick={() => handleAbrirEditar(p)}
+                                  className="text-[11px] font-semibold h-6 px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
+                                  title="Editar posologia, dosagem ou horários"
+                                >
+                                  <Edit3 className="size-3 mr-1" />
+                                  Editar
+                                </Button>
+                                <Button
+                                  size="xs"
+                                  variant="ghost"
+                                  onClick={() => handleAbrirSuspender(p)}
+                                  disabled={pendenteValidacao}
+                                  className="text-[11px] font-semibold h-6 px-2 rounded-md text-rose-600 hover:bg-rose-500/10"
+                                  title="Suspender este medicamento (abrir justificativa)"
+                                >
+                                  Suspender
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                            Ativa
+                          </Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Histórico de Desprescrições / Medicamentos Suspensos (Rastreabilidade Sanitária) */}
+      {prescricoesSuspensas.length > 0 && (
+        <div className="border border-border/60 rounded-xl overflow-hidden bg-muted/10">
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => setExpandirHistorico(!expandirHistorico)}
+            className="p-3 bg-muted/20 hover:bg-muted/30 transition-colors flex items-center justify-between cursor-pointer select-none"
+          >
+            <div className="flex items-center gap-2">
+              <History className="size-4 text-muted-foreground" />
+              <span className="text-xs font-bold text-foreground">
+                Histórico de Medicamentos Suspensos / Desprescrições ({prescricoesSuspensas.length})
+              </span>
+              <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                Arquivados (não constam no receituário)
+              </Badge>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground font-medium">
+              <span>{expandirHistorico ? 'Ocultar' : 'Visualizar histórico'}</span>
+              {expandirHistorico ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+            </div>
+          </div>
+
+          {expandirHistorico && (
+            <div className="p-3 border-t border-border/40 space-y-3">
+              <div className="p-2.5 rounded-lg bg-muted/30 text-[11px] text-muted-foreground flex items-center gap-2">
+                <Info className="size-3.5 text-primary shrink-0" />
+                <span>
+                  Medicamentos retirados da prescrição não poluem o receituário e não são reativados diretamente. Para reintroduzir um fármaco, realize uma nova prescrição médica com dosagem e posologia atualizadas.
+                </span>
+              </div>
+
+              <Table>
+                <TableHeader className="bg-muted/20">
+                  <TableRow>
+                    <TableHead className="text-xs font-semibold">Medicamento</TableHead>
+                    <TableHead className="text-xs font-semibold">Posologia</TableHead>
+                    <TableHead className="text-xs font-semibold">Justificativa Clínica</TableHead>
+                    <TableHead className="text-xs font-semibold">Solicitante</TableHead>
+                    <TableHead className="text-xs font-semibold">Validação Técnica</TableHead>
+                    <TableHead className="text-xs font-semibold text-right">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {prescricoesSuspensas.map((p) => {
+                    const susp = p.suspensao
+                    return (
+                      <TableRow key={p.id} className="opacity-80">
+                        <TableCell className="text-xs font-medium text-foreground">
+                          {p.med}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {p.dose} ({p.via})
+                        </TableCell>
+                        <TableCell className="text-xs text-foreground max-w-xs">
+                          {susp?.justificativa || p.obs || 'Suspensão clínica anterior'}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {susp?.solicitadoPor?.nome ? (
+                            <div>
+                              <span className="font-semibold text-foreground">{susp.solicitadoPor.nome}</span>
+                              <div className="text-[10px]">{susp.solicitadoPor.d} {susp.solicitadoPor.h}</div>
+                            </div>
+                          ) : (
+                            'Médico(a)'
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {susp?.validadoPor?.nome ? (
+                            <div>
+                              <span className="font-semibold text-emerald-700 dark:text-emerald-400">
+                                {susp.validadoPor.nome} ({susp.validadoPor.conselho || 'COREN'})
+                              </span>
+                              <div className="text-[10px]">{susp.validadoPor.d} {susp.validadoPor.h}</div>
+                            </div>
+                          ) : (
+                            <span className="italic text-[10px]">Validada</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant="outline" className="text-[10px] bg-rose-500/10 text-rose-600 border-rose-500/20">
+                            Suspenso
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </div>
-      </CardHeader>
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader className="bg-muted/30">
-            <TableRow>
-              <TableHead className="text-xs font-semibold">Medicamento</TableHead>
-              <TableHead className="text-xs font-semibold">Posologia & Via</TableHead>
-              <TableHead className="text-xs font-semibold">Frequência / Horários</TableHead>
-              <TableHead className="text-xs font-semibold">Tipo</TableHead>
-              <TableHead className="text-xs font-semibold text-right">Ação</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {r.presc.map((p) => (
-              <TableRow key={p.id}>
-                <TableCell className="text-xs">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="font-bold text-foreground">{p.med}</span>
-                    {isMedicamentoControlado(p) && (
-                      <Badge
-                        variant="outline"
-                        className="text-[9px] px-1.5 py-0 h-4 bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/35 font-semibold gap-1 inline-flex items-center"
-                        title="Medicamento sujeito a controle especial (Portaria 344/98)"
-                      >
-                        <ShieldAlert className="size-2.5 text-amber-600 dark:text-amber-400" />
-                        Controlado
-                      </Badge>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground">{p.dose} ({p.via})</TableCell>
-                <TableCell className="text-xs font-medium">{freqTxtMed(p)}</TableCell>
-                <TableCell className="text-xs">
-                  <Badge variant="outline" className="text-[10px]">
-                    {TIPOS_PRESC[p.tipo] || p.tipo}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  {can(cat, 'presc') ? (
-                    <div className="flex items-center justify-end gap-1.5">
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        onClick={() => handleAbrirEditar(p)}
-                        className="text-[11px] font-semibold h-6 px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
-                        title="Editar posologia, dosagem ou horários"
-                      >
-                        <Edit3 className="size-3 mr-1" />
-                        Editar
-                      </Button>
-                      <Button
-                        size="xs"
-                        variant={p.suspensa ? 'outline' : 'ghost'}
-                        onClick={() => void handleToggleSuspender(p.id, !!p.suspensa)}
-                        className={cn(
-                          'text-[11px] font-semibold h-6 px-2 rounded-md',
-                          p.suspensa
-                            ? 'text-emerald-600 border-emerald-500/30'
-                            : 'text-rose-600 hover:bg-rose-500/10'
-                        )}
-                      >
-                        {p.suspensa ? 'Reativar' : 'Suspender'}
-                      </Button>
-                    </div>
-                  ) : p.suspensa ? (
-                    <Badge variant="destructive" className="text-[10px]">Suspensa</Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                      Ativa
-                    </Badge>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
+      )}
+
+      {/* Modal: Suspender Medicamento (com Justificativa e Chips rápidos) */}
+      <Dialog open={modalSuspender} onOpenChange={setModalSuspender}>
+        <DialogContent className="max-w-md">
+          <form onSubmit={handleConfirmarSuspensao}>
+            <DialogHeader>
+              <DialogTitle className="text-base font-bold flex items-center gap-2 text-rose-600 dark:text-rose-400">
+                <AlertTriangle className="size-4" />
+                Suspender Medicamento
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Informe a justificativa clínica para a suspensão de <strong>{prescParaSuspender?.med}</strong> do residente <strong>{r.nome}</strong>.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 py-3 text-xs">
+              <div className="p-2.5 rounded-lg bg-muted/40 border border-border/60 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-foreground text-xs">{prescParaSuspender?.med}</span>
+                  <span className="text-muted-foreground font-medium text-[11px]">{prescParaSuspender?.dose} ({prescParaSuspender?.via})</span>
+                </div>
+                <div className="text-[11px] text-muted-foreground">
+                  Prescrição atual: {prescParaSuspender ? freqTxtMed(prescParaSuspender) : ''}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="justificativaSusp" className="text-[11px] font-semibold flex items-center justify-between">
+                  <span>Justificativa da Suspensão *</span>
+                  <span className="text-[10px] text-muted-foreground">Obrigatório para auditoria</span>
+                </Label>
+                <div className="flex flex-wrap gap-1.5 mb-1.5">
+                  {[
+                    'Término do tratamento',
+                    'Efeito adverso / Intolerância',
+                    'Desprescrição médica',
+                    'Substituição terapêutica',
+                    'Ajuste de conduta clínica',
+                  ].map((chip) => (
+                    <button
+                      key={chip}
+                      type="button"
+                      onClick={() => setJustificativaSuspensao((prev) => prev ? `${prev}. ${chip}` : chip)}
+                      className="text-[10px] px-2 py-0.5 rounded-full bg-muted border border-border/70 hover:bg-muted/80 text-foreground transition-colors cursor-pointer"
+                    >
+                      + {chip}
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  id="justificativaSusp"
+                  rows={3}
+                  placeholder="Descreva o motivo clínico da suspensão deste medicamento..."
+                  value={justificativaSuspensao}
+                  onChange={(e) => setJustificativaSuspensao(e.target.value)}
+                  className="w-full text-xs rounded-md border border-input bg-background p-2 focus-visible:outline-ring resize-none min-h-[75px]"
+                  required
+                />
+              </div>
+
+              <div className="p-2.5 rounded-lg border border-border/60 bg-muted/20 text-[11px] text-muted-foreground space-y-1">
+                {!ehEnfermagem ? (
+                  <p>
+                    ℹ️ <strong>Fluxo Clínico:</strong> Esta solicitação será encaminhada com a justificativa ao <strong>Enfermeiro(a) / RT</strong> para validação técnica. Após a validação, sairá definitivamente da prescrição e do receituário.
+                  </p>
+                ) : (
+                  <p>
+                    ℹ️ <strong>Validação da Enfermagem:</strong> Ao confirmar, o medicamento será retirado imediatamente da prescrição ativa e arquivado no histórico de desprescrições.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setModalSuspender(false)}
+                disabled={salvandoSuspensao}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={salvandoSuspensao || !justificativaSuspensao.trim()}
+                className={!ehEnfermagem ? 'bg-[#123F4A] hover:bg-[#123F4A]/90 text-white font-semibold' : 'bg-rose-600 hover:bg-rose-700 text-white font-semibold'}
+              >
+                {salvandoSuspensao ? (
+                  'Salvando...'
+                ) : !ehEnfermagem ? (
+                  'Solicitar Suspensão (Enviar p/ Enfermagem)'
+                ) : (
+                  'Confirmar Suspensão & Retirar'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Validar Suspensão pela Enfermagem */}
+      <Dialog open={modalValidar} onOpenChange={setModalValidar}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 className="size-4" />
+              Validar Desprescrição (Enfermagem)
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Confirme a validação técnica da suspensão de <strong>{prescParaValidar?.med}</strong> solicitada pelo corpo médico.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-3 text-xs">
+            <div className="p-3 rounded-lg bg-muted/40 border border-border/60 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-foreground text-xs">{prescParaValidar?.med}</span>
+                <span className="text-muted-foreground font-medium text-[11px]">{prescParaValidar?.dose} ({prescParaValidar?.via})</span>
+              </div>
+              <div className="text-[11px] text-muted-foreground">
+                <strong>Solicitado por:</strong> {prescParaValidar?.suspensao?.solicitadoPor?.nome} ({prescParaValidar?.suspensao?.solicitadoPor?.conselho || 'Médico'}) em {prescParaValidar?.suspensao?.solicitadoPor?.d} às {prescParaValidar?.suspensao?.solicitadoPor?.h}
+              </div>
+              <div className="text-[11px] text-amber-900 dark:text-amber-200 bg-amber-500/10 p-2 rounded border border-amber-500/20">
+                <strong>Justificativa clínica:</strong> {prescParaValidar?.suspensao?.justificativa}
+              </div>
+            </div>
+
+            <div className="p-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-[11px] text-emerald-900 dark:text-emerald-200">
+              ✅ Ao validar, o medicamento é formalmente retirado da prescrição ativa deste residente e não constará em impressões de receituário nem na ronda de doses.
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setModalValidar(false)}
+              disabled={salvandoValidacao}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => prescParaValidar && handleExecutarValidacao(prescParaValidar)}
+              disabled={salvandoValidacao}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 font-semibold"
+            >
+              {salvandoValidacao ? 'Validando...' : 'Confirmar Validação Técnica'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={modalNova} onOpenChange={(open) => {
         setModalNova(open)
@@ -3226,26 +3741,6 @@ export function TabPresc({ r, cat }: Ctx) {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 py-3 text-xs">
-              {/* Opção para reativar caso o medicamento esteja atualmente suspenso */}
-              {prescEditando?.suspensa && (
-                <div className="p-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 flex items-center justify-between gap-3">
-                  <div className="space-y-0.5">
-                    <span className="text-xs text-amber-950 dark:text-amber-200 font-bold block">
-                      Medicamento Atualmente Suspenso
-                    </span>
-                    <span className="text-[11px] text-amber-900/80 dark:text-amber-300/80 block">
-                      Deseja reativar o medicamento imediatamente após salvar a correção?
-                    </span>
-                  </div>
-                  <Checkbox
-                    id="pReativar"
-                    checked={reativarAoSalvar}
-                    onCheckedChange={(checked) => setReativarAoSalvar(!!checked)}
-                    className="data-checked:bg-emerald-600 data-checked:border-emerald-600 shrink-0"
-                  />
-                </div>
-              )}
-
               <div className="space-y-1">
                 <Label htmlFor="pMed" className="text-[11px] font-semibold">Medicamento & Dosagem *</Label>
                 <Input
@@ -3411,7 +3906,7 @@ export function TabPresc({ r, cat }: Ctx) {
         tipoInicial="receituario"
         onPedidoSalvo={() => void data.refresh()}
       />
-    </Card>
+    </div>
   )
 }
 
@@ -3593,7 +4088,8 @@ export function TabAnot({ r, cat }: Ctx) {
                     <Clock className="size-3.5 text-primary" />
                     {fmt(a.sig.d)} às {a.sig.h}
                   </span>
-                  <span className="text-muted-foreground font-mono text-[11px]">
+                  <span className="text-muted-foreground font-mono text-[11px] flex items-center gap-1.5">
+                    {profSig && <Avatar r={profSig} size="sm" className="size-4 text-[8px] ring-1 ring-border/60" />}
                     Assinado: {profSig?.nome || a.sig.id}
                   </span>
                 </div>
@@ -3924,20 +4420,184 @@ export function TabAnot({ r, cat }: Ctx) {
 }
 
 /* ==========================================================================
-   TAB 8: EVOLUÇÃO MULTIPROFISSIONAL (com lançamento no Supabase)
+   TAB 8: EVOLUÇÃO MULTIPROFISSIONAL (com lançamento no Supabase e Vigilância Sanitária)
    ========================================================================== */
-export function TabEvol({ r, cat, area }: Ctx) {
+
+export const CORES_ESPECIALIDADE: Record<string, {
+  label: string
+  badgeClass: string
+  cardBorderClass: string
+  tabActiveClass: string
+  dotClass: string
+  bgSoft: string
+}> = {
+  Medicina: {
+    label: 'Medicina',
+    badgeClass: 'bg-purple-600 hover:bg-purple-700 text-white border-purple-500/30',
+    cardBorderClass: 'border-l-4 border-l-purple-500',
+    tabActiveClass: 'bg-purple-600 text-white border-purple-600 shadow-xs',
+    dotClass: 'bg-purple-500',
+    bgSoft: 'bg-purple-500/10 text-purple-700 dark:text-purple-300',
+  },
+  Psicologia: {
+    label: 'Psicologia',
+    badgeClass: 'bg-blue-600 hover:bg-blue-700 text-white border-blue-500/30',
+    cardBorderClass: 'border-l-4 border-l-blue-500',
+    tabActiveClass: 'bg-blue-600 text-white border-blue-600 shadow-xs',
+    dotClass: 'bg-blue-500',
+    bgSoft: 'bg-blue-500/10 text-blue-700 dark:text-blue-300',
+  },
+  Fisioterapia: {
+    label: 'Fisioterapia',
+    badgeClass: 'bg-amber-400 hover:bg-amber-500 text-amber-950 font-bold border-amber-300',
+    cardBorderClass: 'border-l-4 border-l-amber-400',
+    tabActiveClass: 'bg-amber-400 text-amber-950 font-semibold border-amber-400 shadow-xs',
+    dotClass: 'bg-amber-400',
+    bgSoft: 'bg-amber-500/10 text-amber-800 dark:text-amber-300',
+  },
+  'Nutrição': {
+    label: 'Nutrição',
+    badgeClass: 'bg-pink-600 hover:bg-pink-700 text-white border-pink-500/30',
+    cardBorderClass: 'border-l-4 border-l-pink-500',
+    tabActiveClass: 'bg-pink-600 text-white border-pink-600 shadow-xs',
+    dotClass: 'bg-pink-500',
+    bgSoft: 'bg-pink-500/10 text-pink-700 dark:text-pink-300',
+  },
+  Enfermagem: {
+    label: 'Enfermagem',
+    badgeClass: 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500/30',
+    cardBorderClass: 'border-l-4 border-l-emerald-500',
+    tabActiveClass: 'bg-emerald-600 text-white border-emerald-600 shadow-xs',
+    dotClass: 'bg-emerald-500',
+    bgSoft: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+  },
+  'Terapia Ocupacional': {
+    label: 'Terapia Ocupacional',
+    badgeClass: 'bg-orange-500 hover:bg-orange-600 text-white border-orange-400/30',
+    cardBorderClass: 'border-l-4 border-l-orange-500',
+    tabActiveClass: 'bg-orange-500 text-white border-orange-500 shadow-xs',
+    dotClass: 'bg-orange-500',
+    bgSoft: 'bg-orange-500/10 text-orange-700 dark:text-orange-300',
+  },
+  'Serviço Social': {
+    label: 'Serviço Social',
+    badgeClass: 'bg-teal-600 hover:bg-teal-700 text-white border-teal-500/30',
+    cardBorderClass: 'border-l-4 border-l-teal-500',
+    tabActiveClass: 'bg-teal-600 text-white border-teal-500 shadow-xs',
+    dotClass: 'bg-teal-500',
+    bgSoft: 'bg-teal-500/10 text-teal-700 dark:text-teal-300',
+  },
+  Fonoaudiologia: {
+    label: 'Fonoaudiologia',
+    badgeClass: 'bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-500/30',
+    cardBorderClass: 'border-l-4 border-l-indigo-500',
+    tabActiveClass: 'bg-indigo-600 text-white border-indigo-500 shadow-xs',
+    dotClass: 'bg-indigo-500',
+    bgSoft: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300',
+  },
+}
+
+export function getEspecialidadeEstilo(area?: string) {
+  if (!area) {
+    return {
+      label: 'Geral',
+      badgeClass: 'bg-slate-600 text-white',
+      cardBorderClass: 'border-l-4 border-l-slate-400',
+      tabActiveClass: 'bg-slate-700 text-white border-slate-700 shadow-xs',
+      dotClass: 'bg-slate-400',
+      bgSoft: 'bg-slate-500/10 text-slate-700 dark:text-slate-300',
+    }
+  }
+
+  const clean = area.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  if (clean.includes('med')) return CORES_ESPECIALIDADE['Medicina']
+  if (clean.includes('psico')) return CORES_ESPECIALIDADE['Psicologia']
+  if (clean.includes('fisio')) return CORES_ESPECIALIDADE['Fisioterapia']
+  if (clean.includes('nutri')) return CORES_ESPECIALIDADE['Nutrição']
+  if (clean.includes('enf')) return CORES_ESPECIALIDADE['Enfermagem']
+  if (clean.includes('terapia') || clean.includes('ocupacional')) return CORES_ESPECIALIDADE['Terapia Ocupacional']
+  if (clean.includes('social')) return CORES_ESPECIALIDADE['Serviço Social']
+  if (clean.includes('fono')) return CORES_ESPECIALIDADE['Fonoaudiologia']
+
+  return CORES_ESPECIALIDADE[area] || {
+    label: area,
+    badgeClass: 'bg-slate-600 text-white',
+    cardBorderClass: 'border-l-4 border-l-slate-400',
+    tabActiveClass: 'bg-slate-700 text-white border-slate-700 shadow-xs',
+    dotClass: 'bg-slate-400',
+    bgSoft: 'bg-slate-500/10 text-slate-700 dark:text-slate-300',
+  }
+}
+
+const ESPECIALIDADES_PADRAO = [
+  'Medicina',
+  'Psicologia',
+  'Fisioterapia',
+  'Nutrição',
+  'Enfermagem',
+  'Terapia Ocupacional',
+  'Serviço Social',
+  'Fonoaudiologia',
+]
+
+export function TabEvol({ r, cat, area, profNome }: Ctx) {
   const data = useIlpiData()
   const { profissional } = useAuth()
-  const evs = r.evol.filter((e) => cat !== 'multi' || e.area === area)
 
+  const [abaEspecialidade, setAbaEspecialidade] = useState<string>('Todas')
   const [modalNova, setModalNova] = useState(false)
   const [salvando, setSalvando] = useState(false)
-  const [areaEscolhida, setAreaEscolhida] = useState(area || (cat === 'med' ? 'Medicina' : 'Enfermagem'))
+  const [areaEscolhida, setAreaEscolhida] = useState(
+    area || (cat === 'med' ? 'Medicina' : cat === 'enf' || cat === 'rt' ? 'Enfermagem' : 'Psicologia')
+  )
   const [peso, setPeso] = useState('')
   const [texto, setTexto] = useState('')
 
   const chaveRascunhoEvol = `residente_evolucao_draft_${r.id}`
+
+  // Evoluções ordenadas cronologicamente (mais recente primeiro)
+  const evsOrdenadas = useMemo(() => {
+    return [...r.evol].sort((a, b) => {
+      const dDiff = (b.sig?.d || '').localeCompare(a.sig?.d || '')
+      if (dDiff !== 0) return dDiff
+      return (b.sig?.h || '').localeCompare(a.sig?.h || '')
+    })
+  }, [r.evol])
+
+  // Contagem por especialidade para os badges das abas
+  const contagemPorEspecialidade = useMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const e of r.evol) {
+      const estilo = getEspecialidadeEstilo(e.area)
+      const chave = estilo.label
+      counts[chave] = (counts[chave] || 0) + 1
+    }
+    return counts
+  }, [r.evol])
+
+  // Lista consolidada de especialidades (padrão + quaisquer outras presentes nas evoluções)
+  const listaEspecialidades = useMemo(() => {
+    const setEsp = new Set(ESPECIALIDADES_PADRAO)
+    for (const e of r.evol) {
+      if (e.area) {
+        const estilo = getEspecialidadeEstilo(e.area)
+        setEsp.add(estilo.label)
+      }
+    }
+    return Array.from(setEsp)
+  }, [r.evol])
+
+  // Filtro de acordo com a aba selecionada
+  const evsFiltradas = useMemo(() => {
+    if (abaEspecialidade === 'Todas') return evsOrdenadas
+    return evsOrdenadas.filter((e) => {
+      const estilo = getEspecialidadeEstilo(e.area)
+      return (
+        estilo.label.toLowerCase() === abaEspecialidade.toLowerCase() ||
+        (e.area || '').toLowerCase() === abaEspecialidade.toLowerCase()
+      )
+    })
+  }, [evsOrdenadas, abaEspecialidade])
 
   // Restaura rascunho salvo ao abrir modal de evolução
   useEffect(() => {
@@ -3996,52 +4656,193 @@ export function TabEvol({ r, cat, area }: Ctx) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      {/* Cabeçalho do Prontuário Multiprofissional */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-bold text-foreground">Evoluções Multiprofissionais</h3>
-          <span className="text-xs text-muted-foreground">{evs.length} evoluções lançadas</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-sm font-bold text-foreground">Evoluções Multiprofissionais</h3>
+            <Badge variant="outline" className="text-[10px] font-medium border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5">
+              Conforme Vigilância Sanitária
+            </Badge>
+          </div>
+          <span className="text-xs text-muted-foreground">
+            {evsOrdenadas.length} {evsOrdenadas.length === 1 ? 'registro lançado' : 'registros lançados'} no prontuário
+          </span>
         </div>
         {can(cat, 'evol') && (
           <Button
-            size="xs"
-            onClick={() => setModalNova(true)}
-            className="gap-1.5 rounded-lg text-xs font-semibold bg-[#123F4A] hover:bg-[#123F4A]/90 text-white"
+            size="sm"
+            onClick={() => {
+              if (abaEspecialidade !== 'Todas') {
+                setAreaEscolhida(abaEspecialidade)
+              }
+              setModalNova(true)
+            }}
+            className="gap-1.5 rounded-lg text-xs font-semibold bg-[#123F4A] hover:bg-[#123F4A]/90 text-white shrink-0 shadow-xs"
           >
-            <Plus className="size-3" />
+            <Plus className="size-3.5" />
             Nova Evolução
           </Button>
         )}
       </div>
 
-      <div className="space-y-3">
-        {evs.map((e) => (
-          <Card key={e.id} className="border border-border/70 shadow-2xs">
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center justify-between text-xs border-b border-border/40 pb-2">
-                <div className="flex items-center gap-2">
-                  <Badge variant="default" className="text-[10px] font-bold bg-[#123F4A]">
-                    {e.area}
-                  </Badge>
-                  <span className="text-muted-foreground">{fmt(e.sig.d)}</span>
-                </div>
-                {e.peso != null && (
-                  <Badge variant="outline" className="text-xs font-semibold">
-                    Peso: {e.peso} kg
-                  </Badge>
-                )}
-              </div>
-              <p className="text-xs text-foreground leading-relaxed pt-1">{e.texto}</p>
-            </CardContent>
-          </Card>
-        ))}
+      {/* =====================================================================
+          ABAS DE ESPECIALIDADES (com as cores oficiais e contadores)
+          Local riscado pelo usuário na tela
+          ===================================================================== */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5 scrollbar-none border-b border-border/50">
+        {/* Aba Todas as Especialidades */}
+        <button
+          type="button"
+          onClick={() => setAbaEspecialidade('Todas')}
+          className={cn(
+            'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 cursor-pointer border',
+            abaEspecialidade === 'Todas'
+              ? 'bg-[#123F4A] text-white border-[#123F4A] shadow-xs font-semibold'
+              : 'border-border/60 text-muted-foreground hover:bg-muted/60 hover:text-foreground'
+          )}
+        >
+          <span>Todas</span>
+          <span
+            className={cn(
+              'text-[10px] px-1.5 py-0.2 rounded-full font-bold',
+              abaEspecialidade === 'Todas' ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground'
+            )}
+          >
+            {evsOrdenadas.length}
+          </span>
+        </button>
 
-        {!evs.length && (
-          <Card className="border border-dashed border-border/80 p-8 text-center text-xs text-muted-foreground">
-            Nenhuma evolução multiprofissional lançada.
+        {/* Abas individuais por especialidade com a cor oficial */}
+        {listaEspecialidades.map((espNome) => {
+          const estilo = getEspecialidadeEstilo(espNome)
+          const count = contagemPorEspecialidade[espNome] || 0
+          const isActive = abaEspecialidade === espNome
+
+          return (
+            <button
+              key={espNome}
+              type="button"
+              onClick={() => setAbaEspecialidade(espNome)}
+              className={cn(
+                'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-all shrink-0 cursor-pointer border',
+                isActive
+                  ? cn(estilo.tabActiveClass, 'border-transparent font-semibold shadow-xs')
+                  : 'border-border/50 text-muted-foreground hover:bg-muted/50 hover:text-foreground hover:border-border'
+              )}
+            >
+              <span className={cn('size-2 rounded-full shrink-0', estilo.dotClass)} />
+              <span>{espNome}</span>
+              <span
+                className={cn(
+                  'text-[10px] px-1.5 py-0.2 rounded-full font-bold',
+                  isActive
+                    ? (espNome === 'Fisioterapia' ? 'bg-amber-950/20 text-amber-950' : 'bg-white/25 text-white')
+                    : (count > 0 ? 'bg-muted text-foreground font-semibold' : 'bg-muted/60 text-muted-foreground/70')
+                )}
+              >
+                {count}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Lista de Evoluções Multiprofissionais Filtradas */}
+      <div className="space-y-3">
+        {evsFiltradas.map((e) => {
+          const estilo = getEspecialidadeEstilo(e.area)
+          const profSig = data.profissionalPorId(e.sig?.id)
+
+          return (
+            <Card
+              key={e.id}
+              className={cn(
+                'border border-border/70 shadow-2xs transition-all duration-150 hover:border-border',
+                estilo.cardBorderClass
+              )}
+            >
+              <CardContent className="p-4 space-y-2.5">
+                {/* Header do Card com Badge da Especialidade, Data e Identificação da Vigilância */}
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs border-b border-border/40 pb-2.5">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Badge Colorido por Especialidade */}
+                    <Badge className={cn('text-[11px] font-bold px-2.5 py-0.5 shadow-2xs', estilo.badgeClass)}>
+                      {e.area}
+                    </Badge>
+
+                    {/* Data e Hora */}
+                    <span className="text-muted-foreground flex items-center gap-1 font-medium">
+                      <Calendar className="size-3.5 text-muted-foreground/70" />
+                      {fmt(e.sig.d)}
+                      {e.sig.h && <span className="text-muted-foreground/80 font-normal">às {e.sig.h}</span>}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Peso aferido (se houver) */}
+                    {e.peso != null && (
+                      <Badge variant="outline" className="text-xs font-semibold bg-muted/40 border-border/70">
+                        ⚖️ Peso: {e.peso} kg
+                      </Badge>
+                    )}
+
+                    {/* Identificação Legal do Profissional (Exigência Vigilância Sanitária) */}
+                    {profSig ? (
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/30 px-2 py-1 rounded-md border border-border/50">
+                        <Avatar r={profSig} size="sm" className="size-5 text-[9px] ring-1 ring-border/60" />
+                        <span className="font-medium text-foreground">{profSig.nome}</span>
+                        {profSig.conselho && (
+                          <span className="text-[10px] font-mono font-semibold px-1 py-0.2 rounded bg-background border border-border text-foreground">
+                            {profSig.conselho}
+                          </span>
+                        )}
+                      </div>
+                    ) : e.sig?.id ? (
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/30 px-2 py-1 rounded-md border border-border/50">
+                        <UserCheck className="size-3.5 text-muted-foreground/80" />
+                        <span>Assinado: <strong className="text-foreground">{profNome(e.sig.id)}</strong></span>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+
+                {/* Texto da Conduta Clínica */}
+                <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap pt-0.5">
+                  {e.texto}
+                </p>
+              </CardContent>
+            </Card>
+          )
+        })}
+
+        {/* Estado vazio quando não houver registros */}
+        {!evsFiltradas.length && (
+          <Card className="border border-dashed border-border/80 p-8 text-center text-xs text-muted-foreground space-y-3">
+            <p>
+              {abaEspecialidade === 'Todas'
+                ? 'Nenhuma evolução multiprofissional lançada para este residente.'
+                : `Nenhuma evolução de ${abaEspecialidade} registrada até o momento.`}
+            </p>
+            {can(cat, 'evol') && abaEspecialidade !== 'Todas' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setAreaEscolhida(abaEspecialidade)
+                  setModalNova(true)
+                }}
+                className="gap-1.5 text-xs font-medium"
+              >
+                <Plus className="size-3.5" />
+                Registrar 1ª evolução em {abaEspecialidade}
+              </Button>
+            )}
           </Card>
         )}
       </div>
 
+      {/* Modal para Lançamento de Nova Evolução */}
       <Dialog open={modalNova} onOpenChange={setModalNova}>
         <DialogContent className="max-w-md">
           <form onSubmit={handleSalvarEvolucao}>
@@ -4055,26 +4856,33 @@ export function TabEvol({ r, cat, area }: Ctx) {
                 )}
               </DialogTitle>
               <DialogDescription className="text-xs">
-                Conduta técnica multidisciplinar registrada no prontuário.
+                Conduta técnica multidisciplinar registrada no prontuário conforme padrões da Vigilância Sanitária.
               </DialogDescription>
             </DialogHeader>
+
             <div className="space-y-3 py-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label htmlFor="evArea" className="text-[11px] font-semibold">Área Técnica *</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="evArea" className="text-[11px] font-semibold">Área Técnica *</Label>
+                    <Badge className={cn('text-[9px] font-bold px-1.5 py-0', getEspecialidadeEstilo(areaEscolhida).badgeClass)}>
+                      Cor ativa
+                    </Badge>
+                  </div>
                   <SearchableSelect
                     id="evArea"
                     value={areaEscolhida}
                     onValueChange={setAreaEscolhida}
-                    searchPlaceholder="Buscar área..."
+                    searchPlaceholder="Buscar especialidade..."
                     options={[
-                      { value: 'Enfermagem', label: 'Enfermagem' },
-                      { value: 'Fisioterapia', label: 'Fisioterapia' },
-                      { value: 'Medicina', label: 'Medicina' },
-                      { value: 'Nutrição', label: 'Nutrição' },
-                      { value: 'Psicologia', label: 'Psicologia' },
-                      { value: 'Serviço Social', label: 'Serviço Social' },
-                      { value: 'Terapia Ocupacional', label: 'Terapia Ocupacional' },
+                      { value: 'Medicina', label: 'Medicina (Roxo)' },
+                      { value: 'Psicologia', label: 'Psicologia (Azul)' },
+                      { value: 'Fisioterapia', label: 'Fisioterapia (Amarelo)' },
+                      { value: 'Nutrição', label: 'Nutrição (Rosa)' },
+                      { value: 'Enfermagem', label: 'Enfermagem (Verde)' },
+                      { value: 'Terapia Ocupacional', label: 'Terapia Ocupacional (Laranja)' },
+                      { value: 'Serviço Social', label: 'Serviço Social (Ciano)' },
+                      { value: 'Fonoaudiologia', label: 'Fonoaudiologia (Índigo)' },
                     ]}
                   />
                 </div>
@@ -4089,6 +4897,7 @@ export function TabEvol({ r, cat, area }: Ctx) {
                   />
                 </div>
               </div>
+
               <div className="space-y-1">
                 <Label htmlFor="evTexto" className="text-[11px] font-semibold">Descrição da Evolução *</Label>
                 <textarea
@@ -4097,16 +4906,22 @@ export function TabEvol({ r, cat, area }: Ctx) {
                   onChange={(e) => setTexto(e.target.value)}
                   rows={4}
                   required
-                  placeholder="Relato de atendimento, condutas terapêuticas e metas assistenciais..."
+                  placeholder="Relato de atendimento, condutas terapêuticas, metas assistenciais e orientações..."
                   className="w-full text-xs rounded-md border border-input bg-background p-2 focus-visible:outline-ring"
                 />
               </div>
             </div>
+
             <DialogFooter>
               <Button type="button" variant="outline" size="sm" onClick={() => setModalNova(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" size="sm" disabled={salvando} className="bg-[#123F4A] hover:bg-[#123F4A]/90 text-white font-semibold">
+              <Button
+                type="submit"
+                size="sm"
+                disabled={salvando}
+                className="bg-[#123F4A] hover:bg-[#123F4A]/90 text-white font-semibold"
+              >
                 {salvando ? 'Salvando...' : 'Salvar Evolução'}
               </Button>
             </DialogFooter>

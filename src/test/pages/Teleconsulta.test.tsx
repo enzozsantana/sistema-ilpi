@@ -149,4 +149,59 @@ describe('Teleconsulta Page', () => {
     expect(screen.getByRole('button', { name: /Compartilhar Tela/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Voltar para Sala de Espera/i })).toBeInTheDocument()
   })
+
+  it('bloqueia cuidadores e perfil assistencial de solicitar consultas para evitar despesas não autorizadas', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      profissional: { id: 'prof_cuid', nome: 'Maria Cuidadora', cat: 'cuid', funcao: 'Cuidadora de Idosos' },
+    } as any)
+
+    render(<Teleconsulta />)
+
+    // Exibe banner de controle financeiro
+    expect(
+      screen.getByText(/Acesso Assistencial: Solicitação de teleconsulta restrita ao Responsável Financeiro/i),
+    ).toBeInTheDocument()
+
+    // Botões de agendamento ficam desabilitados como restritos ao financeiro
+    const botoesRestritos = screen.getAllByRole('button', { name: /Restrito ao Financeiro/i })
+    expect(botoesRestritos.length).toBeGreaterThanOrEqual(1)
+    expect(botoesRestritos[0]).toBeDisabled()
+
+    // Não deve haver botões habilitados de "Agendar Consulta"
+    expect(screen.queryByRole('button', { name: /^Agendar Consulta$/i })).not.toBeInTheDocument()
+  })
+
+  it('exibe autorização da clínica e responsável familiar no modal quando aberto pelo responsável financeiro / RT', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      profissional: { id: 'prof_fin', nome: 'Carlos Gerente', cat: 'gestao', funcao: 'Gestor Financeiro' },
+    } as any)
+
+    render(<Teleconsulta />)
+
+    const botoesAgendar = screen.getAllByRole('button', { name: /Agendar Consulta/i })
+    fireEvent.click(botoesAgendar[0])
+
+    expect(screen.getByText(/Solicitação Autorizada pela Clínica/i)).toBeInTheDocument()
+    expect(screen.getByText(/Carlos Gerente/i)).toBeInTheDocument()
+    expect(screen.getByText(/Gestor Financeiro/i)).toBeInTheDocument()
+  })
+
+  it('especialista externo (tele_especialista) entra direto na aba de consultas e não vê cadastro de especialista', () => {
+    vi.mocked(useAuth).mockReturnValue({
+      profissional: {
+        id: 'prof_ext',
+        nome: 'Dra. Juliana Mendes',
+        cat: 'tele_especialista',
+        funcao: 'Médica Geriatra',
+      },
+    } as any)
+
+    render(<Teleconsulta />)
+
+    // Não exibe o botão de auto-cadastro pois já é um especialista credenciado
+    expect(screen.queryByRole('button', { name: /Cadastrar como Especialista/i })).not.toBeInTheDocument()
+
+    // O banner de consultório virtual independente deve estar presente
+    expect(screen.getByText(/Consultório Virtual de Dra. Juliana Mendes/i)).toBeInTheDocument()
+  })
 })

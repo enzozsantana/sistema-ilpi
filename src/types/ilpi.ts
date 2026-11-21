@@ -46,6 +46,8 @@ export type AcaoPermissao =
   | 'pop_ver'
   | 'pop_editar'
   | 'alvara'
+  | 'passar_plantao'
+  | 'teleconsulta_solicitar'
 
 export type TipoPrescricao = 'fixo' | 'semanal' | 'intervalo' | 'sn'
 
@@ -144,6 +146,29 @@ export interface ItemEstoque {
   consumoDia?: number
 }
 
+export interface SuspensaoPrescricao {
+  justificativa: string
+  solicitadoPor: {
+    id: string
+    nome: string
+    funcao?: string
+    cat?: string
+    conselho?: string
+    d: string
+    h: string
+  }
+  validadoPor?: {
+    id: string
+    nome: string
+    funcao?: string
+    cat?: string
+    conselho?: string
+    d: string
+    h: string
+  }
+  status: 'pendente_enfermagem' | 'validada'
+}
+
 export interface Prescricao {
   id: string
   med: string
@@ -160,6 +185,7 @@ export interface Prescricao {
   obs?: string
   prescritor?: string
   suspensa?: boolean
+  suspensao?: SuspensaoPrescricao
   controlado?: boolean
   sig?: Assinatura
 }
@@ -403,7 +429,7 @@ export interface AvisoRT {
 
 export interface AlertaCriticoRT {
   id: string
-  tipo: 'dose_atrasada' | 'intercorrencia' | 'ssvv_critico' | 'cuidado_pendente' | 'geladeira_fora'
+  tipo: 'dose_atrasada' | 'intercorrencia' | 'ssvv_critico' | 'cuidado_pendente' | 'geladeira_fora' | 'suspensao_pendente'
   gravidade: 'alta' | 'critica'
   titulo: string
   descricao: string

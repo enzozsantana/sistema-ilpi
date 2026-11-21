@@ -6,6 +6,7 @@ import {
   canAval,
   escalasVisiveis,
   navVisivel,
+  podeSolicitarTeleconsulta,
 } from '../lib/permissions'
 
 describe('RBAC & Permission Matrix', () => {
@@ -19,12 +20,12 @@ describe('RBAC & Permission Matrix', () => {
       expect(can('apoio', 'gerir')).toBe(false)
     })
 
-    it('adm: enfermagem e cuidadores podem checar e administrar medicações', () => {
+    it('adm: enfermagem pode checar e administrar medicações; cuidadores não', () => {
       expect(can('rt', 'adm')).toBe(true)
       expect(can('enf', 'adm')).toBe(true)
       expect(can('tec', 'adm')).toBe(true)
       expect(can('estag', 'adm')).toBe(true)
-      expect(can('cuid', 'adm')).toBe(true)
+      expect(can('cuid', 'adm')).toBe(false)
       expect(can('apoio', 'adm')).toBe(false)
     })
 
@@ -81,6 +82,38 @@ describe('RBAC & Permission Matrix', () => {
       expect(can('med', 'alvara')).toBe(false)
       expect(can('multi', 'alvara')).toBe(false)
       expect(can('apoio', 'alvara')).toBe(false)
+    })
+
+    it('passar_plantao: restrito à equipe de turno contínuo (enfermagem e cuidadores), médica e multi não passam plantão', () => {
+      expect(can('rt', 'passar_plantao')).toBe(true)
+      expect(can('enf', 'passar_plantao')).toBe(true)
+      expect(can('tec', 'passar_plantao')).toBe(true)
+      expect(can('estag', 'passar_plantao')).toBe(true)
+      expect(can('cuid', 'passar_plantao')).toBe(true)
+      expect(can('med', 'passar_plantao')).toBe(false)
+      expect(can('multi', 'passar_plantao')).toBe(false)
+      expect(can('gestao', 'passar_plantao')).toBe(false)
+      expect(can('apoio', 'passar_plantao')).toBe(false)
+    })
+
+    it('teleconsulta_solicitar: restrito ao Responsável Financeiro / Gestão / RT da clínica; cuidadores e assistenciais não podem solicitar', () => {
+      expect(can('gestao', 'teleconsulta_solicitar')).toBe(true)
+      expect(can('rt', 'teleconsulta_solicitar')).toBe(true)
+      expect(can('cuid', 'teleconsulta_solicitar')).toBe(false)
+      expect(can('tec', 'teleconsulta_solicitar')).toBe(false)
+      expect(can('estag', 'teleconsulta_solicitar')).toBe(false)
+      expect(can('apoio', 'teleconsulta_solicitar')).toBe(false)
+      expect(can('tele_especialista', 'teleconsulta_solicitar')).toBe(false)
+
+      // Validação detalhada via podeSolicitarTeleconsulta
+      expect(podeSolicitarTeleconsulta({ cat: 'gestao', funcao: 'Gestor Financeiro' })).toBe(true)
+      expect(podeSolicitarTeleconsulta({ cat: 'rt', funcao: 'Responsável Técnica' })).toBe(true)
+      expect(podeSolicitarTeleconsulta({ cat: 'enf', funcao: 'Diretora Administrativa' })).toBe(true)
+      expect(podeSolicitarTeleconsulta({ cat: 'cuid', funcao: 'Cuidadora de Idosos' })).toBe(false)
+      expect(podeSolicitarTeleconsulta({ cat: 'tec', funcao: 'Técnica de Enfermagem' })).toBe(false)
+      expect(podeSolicitarTeleconsulta({ cat: 'estag', funcao: 'Estagiário' })).toBe(false)
+      expect(podeSolicitarTeleconsulta({ cat: 'tele_especialista', funcao: 'Médica Geriatra' })).toBe(false)
+      expect(podeSolicitarTeleconsulta(null)).toBe(false)
     })
   })
 

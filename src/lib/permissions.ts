@@ -21,7 +21,7 @@ export const TODAS_CATEGORIAS_ILPI: Categoria[] = [
 
 /** Matriz de ações (can no protótipo). */
 export const CAN: Record<AcaoPermissao, Categoria[]> = {
-  adm: [...NURSE, 'cuid'],
+  adm: [...NURSE],
   anot: [...NURSE, 'cuid'],
   cuid: [...NURSE, 'cuid'],
   gerir: ['rt', 'enf', 'gestao'],
@@ -32,6 +32,8 @@ export const CAN: Record<AcaoPermissao, Categoria[]> = {
   pop_ver: ['rt', 'enf', 'tec', 'estag', 'cuid', 'med', 'multi', 'apoio', 'gestao'],
   pop_editar: ['rt', 'enf', 'gestao'],
   alvara: ['rt', 'gestao'],
+  passar_plantao: [...NURSE, 'cuid'],
+  teleconsulta_solicitar: ['gestao', 'rt'],
 }
 
 /** Acesso às views principais (NAV_ACESSO). */
@@ -129,4 +131,34 @@ export function escalasVisiveis(_cat?: Categoria, _area?: string): EscalaKey[] {
 
 export function navVisivel(cat: Categoria): NavView[] {
   return (Object.keys(NAV_ACESSO) as NavView[]).filter((k) => canNav(cat, k))
+}
+
+/**
+ * Verifica se o profissional possui autorização para solicitar/contratar teleconsultas em nome da clínica.
+ * Restrito ao Responsável Financeiro / Gestão / RT. Cuidadores, técnicos, estagiários e especialistas
+ * externos NÃO podem solicitar consultas diretamente para evitar contratações não autorizadas.
+ */
+export function podeSolicitarTeleconsulta(
+  profissional?: { cat?: Categoria; funcao?: string } | null,
+): boolean {
+  if (!profissional) return false
+  if (profissional.cat === 'tele_especialista') return false
+
+  // Se o profissional pertencer à categoria gestao ou rt, tem autorização
+  if (profissional.cat === 'gestao' || profissional.cat === 'rt') return true
+
+  // Se a função especificar explicitamente perfil financeiro/administrativo/diretoria
+  const fn = (profissional.funcao || '').toLowerCase()
+  if (
+    fn.includes('financeir') ||
+    fn.includes('gest') ||
+    fn.includes('admin') ||
+    fn.includes('direto') ||
+    fn.includes('gerente')
+  ) {
+    return true
+  }
+
+  // Cuidadores, técnicos, estagiários, apoio e médicos assistenciais sem cargo financeiro são bloqueados
+  return false
 }

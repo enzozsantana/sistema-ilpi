@@ -158,7 +158,7 @@ export function gerarTituloResumo(pedido: PedidoMedicoData): string {
 }
 
 export function converterPrescricoesParaReceita(r: Residente): MedicamentoReceita[] {
-  const ativas = r.presc?.filter((p) => !p.suspensa) ?? []
+  const ativas = r.presc?.filter((p) => !p.suspensa && p.suspensao?.status !== 'pendente_enfermagem') ?? []
   return ativas.map((p) => ({
     nome: p.med,
     dose: p.dose,

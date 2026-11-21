@@ -19,6 +19,7 @@ import type {
   RegistroAdm,
   Residente,
   StatusAdm,
+  SuspensaoPrescricao,
   TemperaturaGeladeira,
   TipoPrescricao,
   Treinamento,
@@ -105,6 +106,7 @@ export function mapPrescricao(row: {
   suspensa: boolean
   controlado?: boolean | null
   assinatura: unknown
+  suspensao?: unknown
 }): Prescricao {
   const sigRaw = (row.assinatura ?? {}) as Record<string, unknown>
   let isCtrl: boolean | undefined = undefined
@@ -116,6 +118,24 @@ export function mapPrescricao(row: {
     isCtrl = true
   } else if (detectControlado(row.medicamento)) {
     isCtrl = true
+  }
+
+  let suspensao: SuspensaoPrescricao | undefined = undefined
+  if (row.suspensao && typeof row.suspensao === 'object') {
+    suspensao = row.suspensao as SuspensaoPrescricao
+  } else if (sigRaw.suspensao && typeof sigRaw.suspensao === 'object') {
+    suspensao = sigRaw.suspensao as SuspensaoPrescricao
+  } else if (row.suspensa) {
+    suspensao = {
+      justificativa: row.obs && row.obs.includes('SUSPENS') ? row.obs : 'Suspensão clínica anterior',
+      solicitadoPor: {
+        id: row.prescritor_id || '',
+        nome: 'Prescritor',
+        d: row.fim || row.inicio || '',
+        h: '',
+      },
+      status: 'validada',
+    }
   }
 
   return {
@@ -134,6 +154,7 @@ export function mapPrescricao(row: {
     obs: row.obs ?? undefined,
     prescritor: row.prescritor_id ?? undefined,
     suspensa: row.suspensa,
+    suspensao,
     controlado: isCtrl,
     sig: asSig(row.assinatura),
   }

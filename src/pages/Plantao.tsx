@@ -56,6 +56,7 @@ import {
   RotateCcw,
   Send,
   ShieldAlert,
+  Stethoscope,
   X,
   XCircle,
 } from 'lucide-react'
@@ -845,15 +846,26 @@ export default function Plantao() {
               </Button>
             )}
 
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setModalPassagem(true)}
-              className="gap-1.5 rounded-xl text-xs font-semibold bg-background/80 shadow-2xs hover:bg-[#123F4A] hover:text-white transition-colors"
-            >
-              <ClipboardList className="size-3.5 text-primary" />
-              <span>📋 Passar Plantão</span>
-            </Button>
+            {can(profissional.cat, 'passar_plantao') ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setModalPassagem(true)}
+                className="gap-1.5 rounded-xl text-xs font-semibold bg-background/80 shadow-2xs hover:bg-[#123F4A] hover:text-white transition-colors"
+              >
+                <ClipboardList className="size-3.5 text-primary" />
+                <span>📋 Passar Plantão</span>
+              </Button>
+            ) : profissional.cat === 'med' ? (
+              <Button
+                size="sm"
+                onClick={() => navigate('/residentes')}
+                className="gap-1.5 rounded-xl text-xs font-semibold bg-[#123F4A] hover:bg-[#123F4A]/90 text-white shadow-2xs transition-colors"
+              >
+                <Stethoscope className="size-3.5" />
+                <span>Evolução Médica & Prontuários</span>
+              </Button>
+            ) : null}
 
             {isRTouEnf && (
               <Button
@@ -1041,14 +1053,16 @@ export default function Plantao() {
                 Histórico ({data.passagens.length})
               </Button>
             )}
-            <Button
-              size="xs"
-              onClick={() => setModalPassagem(true)}
-              className="bg-[#123F4A] hover:bg-[#123F4A]/90 text-white font-semibold text-xs rounded-lg gap-1.5 cursor-pointer"
-            >
-              <ClipboardList className="size-3.5" />
-              <span>Passar Plantão</span>
-            </Button>
+            {can(profissional.cat, 'passar_plantao') && (
+              <Button
+                size="xs"
+                onClick={() => setModalPassagem(true)}
+                className="bg-[#123F4A] hover:bg-[#123F4A]/90 text-white font-semibold text-xs rounded-lg gap-1.5 cursor-pointer"
+              >
+                <ClipboardList className="size-3.5" />
+                <span>Passar Plantão</span>
+              </Button>
+            )}
           </div>
         </div>
 
@@ -2270,7 +2284,7 @@ export default function Plantao() {
                     allowClear
                     clearLabel="Equipe Geral do Próximo Turno"
                     options={[...data.equipe]
-                      .filter((p) => p.id !== profissional?.id)
+                      .filter((p) => p.id !== profissional?.id && can(p.cat, 'passar_plantao'))
                       .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
                       .map((p) => ({
                         value: p.id,

@@ -37,10 +37,12 @@ import { ModalPedidoMedico } from '../components/ModalPedidoMedico'
 import { ModalConectarMercadoPago } from '../components/ModalConectarMercadoPago'
 import { ModalCadastroEspecialista } from '../components/ModalCadastroEspecialista'
 import { salvarRascunho, obterRascunho, limparRascunho, temRascunho } from '../lib/draftStorage'
+import { podeSolicitarTeleconsulta } from '../lib/permissions'
 import { calcularSplit, processarPagamentoSplit, gerarPixCopiaECola } from '../lib/mercadopagoService'
 import { formatarMoeda } from '../lib/currency'
 import { mascaraCartao, mascaraValidadeCartao, mascaraCvv } from '../lib/masks'
 import {
+  AlertCircle,
   ArrowRightLeft,
   Building2,
   Calendar,
@@ -51,6 +53,7 @@ import {
   Copy,
   CreditCard,
   FileText,
+  Lock,
   Maximize2,
   Mic,
   MicOff,
@@ -62,13 +65,13 @@ import {
   QrCode,
   Search,
   Share2,
+  ShieldCheck,
   Sparkles,
   Stethoscope,
   Users,
   Video,
   VideoOff,
   X,
-  AlertCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -94,13 +97,34 @@ export default function Teleconsulta() {
   )
   const [modalCadastroOpen, setModalCadastroOpen] = useState(false)
 
-  // Aba ativa: Vitrine de Especialistas ou Consultas Agendadas
-  const [abaAtiva, setAbaAtiva] = useState<'especialistas' | 'consultas'>('especialistas')
+  // Validação de perfil: Apenas o Responsável Financeiro / Gestão / RT pode solicitar teleconsultas
+  const podeSolicitar = useMemo(() => {
+    return podeSolicitarTeleconsulta(profissional)
+  }, [profissional])
+
+  const ehEspecialistaExterno = profissional?.cat === 'tele_especialista'
+
+  // Aba ativa: Vitrine de Especialistas ou Consultas Agendadas (especialista externo vai direto para consultas)
+  const [abaAtiva, setAbaAtiva] = useState<'especialistas' | 'consultas'>(() =>
+    profissional?.cat === 'tele_especialista' ? 'consultas' : 'especialistas'
+  )
   const [filtroEsp, setFiltroEsp] = useState<EspecialidadeVirtual | 'todas'>('todas')
   const [busca, setBusca] = useState('')
 
   // Lista de Consultas Carregadas
   const [consultas, setConsultas] = useState<ConsultaVirtual[]>(() => obterConsultasVirtuais())
+
+  // Especialista externo (à parte) só tem acesso às consultas dele; a ILPI vê as consultas da casa
+  const consultasExibidas = useMemo(() => {
+    if (ehEspecialistaExterno && profissional) {
+      return consultas.filter(
+        (c) =>
+          c.profissionalId === profissional.id ||
+          c.profissionalNome.toLowerCase().includes(profissional.nome.toLowerCase()),
+      )
+    }
+    return consultas
+  }, [consultas, ehEspecialistaExterno, profissional])
 
   // Fluxo de Agendamento
   const [modalAgendamentoOpen, setModalAgendamentoOpen] = useState(false)
@@ -373,6 +397,10 @@ export default function Teleconsulta() {
   }, [residentes, salaAberta, residenteId])
 
   function abrirAgendamento(prof: ProfissionalVirtual) {
+    if (!podeSolicitar) {
+      toast.error('Apenas o Responsável Financeiro da clínica tem autorização para solicitar teleconsultas.')
+      return
+    }
     setProfSelecionado(prof)
     setPassoAgendamento('horario')
     setResidenteId(residentes[0]?.id || '')
@@ -436,6 +464,12 @@ export default function Teleconsulta() {
       status: 'confirmada',
       motivo: motivoConsulta.trim() || 'Avaliação e conduta clínica virtual.',
       criadoEm: new Date().toISOString(),
+      solicitanteId: profissional?.id,
+      solicitanteNome: profissional?.nome,
+      solicitanteFuncao:
+        profissional?.funcao ||
+        (profissional?.cat === 'gestao' ? 'Gestão Financeira' : 'Responsável Financeiro / RT'),
+      responsavelFinanceiroResidente: res?.responsavel?.nome,
     }
 
     salvarConsultaVirtual(novaConsulta)
@@ -536,16 +570,18 @@ export default function Teleconsulta() {
 
         {/* Ações e Seletor de Abas */}
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-          {/* Botão Cadastrar como Especialista Independente */}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setModalCadastroOpen(true)}
-            className="rounded-xl text-xs gap-1.5 border-teal-600/40 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40"
-          >
-            <Stethoscope className="size-3.5 text-teal-600" />
-            <span>Cadastrar como Especialista</span>
-          </Button>
+          {/* Botão Cadastrar como Especialista Independente - apenas visível para visitantes ou equipe interna */}
+          {!ehEspecialistaExterno && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setModalCadastroOpen(true)}
+              className="rounded-xl text-xs gap-1.5 border-teal-600/40 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40"
+            >
+              <Stethoscope className="size-3.5 text-teal-600" />
+              <span>Cadastrar como Especialista</span>
+            </Button>
+          )}
 
           {/* Botão de Gestão Mercado Pago Marketplace */}
           <Button
@@ -572,7 +608,7 @@ export default function Teleconsulta() {
             >
               <span>Consultas Agendadas</span>
               <Badge variant="secondary" className="text-[10px] h-4.5 px-1.5 font-bold">
-                {consultas.length}
+                {consultasExibidas.length}
               </Badge>
             </button>
             <button
@@ -629,6 +665,21 @@ export default function Teleconsulta() {
       {/* ABA 1: VITRINE DE PROFISSIONAIS E AGENDAMENTO */}
       {abaAtiva === 'especialistas' && (
         <div className="space-y-4">
+          {/* Alerta de Perfil Assistencial: Não é permitido cuidadores solicitarem consultas para evitar custos indevidos */}
+          {!podeSolicitar && !ehEspecialistaExterno && (
+            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3 shadow-2xs">
+              <AlertCircle className="size-4.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <div className="text-xs space-y-0.5">
+                <p className="font-bold text-amber-900 dark:text-amber-200">
+                  Acesso Assistencial: Solicitação de teleconsulta restrita ao Responsável Financeiro
+                </p>
+                <p className="text-amber-800/90 dark:text-amber-300 leading-relaxed">
+                  Cuidadores e técnicos têm permissão para acompanhar os idosos na aba &quot;Consultas Agendadas&quot;. A contratação de teleconsultas envolve despesas e repasse financeiro, sendo de competência exclusiva do Responsável Financeiro da instituição.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Barra de Filtros e Busca */}
           <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
@@ -750,13 +801,25 @@ export default function Teleconsulta() {
                     </span>
                   </div>
 
-                  <Button
-                    onClick={() => abrirAgendamento(prof)}
-                    className="gap-2 text-xs rounded-xl bg-[#123F4A] hover:bg-[#123F4A]/90 text-white font-semibold shadow-xs"
-                  >
-                    <Calendar className="size-3.5" />
-                    <span>Agendar Consulta</span>
-                  </Button>
+                  {podeSolicitar ? (
+                    <Button
+                      onClick={() => abrirAgendamento(prof)}
+                      className="gap-2 text-xs rounded-xl bg-[#123F4A] hover:bg-[#123F4A]/90 text-white font-semibold shadow-xs"
+                    >
+                      <Calendar className="size-3.5" />
+                      <span>Agendar Consulta</span>
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      disabled
+                      className="gap-2 text-xs rounded-xl text-muted-foreground border-border/70 opacity-70 cursor-not-allowed"
+                      title="Apenas o Responsável Financeiro da clínica tem autorização para solicitar teleconsultas."
+                    >
+                      <Lock className="size-3.5" />
+                      <span>Restrito ao Financeiro</span>
+                    </Button>
+                  )}
                 </div>
               </Card>
             ))}
@@ -767,7 +830,7 @@ export default function Teleconsulta() {
       {/* ABA 2: CONSULTAS AGENDADAS E HISTÓRICO */}
       {abaAtiva === 'consultas' && (
         <div className="space-y-3">
-          {consultas.map((c) => (
+          {consultasExibidas.map((c) => (
             <Card key={c.id} className="border border-border/70 shadow-2xs rounded-2xl overflow-hidden">
               <CardContent className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-2 min-w-0">
@@ -792,6 +855,11 @@ export default function Teleconsulta() {
                     </h3>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       Residente: <strong className="text-foreground">{c.residenteNome}</strong> · Data: <strong>{c.data}</strong> às <strong>{c.horario}</strong>
+                      {c.solicitanteNome && (
+                        <span className="block sm:inline sm:ml-2 text-[11px] text-muted-foreground">
+                          · Solicitado por: <strong className="text-foreground">{c.solicitanteNome}</strong> ({c.solicitanteFuncao || 'Resp. Financeiro'})
+                        </span>
+                      )}
                     </p>
                     {c.motivo && (
                       <p className="text-xs text-muted-foreground/90 italic mt-1 line-clamp-1">
@@ -836,9 +904,11 @@ export default function Teleconsulta() {
             </Card>
           ))}
 
-          {!consultas.length && (
+          {!consultasExibidas.length && (
             <Card className="border border-dashed border-border/80 p-8 text-center text-xs text-muted-foreground">
-              Nenhuma consulta virtual agendada no momento. Selecione um especialista para agendar.
+              {ehEspecialistaExterno
+                ? 'Você não possui teleconsultas agendadas no momento.'
+                : 'Nenhuma consulta virtual agendada no momento. Selecione um especialista para agendar.'}
             </Card>
           )}
         </div>
@@ -865,6 +935,22 @@ export default function Teleconsulta() {
                   </DialogHeader>
 
                   <div className="space-y-3 py-2 text-xs">
+                    {/* Validação de Responsável Financeiro da Clínica */}
+                    <div className="p-3 bg-teal-500/10 border border-teal-500/20 rounded-xl space-y-1">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-teal-800 dark:text-teal-200">
+                        <ShieldCheck className="size-4 text-teal-600 dark:text-teal-400" />
+                        <span>Solicitação Autorizada pela Clínica</span>
+                      </div>
+                      <p className="text-[11px] text-teal-900 dark:text-teal-200">
+                        Solicitante: <strong className="text-foreground">{profissional?.nome || 'Gestor'}</strong> ({profissional?.funcao || (profissional?.cat === 'gestao' ? 'Gestão Financeira' : 'Responsável Financeiro / RT')})
+                      </p>
+                      {residenteEscolhido?.responsavel?.nome && (
+                        <p className="text-[11px] text-teal-800 dark:text-teal-300 pt-1 border-t border-teal-500/20">
+                          Responsável pelo Residente: <strong className="text-foreground">{residenteEscolhido.responsavel.nome}</strong> {residenteEscolhido.responsavel.parentesco ? `(${residenteEscolhido.responsavel.parentesco})` : ''} {residenteEscolhido.responsavel.tel ? `· Contato: ${residenteEscolhido.responsavel.tel}` : ''}
+                        </p>
+                      )}
+                    </div>
+
                     {/* Selecionar Residente */}
                     <div className="space-y-1">
                       <Label className="text-xs font-semibold">Residente que receberá a consulta *</Label>

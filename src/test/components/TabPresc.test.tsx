@@ -67,18 +67,18 @@ describe('TabPresc Component (Edição e Gestão de Prescrições)', () => {
     } as any)
   })
 
-  it('exibe o botão Editar para profissionais com permissão de prescrição', () => {
+  it('exibe o botão Editar para prescrições vigentes', () => {
     render(<TabPresc r={mockResidente as any} cat="med" profNome={() => 'Dr. Roberto'} />)
 
     const botoesEditar = screen.getAllByRole('button', { name: /Editar/i })
-    expect(botoesEditar.length).toBe(2)
+    expect(botoesEditar.length).toBe(1) // Apenas Losartana (vigente); Clonazepam está suspenso no histórico
   })
 
   it('abre o modal preenchido com a posologia atual ao clicar em Editar', () => {
     render(<TabPresc r={mockResidente as any} cat="med" profNome={() => 'Dr. Roberto'} />)
 
-    const botoesEditar = screen.getAllByRole('button', { name: /Editar/i })
-    fireEvent.click(botoesEditar[0]) // Editar Losartana
+    const botaoEditar = screen.getByRole('button', { name: /Editar/i })
+    fireEvent.click(botaoEditar) // Editar Losartana
 
     expect(screen.getByText('Editar Prescrição Médica')).toBeInTheDocument()
     expect(screen.getByDisplayValue('Losartana Potássica 50 mg')).toBeInTheDocument()
@@ -98,8 +98,8 @@ describe('TabPresc Component (Edição e Gestão de Prescrições)', () => {
 
     render(<TabPresc r={mockResidente as any} cat="med" profNome={() => 'Dr. Roberto'} />)
 
-    const botoesEditar = screen.getAllByRole('button', { name: /Editar/i })
-    fireEvent.click(botoesEditar[0]) // Editar Losartana
+    const botaoEditar = screen.getByRole('button', { name: /Editar/i })
+    fireEvent.click(botaoEditar) // Editar Losartana
 
     // Altera a dose de 1 cp para 2 cp e o horário
     const inputDose = screen.getByDisplayValue('1 cp')
@@ -122,13 +122,54 @@ describe('TabPresc Component (Edição e Gestão de Prescrições)', () => {
     })
   })
 
-  it('exibe opção para reativar caso o medicamento esteja suspenso', () => {
+  it('ao clicar em Suspender, abre modal solicitando justificativa clínica e encaminha para enfermagem', async () => {
+    const updateMock = vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ error: null }),
+    })
+    vi.mocked(supabase.from).mockReturnValue({
+      update: updateMock,
+    } as any)
+
     render(<TabPresc r={mockResidente as any} cat="med" profNome={() => 'Dr. Roberto'} />)
 
-    const botoesEditar = screen.getAllByRole('button', { name: /Editar/i })
-    fireEvent.click(botoesEditar[1]) // Editar Clonazepam (suspenso)
+    // Clica em Suspender no Losartana
+    const botaoSuspender = screen.getByRole('button', { name: /Suspender/i })
+    fireEvent.click(botaoSuspender)
 
-    expect(screen.getByText('Medicamento Atualmente Suspenso')).toBeInTheDocument()
-    expect(screen.getByText(/Deseja reativar o medicamento imediatamente após salvar a correção/i)).toBeInTheDocument()
+    // Modal de suspensão aberto com justificativa obrigatória
+    expect(screen.getByText('Suspender Medicamento')).toBeInTheDocument()
+    expect(screen.getByText(/Informe a justificativa clínica para a suspensão/i)).toBeInTheDocument()
+
+    // Preenche a justificativa
+    const textareaJustificativa = screen.getByPlaceholderText(/Descreva o motivo clínico da suspensão/i)
+    fireEvent.change(textareaJustificativa, { target: { value: 'Efeito adverso: hipotensão postural acentuada' } })
+
+    // Clica no botão de enviar para enfermagem
+    const botaoEnviar = screen.getByRole('button', { name: /Solicitar Suspensão \(Enviar p\/ Enfermagem\)/i })
+    fireEvent.click(botaoEnviar)
+
+    await waitFor(() => {
+      expect(supabase.from).toHaveBeenCalledWith('prescricoes')
+      expect(updateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          assinatura: expect.objectContaining({
+            suspensao: expect.objectContaining({
+              justificativa: 'Efeito adverso: hipotensão postural acentuada',
+              status: 'pendente_enfermagem',
+            }),
+          }),
+        })
+      )
+    })
+  })
+
+  it('não exibe botão de reativar para medicamentos descontinuados (não polui receita)', () => {
+    render(<TabPresc r={mockResidente as any} cat="med" profNome={() => 'Dr. Roberto'} />)
+
+    // Não deve existir botão "Reativar" na tela
+    expect(screen.queryByRole('button', { name: /Reativar/i })).not.toBeInTheDocument()
+
+    // O histórico de medicamentos suspensos deve estar presente
+    expect(screen.getByText(/Histórico de Medicamentos Suspensos \/ Desprescrições/i)).toBeInTheDocument()
   })
 })

@@ -4,7 +4,9 @@ import type { DoseDia, Prescricao, RegistroAdm, Residente } from '../../types/il
 export const DOSE_LATE_MINUTES = 30
 
 export function presAtiva(p: Prescricao, dt: string): boolean {
-  return !p.suspensa && p.inicio <= dt && (!p.fim || p.fim >= dt)
+  if (p.suspensa) return false
+  if (p.suspensao?.status === 'pendente_enfermagem') return false
+  return p.inicio <= dt && (!p.fim || p.fim >= dt)
 }
 
 export function horariosNoDia(p: Prescricao, dt: string): string[] {

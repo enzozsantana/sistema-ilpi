@@ -1,3 +1,4 @@
+import { useState, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { fmt, idade } from '../lib/business/dates'
 import { grau as calcGrau } from '../lib/business/escalas'
@@ -10,17 +11,23 @@ import { RTABS, renderTab, tabsVisiveis } from './residente/Tabs'
 import { Card, CardContent } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
+import { processarEUploadFoto } from '../lib/image'
+import { supabase } from '../lib/supabase'
+import { toast } from 'sonner'
 import {
   Activity,
   ArrowLeft,
   Calendar,
+  Camera,
   ChevronRight,
   FileText,
   HeartHandshake,
   Home,
+  Loader2,
   Package,
   Phone,
   Pill,
+  Trash2,
   User,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -60,6 +67,9 @@ export default function ResidentePasta() {
   const data = useIlpiData()
   const navigate = useNavigate()
 
+  const [enviandoFoto, setEnviandoFoto] = useState(false)
+  const inputFotoRef = useRef<HTMLInputElement>(null)
+
   if (!profissional || !id) return null
   const r = data.getResidente(id)
   if (!r) {
@@ -69,6 +79,57 @@ export default function ResidentePasta() {
         <Button onClick={() => navigate('/residentes')}>Voltar aos Residentes</Button>
       </div>
     )
+  }
+
+  async function handleFotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !r) return
+    if (!file.type.startsWith('image/')) {
+      toast.error('Envie uma imagem válida (JPG, PNG ou WebP).')
+      return
+    }
+    setEnviandoFoto(true)
+    try {
+      const url = await processarEUploadFoto(file, `residentes/${r.id}`)
+      const { error } = await supabase
+        .from('residentes')
+        .update({ foto: url })
+        .eq('id', r.id)
+      if (error) {
+        toast.error('Erro ao salvar foto: ' + error.message)
+        return
+      }
+      toast.success('Foto do residente atualizada com sucesso!')
+      await data.refresh()
+    } catch {
+      toast.error('Falha ao processar a foto do residente.')
+    } finally {
+      setEnviandoFoto(false)
+      if (inputFotoRef.current) inputFotoRef.current.value = ''
+    }
+  }
+
+  async function handleRemoverFoto(e: React.MouseEvent) {
+    e.stopPropagation()
+    if (!r) return
+    if (!confirm('Deseja remover a foto deste residente?')) return
+    setEnviandoFoto(true)
+    try {
+      const { error } = await supabase
+        .from('residentes')
+        .update({ foto: null })
+        .eq('id', r.id)
+      if (error) {
+        toast.error('Erro ao remover foto: ' + error.message)
+        return
+      }
+      toast.success('Foto do residente removida.')
+      await data.refresh()
+    } catch {
+      toast.error('Erro ao remover foto.')
+    } finally {
+      setEnviandoFoto(false)
+    }
   }
 
   const tabs = tabsVisiveis(profissional.cat, profissional.area)
@@ -107,7 +168,46 @@ export default function ResidentePasta() {
         <CardContent className="p-5 sm:p-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-start sm:items-center gap-4 sm:gap-5 min-w-0">
-              <Avatar r={r} size="xl" className="ring-2 ring-primary/20 shadow-sm" />
+              {/* Avatar do Idoso com Upload/Alteração Direta */}
+              <div className="relative group shrink-0">
+                <Avatar r={r} size="xl" className="ring-2 ring-primary/20 shadow-sm" />
+                
+                <input
+                  ref={inputFotoRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFotoChange}
+                  disabled={enviandoFoto}
+                />
+
+                <div className="absolute -bottom-1 -right-1 flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => inputFotoRef.current?.click()}
+                    disabled={enviandoFoto}
+                    title={r.foto ? 'Alterar foto do residente' : 'Adicionar foto do residente'}
+                    className="size-7 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full flex items-center justify-center shadow-md transition-all hover:scale-110 cursor-pointer disabled:opacity-50"
+                  >
+                    {enviandoFoto ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <Camera className="size-3.5" />
+                    )}
+                  </button>
+
+                  {r.foto && !enviandoFoto && (
+                    <button
+                      type="button"
+                      onClick={handleRemoverFoto}
+                      title="Remover foto do residente"
+                      className="size-5 bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    >
+                      <Trash2 className="size-2.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
               <div className="space-y-1.5 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground font-heading truncate">
