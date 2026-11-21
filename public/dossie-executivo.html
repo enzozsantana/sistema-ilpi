@@ -369,13 +369,13 @@
       </div>
     </section>
 
-    <!-- Seção 2: Demonstração dos Custos Graduais de Infraestrutura (100 a 100k Usuários) -->
+    <!-- Seção 2: Demonstração dos Custos Graduais de Infraestrutura por Capacidade de ILPIs & Residentes -->
     <section class="space-y-6">
       <div class="border-b border-white/10 pb-4">
         <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Engenharia de Infraestrutura em Nuvem</span>
-        <h3 class="text-2xl sm:text-3xl font-bold font-heading text-white mt-1">Custos Reais de Servidor por Faixa de Escala</h3>
+        <h3 class="text-2xl sm:text-3xl font-bold font-heading text-white mt-1">Custos Reais de Servidor por Porte & Volume de Residentes</h3>
         <p class="text-xs sm:text-sm text-slate-400">
-          Apresentamos a decomposição técnica exata do custo de tecnologia do Senecurare. A arquitetura moderna garante que o custo caia drasticamente por usuário conforme escalamos:
+          Apresentamos a decomposição técnica exata do custo de tecnologia do Senecurare. A arquitetura multi-tenant moderna garante que o custo computacional por residente atendido caia drasticamente conforme a carteira de ILPIs cresce:
         </p>
       </div>
 
@@ -385,14 +385,14 @@
           <thead class="bg-black/40 text-slate-300 border-b border-white/10 font-semibold uppercase tracking-wider text-[11px]">
             <tr>
               <th class="py-4 px-4">Componente de Tecnologia</th>
-              <th class="py-4 px-3 text-center">100 Usuários</th>
-              <th class="py-4 px-3 text-center">500 Usuários</th>
-              <th class="py-4 px-3 text-center">1.000 Usuários</th>
-              <th class="py-4 px-3 text-center">5.000 Usuários</th>
-              <th class="py-4 px-3 text-center">10.000 Usuários</th>
-              <th class="py-4 px-3 text-center">25.000 Usuários</th>
-              <th class="py-4 px-3 text-center">50.000 Usuários</th>
-              <th class="py-4 px-3 text-center text-cyan-300 font-bold">100.000 Usuários</th>
+              <th class="py-4 px-3 text-center">3 ILPIs (~75 res.)</th>
+              <th class="py-4 px-3 text-center">15 ILPIs (~375 res.)</th>
+              <th class="py-4 px-3 text-center">30 ILPIs (~750 res.)</th>
+              <th class="py-4 px-3 text-center">140 ILPIs (~3.5k res.)</th>
+              <th class="py-4 px-3 text-center">280 ILPIs (~7k res.)</th>
+              <th class="py-4 px-3 text-center">700 ILPIs (~17.5k res.)</th>
+              <th class="py-4 px-3 text-center">1.400 ILPIs (~35k res.)</th>
+              <th class="py-4 px-3 text-center text-cyan-300 font-bold">2.500 ILPIs (~62.5k res.)</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-white/5 text-slate-300">
@@ -514,22 +514,116 @@
       </p>
     </section>
 
-    <!-- Seção 3: DRE Projetado do SaaS Senecurare -->
+    <!-- Seção 3: Estrutura Comercial Oficial — Precificação por Porte & Residentes (Usuários Ilimitados) -->
+    <section class="space-y-6">
+      <div class="border-b border-white/10 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-bold uppercase tracking-wider text-cyan-400">Arquitetura de Precificação B2B</span>
+          <h3 class="text-2xl sm:text-3xl font-bold font-heading text-white mt-1">Tabela Oficial de Planos: Porte da ILPI & Residentes</h3>
+          <p class="text-xs sm:text-sm text-slate-300 mt-1">
+            Modelo 100% alinhado às melhores práticas de mercado: mensalidade por leito ativo e <strong>usuários profissionais ilimitados</strong> para garantir total conformidade com o COREN e a RDC 502:
+          </p>
+        </div>
+        <div class="px-4 py-2 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-right shrink-0">
+          <span class="text-[10px] text-slate-400 uppercase block font-semibold">Política Regulatória</span>
+          <span class="text-xs font-bold text-emerald-400">Usuários Profissionais Ilimitados</span>
+        </div>
+      </div>
+
+      <!-- 4 Cards de Planos Comerciais -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- 1. Plano Compacto -->
+        <div class="exec-card p-5 rounded-2xl border border-white/10 flex flex-col justify-between space-y-4">
+          <div class="space-y-2">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 border border-white/10">PEQUENO PORTE</span>
+            <h4 class="text-lg font-bold text-white">Plano Compacto</h4>
+            <div class="text-2xl font-black text-cyan-300 font-mono">R$ 450 <span class="text-xs font-normal text-slate-400">/mês</span></div>
+            <p class="text-xs text-slate-300 font-semibold">Até 15 residentes ativos</p>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              Casas de repouso familiares e lares de pequeno porte. Inclui prontuário multidisciplinar, aprazamento de remédios e livro de ocorrências digital.
+            </p>
+          </div>
+          <div class="pt-3 border-t border-white/5 text-[11px] text-emerald-300 font-medium">
+            ✓ Usuários ilimitados para cuidadores e RT
+          </div>
+        </div>
+
+        <!-- 2. Plano Clínico & Compliance (Carro-Chefe) -->
+        <div class="exec-card p-5 rounded-2xl border border-cyan-500/40 bg-cyan-950/20 relative flex flex-col justify-between space-y-4 shadow-lg shadow-cyan-950/50">
+          <span class="absolute -top-3 right-4 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-cyan-400 text-slate-950 uppercase tracking-wider">Mais Vendido</span>
+          <div class="space-y-2">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">MÉDIO PORTE</span>
+            <h4 class="text-lg font-bold text-white">Clínico & Compliance</h4>
+            <div class="text-2xl font-black text-white font-mono">R$ 890 <span class="text-xs font-normal text-slate-400">/mês</span></div>
+            <p class="text-xs text-cyan-200 font-semibold">16 a 35 residentes ativos</p>
+            <p class="text-[11px] text-slate-300 leading-relaxed">
+              Padrão clássico da grande maioria das ILPIs privadas (média de 25 idosos). Inclui mapa anatômico de LPP, cadeia de frio rígida e controle de estoque individual.
+            </p>
+          </div>
+          <div class="pt-3 border-t border-cyan-500/20 text-[11px] text-cyan-300 font-medium">
+            ✓ Blindagem total RDC 502 + Auditoria COREN
+          </div>
+        </div>
+
+        <!-- 3. Plano Avançado -->
+        <div class="exec-card p-5 rounded-2xl border border-white/10 flex flex-col justify-between space-y-4">
+          <div class="space-y-2">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">GRANDE PORTE</span>
+            <h4 class="text-lg font-bold text-white">Plano Avançado</h4>
+            <div class="text-2xl font-black text-purple-300 font-mono">R$ 1.390 <span class="text-xs font-normal text-slate-400">/mês</span></div>
+            <p class="text-xs text-slate-300 font-semibold">36 a 60 residentes ativos</p>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              Instituições com alta complexidade clínica, múltiplos turnos 12×36 e equipe multidisciplinar (médico, enfermagem, nutrição, fisio).
+            </p>
+          </div>
+          <div class="pt-3 border-t border-white/5 text-[11px] text-purple-300 font-medium">
+            ✓ LMS com certificação obrigatória Art. 38
+          </div>
+        </div>
+
+        <!-- 4. Plano Redes & Enterprise -->
+        <div class="exec-card p-5 rounded-2xl border border-white/10 flex flex-col justify-between space-y-4">
+          <div class="space-y-2">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">PORTE ESPECIAL / REDES</span>
+            <h4 class="text-lg font-bold text-white">Redes & Enterprise</h4>
+            <div class="text-2xl font-black text-amber-300 font-mono">R$ 1.990 <span class="text-xs font-normal text-slate-400">/mês</span></div>
+            <p class="text-xs text-slate-300 font-semibold">60+ residentes ou filiais</p>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              Redes de ILPIs, hospitais de transição e grupos geriátricos. Painel multicentro, SLA dedicado e teleconsultas integradas.
+            </p>
+          </div>
+          <div class="pt-3 border-t border-white/5 text-[11px] text-amber-300 font-medium">
+            ✓ Suporte VIP 24/7 + Multi-unidades
+          </div>
+        </div>
+      </div>
+
+      <!-- Alerta Estratégico COREN / RDC 502 sobre Usuários Ilimitados -->
+      <div class="p-4 rounded-2xl bg-black/40 border border-cyan-500/20 flex items-start gap-3 text-xs text-slate-300">
+        <span class="text-base text-cyan-400 shrink-0">🛡️</span>
+        <div>
+          <strong class="text-white">Diferencial Estratégico perante a Fiscalização do COREN e Vigilância Sanitária:</strong>
+          Ao contrário de softwares generalistas que cobram por usuário cadastrado (induzindo o gestor a criar senhas compartilhadas e violar a ética de enfermagem), o Senecurare oferece <strong>usuários profissionais 100% ilimitados e gratuitos</strong> em todos os planos. Cada enfermeiro, cuidador e técnico tem seu próprio login auditável com carimbo inviolável de data e hora, eliminando riscos de autuação do COREN e da ANVISA.
+        </div>
+      </div>
+    </section>
+
+    <!-- Seção 4: DRE Projetado do SaaS Senecurare por Faixas de ILPIs & Residentes -->
     <section class="space-y-6">
       <div class="border-b border-white/10 pb-4">
         <span class="text-xs font-bold uppercase tracking-wider text-amber-400">Demonstrativo Financeiro do SaaS</span>
-        <h3 class="text-2xl sm:text-3xl font-bold font-heading text-white mt-1">DRE Projetado & Estimativa de Lucros do Senecurare</h3>
+        <h3 class="text-2xl sm:text-3xl font-bold font-heading text-white mt-1">DRE Projetado & Estimativa de Lucros por Volume de ILPIs</h3>
         <p class="text-xs sm:text-sm text-slate-400">
-          Cálculo realístico considerando impostos federais (transição de Simples Nacional para Lucro Presumido), emissão de NFS-e automatizada, custos de nuvem e margem líquida gerada pela empresa:
+          Cálculo realístico considerando impostos federais progressivos (Simples Nacional a Lucro Presumido), emissão de NFS-e automatizada, custos de nuvem e margem líquida gerada pelo Senecurare:
         </p>
       </div>
 
       <div class="overflow-x-auto exec-card rounded-3xl border border-white/10">
-        <table class="w-full text-left text-xs sm:text-sm">
+        <table class="w-full text-left text-xs sm:text-sm whitespace-nowrap">
           <thead class="bg-black/40 text-slate-300 border-b border-white/10 font-semibold uppercase tracking-wider text-[11px]">
             <tr>
               <th class="py-4 px-5">Faixa de Escala</th>
-              <th class="py-4 px-4 text-center">ILPIs Ativas</th>
+              <th class="py-4 px-4 text-center">ILPIs · Residentes</th>
               <th class="py-4 px-4 text-right font-bold text-white">Faturamento Bruto SaaS</th>
               <th class="py-4 px-4 text-right text-rose-300">Impostos (Simples / LP)</th>
               <th class="py-4 px-4 text-right text-rose-300">Custos Nuvem + NFS-e</th>
@@ -537,117 +631,117 @@
               <th class="py-4 px-4 text-center font-bold text-cyan-300">Margem Líquida</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-white/5 text-slate-300">
-            <!-- 100 Usuários -->
+          <tbody class="divide-y divide-white/5 text-slate-300 whitespace-nowrap">
+            <!-- 3 ILPIs -->
             <tr class="hover:bg-white/[0.02]">
               <td class="py-4 px-5 font-bold text-white">
-                100 usuários
-                <span class="block text-[11px] font-normal text-slate-400">~70 resid. / 30 func. (Piloto)</span>
+                Piloto & Validação
+                <span class="block text-[11px] font-normal text-slate-400">3 ILPIs parceiras</span>
               </td>
-              <td class="py-4 px-4 text-center font-mono">2 a 4</td>
-              <td class="py-4 px-4 text-right font-mono font-bold text-white">R$ 2.240,00</td>
-              <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 134,40 <span class="text-[10px] text-slate-500">(6%)</span></td>
+              <td class="py-4 px-4 text-center font-mono">3 ILPIs · ~75 res.</td>
+              <td class="py-4 px-4 text-right font-mono font-bold text-white">R$ 2.670,00</td>
+              <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 160,20 <span class="text-[10px] text-slate-500">(6%)</span></td>
               <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 261,00</td>
-              <td class="py-4 px-5 text-right font-mono font-extrabold text-emerald-400 text-base">R$ 1.844,60</td>
-              <td class="py-4 px-4 text-center font-bold text-cyan-300">82,3%</td>
+              <td class="py-4 px-5 text-right font-mono font-extrabold text-emerald-400 text-base">R$ 2.248,80</td>
+              <td class="py-4 px-4 text-center font-bold text-cyan-300">84,2%</td>
             </tr>
 
-            <!-- 500 Usuários -->
+            <!-- 15 ILPIs -->
             <tr class="hover:bg-white/[0.02]">
               <td class="py-4 px-5 font-bold text-white">
-                500 usuários
-                <span class="block text-[11px] font-normal text-slate-400">~350 resid. / 150 func.</span>
+                Tração Inicial
+                <span class="block text-[11px] font-normal text-slate-400">15 ILPIs clientes</span>
               </td>
-              <td class="py-4 px-4 text-center font-mono">10 a 15</td>
-              <td class="py-4 px-4 text-right font-mono font-bold text-white">R$ 11.200,00</td>
-              <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 672,00 <span class="text-[10px] text-slate-500">(6%)</span></td>
+              <td class="py-4 px-4 text-center font-mono">15 ILPIs · ~375 res.</td>
+              <td class="py-4 px-4 text-right font-mono font-bold text-white">R$ 13.350,00</td>
+              <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 801,00 <span class="text-[10px] text-slate-500">(6%)</span></td>
               <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 564,00</td>
-              <td class="py-4 px-5 text-right font-mono font-extrabold text-emerald-400 text-base">R$ 9.964,00</td>
-              <td class="py-4 px-4 text-center font-bold text-cyan-300">88,9%</td>
+              <td class="py-4 px-5 text-right font-mono font-extrabold text-emerald-400 text-base">R$ 11.985,00</td>
+              <td class="py-4 px-4 text-center font-bold text-cyan-300">89,8%</td>
             </tr>
 
-            <!-- 1.000 Usuários -->
+            <!-- 30 ILPIs -->
             <tr class="hover:bg-white/[0.02]">
               <td class="py-4 px-5 font-bold text-white">
-                1.000 usuários
-                <span class="block text-[11px] font-normal text-slate-400">~700 resid. / 300 func.</span>
+                Validação Comercial
+                <span class="block text-[11px] font-normal text-slate-400">30 ILPIs clientes</span>
               </td>
-              <td class="py-4 px-4 text-center font-mono">20 a 30</td>
-              <td class="py-4 px-4 text-right font-mono font-bold text-white">R$ 22.400,00</td>
-              <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 1.568,00 <span class="text-[10px] text-slate-500">(7%)</span></td>
+              <td class="py-4 px-4 text-center font-mono">30 ILPIs · ~750 res.</td>
+              <td class="py-4 px-4 text-right font-mono font-bold text-white">R$ 26.700,00</td>
+              <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 1.869,00 <span class="text-[10px] text-slate-500">(7%)</span></td>
               <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 1.186,00</td>
-              <td class="py-4 px-5 text-right font-mono font-extrabold text-emerald-400 text-base">R$ 19.646,00</td>
-              <td class="py-4 px-4 text-center font-bold text-cyan-300">87,7%</td>
+              <td class="py-4 px-5 text-right font-mono font-extrabold text-emerald-400 text-base">R$ 23.645,00</td>
+              <td class="py-4 px-4 text-center font-bold text-cyan-300">88,6%</td>
             </tr>
 
-            <!-- 5.000 Usuários -->
+            <!-- 140 ILPIs -->
             <tr class="hover:bg-white/[0.02]">
               <td class="py-4 px-5 font-bold text-white">
-                5.000 usuários
-                <span class="block text-[11px] font-normal text-slate-400">~3.500 resid. / 1.500 func.</span>
+                Consolidação Regional
+                <span class="block text-[11px] font-normal text-slate-400">140 ILPIs clientes</span>
               </td>
-              <td class="py-4 px-4 text-center font-mono">100 a 140</td>
-              <td class="py-4 px-4 text-right font-mono font-bold text-white">R$ 112.000,00</td>
-              <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 10.080,00 <span class="text-[10px] text-slate-500">(9%)</span></td>
+              <td class="py-4 px-4 text-center font-mono">140 ILPIs · ~3.500 res.</td>
+              <td class="py-4 px-4 text-right font-mono font-bold text-white">R$ 124.600,00</td>
+              <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 11.214,00 <span class="text-[10px] text-slate-500">(9%)</span></td>
               <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 2.923,00</td>
-              <td class="py-4 px-5 text-right font-mono font-extrabold text-emerald-400 text-base">R$ 98.997,00</td>
-              <td class="py-4 px-4 text-center font-bold text-cyan-300">88,3%</td>
+              <td class="py-4 px-5 text-right font-mono font-extrabold text-emerald-400 text-base">R$ 110.463,00</td>
+              <td class="py-4 px-4 text-center font-bold text-cyan-300">88,7%</td>
             </tr>
 
-            <!-- 10.000 Usuários -->
+            <!-- 280 ILPIs -->
             <tr class="hover:bg-white/[0.02] bg-cyan-950/10">
               <td class="py-4 px-5 font-bold text-white">
-                10.000 usuários
-                <span class="block text-[11px] font-normal text-cyan-300">~7.000 resid. / 3.000 func.</span>
+                Escala Estadual
+                <span class="block text-[11px] font-normal text-cyan-300">280 ILPIs clientes</span>
               </td>
-              <td class="py-4 px-4 text-center font-mono font-bold text-white">200 a 280</td>
-              <td class="py-4 px-4 text-right font-mono font-bold text-white text-base">R$ 224.000,00</td>
-              <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 24.640,00 <span class="text-[10px] text-slate-500">(11%)</span></td>
+              <td class="py-4 px-4 text-center font-mono font-bold text-white">280 ILPIs · ~7.000 res.</td>
+              <td class="py-4 px-4 text-right font-mono font-bold text-white text-base">R$ 249.200,00</td>
+              <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 27.412,00 <span class="text-[10px] text-slate-500">(11%)</span></td>
               <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 5.324,00</td>
-              <td class="py-4 px-5 text-right font-mono font-extrabold text-emerald-400 text-lg">R$ 194.036,00</td>
-              <td class="py-4 px-4 text-center font-bold text-cyan-300">86,6%</td>
+              <td class="py-4 px-5 text-right font-mono font-extrabold text-emerald-400 text-lg">R$ 216.464,00</td>
+              <td class="py-4 px-4 text-center font-bold text-cyan-300">86,9%</td>
             </tr>
 
-            <!-- 25.000 Usuários -->
+            <!-- 700 ILPIs -->
             <tr class="hover:bg-white/[0.02]">
               <td class="py-4 px-5 font-bold text-white">
-                25.000 usuários
-                <span class="block text-[11px] font-normal text-slate-400">~17.500 resid. / 7.500 func.</span>
+                Liderança Regional
+                <span class="block text-[11px] font-normal text-slate-400">700 ILPIs clientes</span>
               </td>
-              <td class="py-4 px-4 text-center font-mono">500 a 700</td>
-              <td class="py-4 px-4 text-right font-mono font-bold text-white text-base">R$ 560.000,00</td>
-              <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 91.448,00 <span class="text-[10px] text-slate-500">(16,33% LP)</span></td>
+              <td class="py-4 px-4 text-center font-mono">700 ILPIs · ~17.500 res.</td>
+              <td class="py-4 px-4 text-right font-mono font-bold text-white text-base">R$ 623.000,00</td>
+              <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 101.736,00 <span class="text-[10px] text-slate-500">(16,33% LP)</span></td>
               <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 8.924,00</td>
-              <td class="py-4 px-5 text-right font-mono font-extrabold text-emerald-400 text-lg">R$ 459.628,00</td>
-              <td class="py-4 px-4 text-center font-bold text-cyan-300">82,0%</td>
+              <td class="py-4 px-5 text-right font-mono font-extrabold text-emerald-400 text-lg">R$ 512.340,00</td>
+              <td class="py-4 px-4 text-center font-bold text-cyan-300">82,2%</td>
             </tr>
 
-            <!-- 50.000 Usuários -->
+            <!-- 1.400 ILPIs -->
             <tr class="hover:bg-white/[0.02]">
               <td class="py-4 px-5 font-bold text-white">
-                50.000 usuários
-                <span class="block text-[11px] font-normal text-slate-400">~35.000 resid. / 15.000 func.</span>
+                Expansão Nacional
+                <span class="block text-[11px] font-normal text-slate-400">1.400 ILPIs clientes</span>
               </td>
-              <td class="py-4 px-4 text-center font-mono">1.000 a 1.400</td>
-              <td class="py-4 px-4 text-right font-mono font-extrabold text-white text-lg">R$ 1.120.000,00</td>
-              <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 182.896,00 <span class="text-[10px] text-slate-500">(16,33% LP)</span></td>
+              <td class="py-4 px-4 text-center font-mono">1.400 ILPIs · ~35.000 res.</td>
+              <td class="py-4 px-4 text-right font-mono font-extrabold text-white text-lg">R$ 1.246.000,00</td>
+              <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 203.472,00 <span class="text-[10px] text-slate-500">(16,33% LP)</span></td>
               <td class="py-4 px-4 text-right font-mono text-rose-300">- R$ 13.904,00</td>
-              <td class="py-4 px-5 text-right font-mono font-extrabold text-emerald-400 text-xl">R$ 923.199,00</td>
-              <td class="py-4 px-4 text-center font-bold text-cyan-300">82,4%</td>
+              <td class="py-4 px-5 text-right font-mono font-extrabold text-emerald-400 text-xl">R$ 1.028.624,00</td>
+              <td class="py-4 px-4 text-center font-bold text-cyan-300">82,6%</td>
             </tr>
 
-            <!-- 100.000 Usuários -->
+            <!-- 2.500 ILPIs -->
             <tr class="bg-emerald-950/20 border-t-2 border-emerald-500/40">
               <td class="py-5 px-5 font-extrabold text-emerald-300">
-                100.000 usuários (Maturidade)
-                <span class="block text-xs font-medium text-slate-300">~70.000 resid. / 30.000 func. (2.000 a 2.500 ILPIs)</span>
+                Maturidade de Mercado
+                <span class="block text-xs font-medium text-slate-300">2.500 ILPIs (~62.500 a 70.000 residentes)</span>
               </td>
-              <td class="py-5 px-4 text-center font-mono font-extrabold text-white text-base">~2.500 ILPIs</td>
-              <td class="py-5 px-4 text-right font-mono font-extrabold text-white text-xl">R$ 2.240.000,00 /mês</td>
-              <td class="py-5 px-4 text-right font-mono text-rose-300 font-semibold">- R$ 365.792,00 <span class="text-[10px] text-slate-400">(16,33%)</span></td>
+              <td class="py-5 px-4 text-center font-mono font-extrabold text-white text-base">2.500 ILPIs</td>
+              <td class="py-5 px-4 text-right font-mono font-extrabold text-white text-xl">R$ 2.225.000,00 /mês</td>
+              <td class="py-5 px-4 text-right font-mono text-rose-300 font-semibold">- R$ 363.343,00 <span class="text-[10px] text-slate-400">(16,33%)</span></td>
               <td class="py-5 px-4 text-right font-mono text-rose-300 font-semibold">- R$ 17.963,00</td>
-              <td class="py-5 px-5 text-right font-mono font-black text-emerald-400 text-2xl">R$ 1.856.245,00 /mês</td>
-              <td class="py-5 px-4 text-center font-black text-cyan-300 text-base">82,8%</td>
+              <td class="py-5 px-5 text-right font-mono font-black text-emerald-400 text-2xl">R$ 1.843.694,00 /mês</td>
+              <td class="py-5 px-4 text-center font-black text-cyan-300 text-base">82,9%</td>
             </tr>
           </tbody>
         </table>
@@ -655,8 +749,8 @@
 
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
         <div class="exec-card p-5 rounded-2xl border border-white/5 space-y-1">
-          <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Lucro Líquido Anual SaaS (100k)</span>
-          <p class="text-2xl font-black text-emerald-400 font-mono">R$ 22.274.940,00</p>
+          <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Lucro Líquido Anual SaaS (2.500 ILPIs)</span>
+          <p class="text-2xl font-black text-emerald-400 font-mono">R$ 22.124.328,00</p>
           <span class="text-[11px] text-slate-400">Geração de caixa anual pura das assinaturas</span>
         </div>
         <div class="exec-card p-5 rounded-2xl border border-white/5 space-y-1">
@@ -707,140 +801,140 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-white/5 text-slate-300 whitespace-nowrap">
-            <!-- 100 Usuários -->
+            <!-- 3 ILPIs -->
             <tr class="hover:bg-white/[0.02]">
               <td class="py-3 px-4 font-bold text-white">
-                100 usuários <span class="text-[11px] text-slate-400 font-normal">· Piloto</span>
+                Piloto & Validação <span class="text-[11px] text-slate-400 font-normal">· 3 ILPIs</span>
               </td>
-              <td class="py-3 px-3 text-center text-slate-300 font-mono text-xs">3 ILPIs <span class="text-slate-500">· 70 res.</span></td>
-              <td class="py-3 px-3 text-right font-mono">R$ 2.240</td>
+              <td class="py-3 px-3 text-center text-slate-300 font-mono text-xs">3 ILPIs <span class="text-slate-500">· ~75 res.</span></td>
+              <td class="py-3 px-3 text-right font-mono">R$ 2.670</td>
               <td class="py-3 px-3 text-right font-mono text-cyan-300">+ R$ 510</td>
-              <td class="py-3 px-4 text-right font-mono font-bold text-white">R$ 2.750</td>
-              <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 165 <span class="text-[10px] text-slate-500">(6%)</span></td>
+              <td class="py-3 px-4 text-right font-mono font-bold text-white">R$ 3.180</td>
+              <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 190 <span class="text-[10px] text-slate-500">(6%)</span></td>
               <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 356</td>
               <td class="py-3 px-3 text-right font-mono text-slate-500 text-xs">R$ 0 <span class="text-[10px]">(Fundadores)</span></td>
-              <td class="py-3 px-4 text-right font-mono font-black text-emerald-400 text-sm">R$ 2.229 /mês</td>
-              <td class="py-3 px-3 text-center font-bold text-cyan-300 text-xs">81,1%</td>
-              <td class="py-3 px-4 text-right font-mono font-extrabold text-emerald-300 text-xs">R$ 26.748 /ano</td>
+              <td class="py-3 px-4 text-right font-mono font-black text-emerald-400 text-sm">R$ 2.624 /mês</td>
+              <td class="py-3 px-3 text-center font-bold text-cyan-300 text-xs">82,5%</td>
+              <td class="py-3 px-4 text-right font-mono font-extrabold text-emerald-300 text-xs">R$ 31.488 /ano</td>
             </tr>
 
-            <!-- 500 Usuários -->
+            <!-- 15 ILPIs -->
             <tr class="hover:bg-white/[0.02]">
               <td class="py-3 px-4 font-bold text-white">
-                500 usuários <span class="text-[11px] text-slate-400 font-normal">· Validação</span>
+                Tração Inicial <span class="text-[11px] text-slate-400 font-normal">· 15 ILPIs</span>
               </td>
-              <td class="py-3 px-3 text-center text-slate-300 font-mono text-xs">14 ILPIs <span class="text-slate-500">· 350 res.</span></td>
-              <td class="py-3 px-3 text-right font-mono">R$ 11.200</td>
+              <td class="py-3 px-3 text-center text-slate-300 font-mono text-xs">15 ILPIs <span class="text-slate-500">· ~375 res.</span></td>
+              <td class="py-3 px-3 text-right font-mono">R$ 13.350</td>
               <td class="py-3 px-3 text-right font-mono text-cyan-300">+ R$ 2.720</td>
-              <td class="py-3 px-4 text-right font-mono font-bold text-white">R$ 13.920</td>
-              <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 835 <span class="text-[10px] text-slate-500">(6%)</span></td>
+              <td class="py-3 px-4 text-right font-mono font-bold text-white">R$ 16.070</td>
+              <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 964 <span class="text-[10px] text-slate-500">(6%)</span></td>
               <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 968</td>
               <td class="py-3 px-3 text-right font-mono text-slate-500 text-xs">R$ 0 <span class="text-[10px]">(Fundadores)</span></td>
-              <td class="py-3 px-4 text-right font-mono font-black text-emerald-400 text-sm">R$ 12.117 /mês</td>
-              <td class="py-3 px-3 text-center font-bold text-cyan-300 text-xs">87,0%</td>
-              <td class="py-3 px-4 text-right font-mono font-extrabold text-emerald-300 text-xs">R$ 145.404 /ano</td>
+              <td class="py-3 px-4 text-right font-mono font-black text-emerald-400 text-sm">R$ 14.138 /mês</td>
+              <td class="py-3 px-3 text-center font-bold text-cyan-300 text-xs">88,0%</td>
+              <td class="py-3 px-4 text-right font-mono font-extrabold text-emerald-300 text-xs">R$ 169.656 /ano</td>
             </tr>
 
-            <!-- 1.000 Usuários -->
+            <!-- 30 ILPIs -->
             <tr class="hover:bg-white/[0.02]">
               <td class="py-3 px-4 font-bold text-white">
-                1.000 usuários <span class="text-[11px] text-slate-400 font-normal">· Tração</span>
+                Validação Comercial <span class="text-[11px] text-slate-400 font-normal">· 30 ILPIs</span>
               </td>
-              <td class="py-3 px-3 text-center text-slate-300 font-mono text-xs">28 ILPIs <span class="text-slate-500">· 700 res.</span></td>
-              <td class="py-3 px-3 text-right font-mono">R$ 22.400</td>
+              <td class="py-3 px-3 text-center text-slate-300 font-mono text-xs">30 ILPIs <span class="text-slate-500">· ~750 res.</span></td>
+              <td class="py-3 px-3 text-right font-mono">R$ 26.700</td>
               <td class="py-3 px-3 text-right font-mono text-cyan-300">+ R$ 5.950</td>
-              <td class="py-3 px-4 text-right font-mono font-bold text-white">R$ 28.350</td>
-              <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 1.984 <span class="text-[10px] text-slate-500">(7%)</span></td>
+              <td class="py-3 px-4 text-right font-mono font-bold text-white">R$ 32.650</td>
+              <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 2.285 <span class="text-[10px] text-slate-500">(7%)</span></td>
               <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 2.088</td>
               <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 300 <span class="text-[10px]">(Ferramentas)</span></td>
-              <td class="py-3 px-4 text-right font-mono font-black text-emerald-400 text-sm">R$ 23.978 /mês</td>
-              <td class="py-3 px-3 text-center font-bold text-cyan-300 text-xs">84,6%</td>
-              <td class="py-3 px-4 text-right font-mono font-extrabold text-emerald-300 text-xs">R$ 287.736 /ano</td>
+              <td class="py-3 px-4 text-right font-mono font-black text-emerald-400 text-sm">R$ 27.977 /mês</td>
+              <td class="py-3 px-3 text-center font-bold text-cyan-300 text-xs">85,7%</td>
+              <td class="py-3 px-4 text-right font-mono font-extrabold text-emerald-300 text-xs">R$ 335.724 /ano</td>
             </tr>
 
-            <!-- 5.000 Usuários -->
+            <!-- 140 ILPIs -->
             <tr class="hover:bg-white/[0.02]">
               <td class="py-3 px-4 font-bold text-white">
-                5.000 usuários <span class="text-[11px] text-slate-400 font-normal">· Consolidação</span>
+                Consolidação Regional <span class="text-[11px] text-slate-400 font-normal">· 140 ILPIs</span>
               </td>
-              <td class="py-3 px-3 text-center text-slate-300 font-mono text-xs">140 ILPIs <span class="text-slate-500">· 3.500 res.</span></td>
-              <td class="py-3 px-3 text-right font-mono">R$ 112.000</td>
+              <td class="py-3 px-3 text-center text-slate-300 font-mono text-xs">140 ILPIs <span class="text-slate-500">· ~3.500 res.</span></td>
+              <td class="py-3 px-3 text-right font-mono">R$ 124.600</td>
               <td class="py-3 px-3 text-right font-mono text-cyan-300">+ R$ 27.200</td>
-              <td class="py-3 px-4 text-right font-mono font-bold text-white">R$ 139.200</td>
-              <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 12.528 <span class="text-[10px] text-slate-500">(9%)</span></td>
+              <td class="py-3 px-4 text-right font-mono font-bold text-white">R$ 151.800</td>
+              <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 13.662 <span class="text-[10px] text-slate-500">(9%)</span></td>
               <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 7.563</td>
               <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 5.700 <span class="text-[10px]">(1 Suporte CLT)</span></td>
-              <td class="py-3 px-4 text-right font-mono font-black text-emerald-400 text-sm">R$ 113.409 /mês</td>
-              <td class="py-3 px-3 text-center font-bold text-cyan-300 text-xs">81,5%</td>
-              <td class="py-3 px-4 text-right font-mono font-extrabold text-emerald-300 text-sm">R$ 1.360.908 /ano</td>
+              <td class="py-3 px-4 text-right font-mono font-black text-emerald-400 text-sm">R$ 124.875 /mês</td>
+              <td class="py-3 px-3 text-center font-bold text-cyan-300 text-xs">82,3%</td>
+              <td class="py-3 px-4 text-right font-mono font-extrabold text-emerald-300 text-sm">R$ 1.498.500 /ano</td>
             </tr>
 
-            <!-- 10.000 Usuários -->
+            <!-- 280 ILPIs -->
             <tr class="hover:bg-white/[0.02] bg-cyan-950/15">
               <td class="py-3 px-4 font-bold text-white">
-                10.000 usuários <span class="text-[11px] text-cyan-300 font-normal">· Escala Regional</span>
+                Escala Estadual <span class="text-[11px] text-cyan-300 font-normal">· 280 ILPIs</span>
               </td>
-              <td class="py-3 px-3 text-center text-white font-mono text-xs font-bold">280 ILPIs <span class="text-slate-400">· 7.000 res.</span></td>
-              <td class="py-3 px-3 text-right font-mono">R$ 224.000</td>
+              <td class="py-3 px-3 text-center text-white font-mono text-xs font-bold">280 ILPIs <span class="text-slate-400">· ~7.000 res.</span></td>
+              <td class="py-3 px-3 text-right font-mono">R$ 249.200</td>
               <td class="py-3 px-3 text-right font-mono text-cyan-300">+ R$ 54.400</td>
-              <td class="py-3 px-4 text-right font-mono font-bold text-white text-base">R$ 278.400</td>
-              <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 30.624 <span class="text-[10px] text-slate-500">(11%)</span></td>
+              <td class="py-3 px-4 text-right font-mono font-bold text-white text-base">R$ 303.600</td>
+              <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 33.396 <span class="text-[10px] text-slate-500">(11%)</span></td>
               <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 14.604</td>
               <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 13.500 <span class="text-[10px]">(2 Suportes + Onb)</span></td>
-              <td class="py-3 px-4 text-right font-mono font-black text-emerald-400 text-base">R$ 219.672 /mês</td>
-              <td class="py-3 px-3 text-center font-bold text-cyan-300 text-xs">78,9%</td>
-              <td class="py-3 px-4 text-right font-mono font-black text-emerald-300 text-sm">R$ 2.636.064 /ano</td>
+              <td class="py-3 px-4 text-right font-mono font-black text-emerald-400 text-base">R$ 242.100 /mês</td>
+              <td class="py-3 px-3 text-center font-bold text-cyan-300 text-xs">79,7%</td>
+              <td class="py-3 px-4 text-right font-mono font-black text-emerald-300 text-sm">R$ 2.905.200 /ano</td>
             </tr>
 
-            <!-- 25.000 Usuários -->
+            <!-- 700 ILPIs -->
             <tr class="hover:bg-white/[0.02]">
               <td class="py-3 px-4 font-bold text-white">
-                25.000 usuários <span class="text-[11px] text-slate-400 font-normal">· Líder Regional</span>
+                Liderança Regional <span class="text-[11px] text-slate-400 font-normal">· 700 ILPIs</span>
               </td>
-              <td class="py-3 px-3 text-center text-slate-300 font-mono text-xs">700 ILPIs <span class="text-slate-500">· 17.500 res.</span></td>
-              <td class="py-3 px-3 text-right font-mono">R$ 560.000</td>
+              <td class="py-3 px-3 text-center text-slate-300 font-mono text-xs">700 ILPIs <span class="text-slate-500">· ~17.500 res.</span></td>
+              <td class="py-3 px-3 text-right font-mono">R$ 623.000</td>
               <td class="py-3 px-3 text-right font-mono text-cyan-300">+ R$ 136.000</td>
-              <td class="py-3 px-4 text-right font-mono font-bold text-white text-base">R$ 696.000</td>
-              <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 113.656 <span class="text-[10px] text-slate-500">(16,33% LP)</span></td>
+              <td class="py-3 px-4 text-right font-mono font-bold text-white text-base">R$ 759.000</td>
+              <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 123.945 <span class="text-[10px] text-slate-500">(16,33% LP)</span></td>
               <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 32.624</td>
               <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 34.000 <span class="text-[10px]">(Equipe 6 CLT)</span></td>
-              <td class="py-3 px-4 text-right font-mono font-black text-emerald-400 text-base">R$ 515.720 /mês</td>
-              <td class="py-3 px-3 text-center font-bold text-cyan-300 text-xs">74,1%</td>
-              <td class="py-3 px-4 text-right font-mono font-black text-emerald-300 text-base">R$ 6.188.640 /ano</td>
+              <td class="py-3 px-4 text-right font-mono font-black text-emerald-400 text-base">R$ 568.431 /mês</td>
+              <td class="py-3 px-3 text-center font-bold text-cyan-300 text-xs">74,9%</td>
+              <td class="py-3 px-4 text-right font-mono font-black text-emerald-300 text-base">R$ 6.821.172 /ano</td>
             </tr>
 
-            <!-- 50.000 Usuários -->
+            <!-- 1.400 ILPIs -->
             <tr class="hover:bg-white/[0.02]">
               <td class="py-3 px-4 font-bold text-white">
-                50.000 usuários <span class="text-[11px] text-slate-400 font-normal">· Nacional</span>
+                Expansão Nacional <span class="text-[11px] text-slate-400 font-normal">· 1.400 ILPIs</span>
               </td>
-              <td class="py-3 px-3 text-center text-slate-300 font-mono text-xs">1.400 ILPIs <span class="text-slate-500">· 35.000 res.</span></td>
-              <td class="py-3 px-3 text-right font-mono">R$ 1.120.000</td>
+              <td class="py-3 px-3 text-center text-slate-300 font-mono text-xs">1.400 ILPIs <span class="text-slate-500">· ~35.000 res.</span></td>
+              <td class="py-3 px-3 text-right font-mono">R$ 1.246.000</td>
               <td class="py-3 px-3 text-right font-mono text-cyan-300">+ R$ 272.000</td>
-              <td class="py-3 px-4 text-right font-mono font-bold text-white text-base">R$ 1.392.000</td>
-              <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 227.313 <span class="text-[10px] text-slate-500">(16,33% LP)</span></td>
+              <td class="py-3 px-4 text-right font-mono font-bold text-white text-base">R$ 1.518.000</td>
+              <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 247.889 <span class="text-[10px] text-slate-500">(16,33% LP)</span></td>
               <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 61.304</td>
               <td class="py-3 px-3 text-right font-mono text-rose-300 text-xs">- R$ 67.000 <span class="text-[10px]">(Equipe 10 CLT)</span></td>
-              <td class="py-3 px-4 text-right font-mono font-black text-emerald-400 text-base">R$ 1.036.383 /mês</td>
-              <td class="py-3 px-3 text-center font-bold text-cyan-300 text-xs">74,4%</td>
-              <td class="py-3 px-4 text-right font-mono font-black text-emerald-300 text-base">R$ 12.436.596 /ano</td>
+              <td class="py-3 px-4 text-right font-mono font-black text-emerald-400 text-base">R$ 1.141.807 /mês</td>
+              <td class="py-3 px-3 text-center font-bold text-cyan-300 text-xs">75,2%</td>
+              <td class="py-3 px-4 text-right font-mono font-black text-emerald-300 text-base">R$ 13.701.684 /ano</td>
             </tr>
 
-            <!-- 100.000 Usuários -->
+            <!-- 2.500 ILPIs -->
             <tr class="bg-emerald-950/25 border-t-2 border-emerald-500/40">
               <td class="py-4 px-4 font-black text-emerald-300 text-sm">
-                100.000 usuários <span class="text-xs font-normal text-slate-300">· Maturidade Total</span>
+                Maturidade de Mercado <span class="text-xs font-normal text-slate-300">· 2.500 ILPIs</span>
               </td>
-              <td class="py-4 px-3 text-center text-white font-mono text-xs font-black">2.500 ILPIs <span class="text-cyan-300">· 70.000 res.</span></td>
-              <td class="py-4 px-3 text-right font-mono font-bold text-white">R$ 2.240.000</td>
+              <td class="py-4 px-3 text-center text-white font-mono text-xs font-black">2.500 ILPIs <span class="text-cyan-300">· ~62.500 res.</span></td>
+              <td class="py-4 px-3 text-right font-mono font-bold text-white">R$ 2.225.000</td>
               <td class="py-4 px-3 text-right font-mono font-bold text-cyan-300">+ R$ 544.000</td>
-              <td class="py-4 px-4 text-right font-mono font-black text-white text-lg">R$ 2.784.000</td>
-              <td class="py-4 px-3 text-right font-mono text-rose-300 text-xs font-semibold">- R$ 454.627 <span class="text-[10px] text-slate-400">(16,33%)</span></td>
+              <td class="py-4 px-4 text-right font-mono font-black text-white text-lg">R$ 2.769.000</td>
+              <td class="py-4 px-3 text-right font-mono text-rose-300 text-xs font-semibold">- R$ 452.178 <span class="text-[10px] text-slate-400">(16,33%)</span></td>
               <td class="py-4 px-3 text-right font-mono text-rose-300 text-xs font-semibold">- R$ 113.763</td>
               <td class="py-4 px-3 text-right font-mono text-rose-300 text-xs font-semibold">- R$ 135.000 <span class="text-[10px]">(18 CLT 24/7)</span></td>
-              <td class="py-4 px-4 text-right font-mono font-black text-emerald-400 text-xl">R$ 2.080.610 /mês</td>
+              <td class="py-4 px-4 text-right font-mono font-black text-emerald-400 text-xl">R$ 2.068.059 /mês</td>
               <td class="py-4 px-3 text-center font-black text-cyan-300 text-sm">74,7%</td>
-              <td class="py-4 px-4 text-right font-mono font-black text-emerald-300 text-lg">R$ 24.967.320 /ano</td>
+              <td class="py-4 px-4 text-right font-mono font-black text-emerald-300 text-lg">R$ 24.816.708 /ano</td>
             </tr>
           </tbody>
         </table>
@@ -849,13 +943,13 @@
       <!-- Destaques Realistas -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
         <div class="exec-card p-5 rounded-2xl border border-white/5 space-y-1">
-          <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Lucro Líquido Anual Senecurare (100k)</span>
-          <p class="text-2xl font-black text-emerald-400 font-mono">R$ 24.967.320,00</p>
+          <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Lucro Líquido Anual Senecurare (2.500 ILPIs)</span>
+          <p class="text-2xl font-black text-emerald-400 font-mono">R$ 24.816.708,00</p>
           <span class="text-[11px] text-slate-400">Geração de caixa líquida anual do negócio na maturidade</span>
         </div>
         <div class="exec-card p-5 rounded-2xl border border-emerald-500/30 bg-emerald-950/15 space-y-1">
           <span class="text-xs text-emerald-300 uppercase font-bold tracking-wider">Lucro Líquido Mensal Senecurare</span>
-          <p class="text-2xl font-black text-emerald-400 font-mono">R$ 2.080.610,00</p>
+          <p class="text-2xl font-black text-emerald-400 font-mono">R$ 2.068.059,00</p>
           <span class="text-[11px] text-emerald-200">Mais de R$ 2 Milhões por mês de resultado líquido limpo</span>
         </div>
         <div class="exec-card p-5 rounded-2xl border border-white/5 space-y-1">
@@ -1102,7 +1196,7 @@
       <div class="space-y-3">
         <h4 class="text-base font-bold text-white flex items-center gap-2">
           <span class="size-2 rounded-full bg-emerald-400"></span>
-          6.2 Estimativa Gradual de Lucro da Telemedicina (De 100 a 100.000 Usuários)
+          6.2 Estimativa Gradual de Lucro da Telemedicina por Escala de ILPIs & Residentes
         </h4>
         <p class="text-xs text-slate-400">
           Projeção com base em uma taxa de adoção conservadora de <strong>0,25 consulta por residente/mês</strong> (ou seja, 1 consulta especializada a cada 4 meses por residente):
@@ -1125,8 +1219,8 @@
             </thead>
             <tbody class="divide-y divide-white/5 text-slate-300">
               <tr>
-                <td class="py-3 px-4 font-semibold text-white">100 usuários (Piloto)</td>
-                <td class="py-3 px-3 text-center text-slate-400">~70</td>
+                <td class="py-3 px-4 font-semibold text-white">3 ILPIs (Piloto)</td>
+                <td class="py-3 px-3 text-center text-slate-400">~75</td>
                 <td class="py-3 px-3 text-center font-mono">20 /mês</td>
                 <td class="py-3 px-4 text-right font-mono">R$ 3.400,00</td>
                 <td class="py-3 px-4 text-right font-mono text-cyan-300">R$ 2.720,00</td>
@@ -1136,8 +1230,8 @@
                 <td class="py-3 px-4 text-right font-mono text-emerald-300 font-semibold">R$ 6.648,00</td>
               </tr>
               <tr>
-                <td class="py-3 px-4 font-semibold text-white">500 usuários</td>
-                <td class="py-3 px-3 text-center text-slate-400">~350</td>
+                <td class="py-3 px-4 font-semibold text-white">15 ILPIs (Tração)</td>
+                <td class="py-3 px-3 text-center text-slate-400">~375</td>
                 <td class="py-3 px-3 text-center font-mono">100 /mês</td>
                 <td class="py-3 px-4 text-right font-mono">R$ 17.000,00</td>
                 <td class="py-3 px-4 text-right font-mono text-cyan-300">R$ 13.600,00</td>
@@ -1147,8 +1241,8 @@
                 <td class="py-3 px-4 text-right font-mono text-emerald-300 font-semibold">R$ 33.240,00</td>
               </tr>
               <tr>
-                <td class="py-3 px-4 font-semibold text-white">1.000 usuários</td>
-                <td class="py-3 px-3 text-center text-slate-400">~700</td>
+                <td class="py-3 px-4 font-semibold text-white">30 ILPIs (Validação)</td>
+                <td class="py-3 px-3 text-center text-slate-400">~750</td>
                 <td class="py-3 px-3 text-center font-mono">200 /mês</td>
                 <td class="py-3 px-4 text-right font-mono">R$ 34.000,00</td>
                 <td class="py-3 px-4 text-right font-mono text-cyan-300">R$ 27.200,00</td>
@@ -1158,7 +1252,7 @@
                 <td class="py-3 px-4 text-right font-mono text-emerald-300 font-semibold">R$ 66.480,00</td>
               </tr>
               <tr>
-                <td class="py-3 px-4 font-semibold text-white">5.000 usuários</td>
+                <td class="py-3 px-4 font-semibold text-white">140 ILPIs (Consolidação)</td>
                 <td class="py-3 px-3 text-center text-slate-400">~3.500</td>
                 <td class="py-3 px-3 text-center font-mono">1.000 /mês</td>
                 <td class="py-3 px-4 text-right font-mono">R$ 170.000,00</td>
@@ -1169,7 +1263,7 @@
                 <td class="py-3 px-4 text-right font-mono text-emerald-300 font-semibold">R$ 332.400,00</td>
               </tr>
               <tr class="bg-cyan-950/20">
-                <td class="py-3.5 px-4 font-bold text-white">10.000 usuários</td>
+                <td class="py-3.5 px-4 font-bold text-white">280 ILPIs (Escala Estadual)</td>
                 <td class="py-3.5 px-3 text-center font-bold text-white">~7.000</td>
                 <td class="py-3.5 px-3 text-center font-mono font-bold text-white">2.000 /mês</td>
                 <td class="py-3.5 px-4 text-right font-mono font-bold text-white">R$ 340.000,00</td>
@@ -1180,7 +1274,7 @@
                 <td class="py-3.5 px-4 text-right font-mono text-emerald-300 font-bold">R$ 664.800,00</td>
               </tr>
               <tr>
-                <td class="py-3 px-4 font-semibold text-white">25.000 usuários</td>
+                <td class="py-3 px-4 font-semibold text-white">700 ILPIs (Líder Regional)</td>
                 <td class="py-3 px-3 text-center text-slate-400">~17.500</td>
                 <td class="py-3 px-3 text-center font-mono">5.000 /mês</td>
                 <td class="py-3 px-4 text-right font-mono">R$ 850.000,00</td>
@@ -1191,7 +1285,7 @@
                 <td class="py-3 px-4 text-right font-mono text-emerald-300 font-semibold">R$ 1.662.000,00</td>
               </tr>
               <tr>
-                <td class="py-3 px-4 font-semibold text-white">50.000 usuários</td>
+                <td class="py-3 px-4 font-semibold text-white">1.400 ILPIs (Nacional)</td>
                 <td class="py-3 px-3 text-center text-slate-400">~35.000</td>
                 <td class="py-3 px-3 text-center font-mono">10.000 /mês</td>
                 <td class="py-3 px-4 text-right font-mono">R$ 1.700.000,00</td>
@@ -1202,8 +1296,8 @@
                 <td class="py-3 px-4 text-right font-mono text-emerald-300 font-semibold">R$ 3.324.000,00</td>
               </tr>
               <tr class="bg-emerald-950/20 border-t-2 border-emerald-500/40">
-                <td class="py-4 px-4 font-black text-emerald-300">100.000 usuários (Maturidade)</td>
-                <td class="py-4 px-3 text-center font-bold text-white">~70.000</td>
+                <td class="py-4 px-4 font-black text-emerald-300">2.500 ILPIs (Maturidade)</td>
+                <td class="py-4 px-3 text-center font-bold text-white">~62.500</td>
                 <td class="py-4 px-3 text-center font-mono font-bold text-white">20.000 /mês</td>
                 <td class="py-4 px-4 text-right font-mono font-bold text-white">R$ 3.400.000,00</td>
                 <td class="py-4 px-4 text-right font-mono text-cyan-300">R$ 2.720.000,00</td>
