@@ -672,7 +672,7 @@ export default function Estoque() {
 
       {/* Modal: Lançar Entrada de Estoque Individual */}
       <Dialog open={modalEntrada} onOpenChange={setModalEntrada}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[95vw] sm:max-w-md rounded-2xl">
           <form onSubmit={handleSalvarEntrada}>
             <DialogHeader>
               <DialogTitle className="text-base font-bold flex items-center gap-2">
@@ -773,7 +773,7 @@ export default function Estoque() {
 
       {/* Modal: Cadastrar Novo Item Individual */}
       <Dialog open={modalNovoItem} onOpenChange={setModalNovoItem}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[95vw] sm:max-w-md rounded-2xl">
           <form onSubmit={handleSalvarNovoItem}>
             <DialogHeader>
               <DialogTitle className="text-base font-bold flex items-center gap-2">
@@ -911,7 +911,7 @@ export default function Estoque() {
 
       {/* Modal: Ajuste / Retificação de Saldo Físico */}
       <Dialog open={!!modalAjuste} onOpenChange={(v) => !v && setModalAjuste(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[95vw] sm:max-w-md rounded-2xl">
           {modalAjuste && (
             <form onSubmit={handleSalvarAjuste}>
               <DialogHeader>

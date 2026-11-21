@@ -113,6 +113,18 @@ export function AppShell() {
   const { pathname } = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  const [isOnline, setIsOnline] = useState(() => (typeof navigator !== 'undefined' ? navigator.onLine : true))
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true)
+    const handleOffline = () => setIsOnline(false)
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
   const [treinamentosCount, setTreinamentosCount] = useState<number>(CURSOS_PADRAO_ILPI.length)
 
   // Atalho global do teclado: Ctrl+K / Cmd+K para abrir a busca rápida
@@ -324,6 +336,20 @@ export function AppShell() {
             <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-muted/60 border border-border/50 text-xs font-medium text-muted-foreground">
               <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>{profissional.cat === 'tele_especialista' ? 'Consultório online' : 'Plantão ativo'}</span>
+            </div>
+
+            {/* Online / Offline Connectivity Pill */}
+            <div
+              className={cn(
+                "hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors",
+                isOnline
+                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25"
+                  : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 animate-pulse"
+              )}
+              title={isOnline ? "Conexão ativa e sincronizada em tempo real com a nuvem" : "Operando no modo local. As alterações serão sincronizadas ao reconectar."}
+            >
+              <span className={cn("size-1.5 rounded-full", isOnline ? "bg-emerald-500" : "bg-amber-500")} />
+              <span>{isOnline ? "Sincronizado" : "Modo Local"}</span>
             </div>
 
             <NotificacoesMenu />

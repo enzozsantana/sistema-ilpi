@@ -1801,7 +1801,7 @@ export default function Plantao() {
 
       {/* Modal: Medicação Se Necessário (SN) */}
       <Dialog open={modalSn} onOpenChange={setModalSn}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[95vw] sm:max-w-md rounded-2xl">
           <form onSubmit={handleSalvarSn}>
             <DialogHeader>
               <DialogTitle className="text-base font-bold flex items-center gap-2">
@@ -1888,7 +1888,7 @@ export default function Plantao() {
 
       {/* Modal: Intercorrência Sanitária (RDC 502 / ANVISA) */}
       <Dialog open={modalOcorrencia} onOpenChange={setModalOcorrencia}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[95vw] sm:max-w-md rounded-2xl">
           <form onSubmit={handleSalvarOcorrencia}>
             <DialogHeader>
               <DialogTitle className="text-base font-bold flex items-center gap-2">
@@ -1971,7 +1971,7 @@ export default function Plantao() {
 
       {/* Modal: Quick Aferição de Sinais Vitais */}
       <Dialog open={!!modalSsvv} onOpenChange={(v) => !v && setModalSsvv(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[95vw] sm:max-w-md rounded-2xl">
           {modalSsvv && (
             <form onSubmit={handleSalvarSsvv}>
               <DialogHeader>
@@ -2071,7 +2071,7 @@ export default function Plantao() {
 
       {/* Modal: Comprovação Fotográfica de Cuidados (Decúbito / Curativos) */}
       <Dialog open={!!modalFotoCuidado} onOpenChange={(v) => !v && setModalFotoCuidado(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[95vw] sm:max-w-md rounded-2xl">
           {modalFotoCuidado && (
             <form onSubmit={handleSalvarFotoCuidado}>
               <DialogHeader>
@@ -2188,7 +2188,7 @@ export default function Plantao() {
 
       {/* Modal: Passagem de Plantão da Equipe */}
       <Dialog open={modalPassagem} onOpenChange={setModalPassagem}>
-        <DialogContent className="max-w-xl max-h-[88vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] sm:max-w-xl max-h-[88vh] overflow-y-auto rounded-2xl">
           <form onSubmit={handleSalvarPassagem}>
             <DialogHeader>
               <DialogTitle className="text-base font-bold flex items-center gap-2">
@@ -2359,7 +2359,7 @@ export default function Plantao() {
 
       {/* Modal: Histórico de Passagens de Plantão */}
       <Dialog open={modalHistoricoPassagens} onOpenChange={setModalHistoricoPassagens}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-base font-bold flex items-center gap-2">
               <Clock className="size-4 text-[#123F4A]" />
@@ -2426,7 +2426,7 @@ export default function Plantao() {
 
       {/* Modal: Novo Comunicado da RT (Egle) para a Equipe */}
       <Dialog open={modalNovoAviso} onOpenChange={setModalNovoAviso}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="w-[95vw] sm:max-w-md rounded-2xl">
           <form onSubmit={handleSalvarAviso}>
             <DialogHeader>
               <DialogTitle className="text-base font-bold flex items-center gap-2">

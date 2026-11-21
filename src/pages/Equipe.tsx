@@ -785,8 +785,9 @@ export default function Equipe() {
                 </div>
               )}
             </CardHeader>
-            <CardContent className="p-0 overflow-x-auto">
-              <table className="w-full text-xs text-left border-collapse">
+            <CardContent className="p-0 relative">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left border-collapse">
                 <thead>
                   <tr className="bg-muted/40 border-b border-border/60 text-muted-foreground">
                     <th className="p-3 sticky left-0 bg-muted/90 backdrop-blur-xs font-bold text-foreground min-w-[180px] z-10 border-r border-border/40">
@@ -875,7 +876,9 @@ export default function Equipe() {
                     })}
                 </tbody>
               </table>
-            </CardContent>
+            </div>
+            <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-card/80 to-transparent sm:hidden" />
+          </CardContent>
           </Card>
         </TabsContent>
 

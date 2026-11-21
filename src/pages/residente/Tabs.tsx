@@ -544,15 +544,16 @@ export function TabFicha({ r, cat }: Ctx) {
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="es" className="text-[11px] font-semibold">Status do Residente</Label>
-                  <select
+                  <SearchableSelect
                     id="es"
                     value={status}
-                    onChange={(e) => setStatus(e.target.value as StatusResidente)}
-                    className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                  >
-                    <option value="ativo">Ativo</option>
-                    <option value="obito">Óbito</option>
-                  </select>
+                    onValueChange={(v) => setStatus(v as StatusResidente)}
+                    searchPlaceholder="Buscar status..."
+                    options={[
+                      { value: 'ativo', label: 'Ativo' },
+                      { value: 'obito', label: 'Óbito' },
+                    ]}
+                  />
                 </div>
               </div>
 
@@ -1533,19 +1534,21 @@ export function TabAval({ r, cat, area, profNome }: Ctx) {
                       className="h-7 text-xs flex-1 min-w-[140px]"
                     />
 
-                    <select
+                    <SearchableSelect
                       value={fx.nivel}
-                      onChange={(e) => {
+                      onValueChange={(v) => {
                         const clone = [...formFaixas]
-                        clone[fxIdx].nivel = e.target.value as NivelBadge
+                        clone[fxIdx].nivel = v as NivelBadge
                         setFormFaixas(clone)
                       }}
-                      className="h-7 px-2 text-xs rounded border border-input bg-background font-medium"
-                    >
-                      <option value="warn">Amarelo (Atenção / Moderado)</option>
-                      <option value="ok">Verde (Normal / Seguro)</option>
-                      <option value="danger">Vermelho (Alto Risco / Grave)</option>
-                    </select>
+                      triggerClassName="h-7 text-xs min-w-[150px]"
+                      searchPlaceholder="Buscar nível..."
+                      options={[
+                        { value: 'warn', label: 'Amarelo (Atenção / Moderado)' },
+                        { value: 'ok', label: 'Verde (Normal / Seguro)' },
+                        { value: 'danger', label: 'Vermelho (Alto Risco / Grave)' },
+                      ]}
+                    />
 
                     {formFaixas.length > 1 && (
                       <Button
@@ -2182,16 +2185,17 @@ export function TabPia({ r, cat }: Ctx) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border/50">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-semibold">Avaliação Geral do Resultado</Label>
-                  <select
+                  <SearchableSelect
                     value={resultadoGeral}
-                    onChange={(e) => setResultadoGeral(e.target.value)}
-                    className="w-full h-8 px-2 text-xs rounded-md border border-input bg-background"
-                  >
-                    <option value="Alcançado">Alcançado</option>
-                    <option value="Não alcançado">Não alcançado</option>
-                    <option value="Necessidade de ajuste do Plano">Necessidade de ajuste do Plano</option>
-                    <option value="Parcialmente alcançado">Parcialmente alcançado</option>
-                  </select>
+                    onValueChange={setResultadoGeral}
+                    searchPlaceholder="Buscar resultado..."
+                    options={[
+                      { value: 'Alcançado', label: 'Alcançado' },
+                      { value: 'Não alcançado', label: 'Não alcançado' },
+                      { value: 'Necessidade de ajuste do Plano', label: 'Necessidade de ajuste do Plano' },
+                      { value: 'Parcialmente alcançado', label: 'Parcialmente alcançado' },
+                    ]}
+                  />
                 </div>
 
                 <div className="space-y-1.5">
@@ -2533,8 +2537,8 @@ export function TabCuidados({ r, cat }: Ctx) {
                   key={c.id}
                   className={cn(
                     'p-3.5 rounded-xl border text-xs flex flex-col justify-between gap-2.5 transition-all',
-                    isAmbar && 'bg-amber-500/10 dark:bg-amber-950/20 border-amber-500/50 dark:border-amber-400/40 shadow-2xs ring-1 ring-amber-500/20',
-                    isCurativo && !isAmbar && 'bg-purple-500/10 dark:bg-purple-950/20 border-purple-500/40 dark:border-purple-400/40 shadow-2xs',
+                    isAmbar && 'bg-amber-500/10 dark:bg-amber-950/40 border-amber-500/50 dark:border-amber-400/50 shadow-2xs ring-1 ring-amber-500/30',
+                    isCurativo && !isAmbar && 'bg-purple-500/10 dark:bg-purple-950/40 border-purple-500/40 dark:border-purple-400/50 shadow-2xs',
                     !isAmbar && !isCurativo && 'bg-muted/30 border-border/50'
                   )}
                 >
@@ -2693,16 +2697,17 @@ export function TabCuidados({ r, cat }: Ctx) {
 
               <div className="space-y-1">
                 <Label htmlFor="cuidQuem" className="text-[11px] font-semibold">Executores Responsáveis</Label>
-                <select
+                <SearchableSelect
                   id="cuidQuem"
                   value={quem}
-                  onChange={(e) => setQuem(e.target.value as 'todos' | 'enfermagem' | 'cuidador')}
-                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                >
-                  <option value="enfermagem">Auxiliar / Técnico / Enfermeiro</option>
-                  <option value="cuidador">Cuidadores</option>
-                  <option value="todos">Toda a equipe (Cuidadores e Enfermagem)</option>
-                </select>
+                  onValueChange={(v) => setQuem(v as 'todos' | 'enfermagem' | 'cuidador')}
+                  searchPlaceholder="Buscar responsável..."
+                  options={[
+                    { value: 'enfermagem', label: 'Auxiliar / Técnico / Enfermeiro' },
+                    { value: 'cuidador', label: 'Cuidadores' },
+                    { value: 'todos', label: 'Toda a equipe (Cuidadores e Enfermagem)' },
+                  ]}
+                />
               </div>
             </div>
             <DialogFooter>
@@ -2734,68 +2739,57 @@ export function TabCuidados({ r, cat }: Ctx) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-[11px] font-semibold">Tipo de Cobertura / Curativo *</Label>
-                  <select
+                  <SearchableSelect
                     value={curativoCob}
-                    onChange={(e) => setCurativoCob(e.target.value)}
-                    className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                  >
-                    {COBERTURAS_CURATIVO.map((cob) => (
-                      <option key={cob} value={cob}>{cob}</option>
-                    ))}
-                  </select>
+                    onValueChange={setCurativoCob}
+                    searchPlaceholder="Buscar cobertura..."
+                    options={COBERTURAS_CURATIVO.map((cob) => ({ value: cob, label: cob }))}
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-[11px] font-semibold">Localização Anatômica *</Label>
-                  <select
+                  <SearchableSelect
                     value={curativoLoc}
-                    onChange={(e) => setCurativoLoc(e.target.value)}
-                    className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                  >
-                    {LOCAIS_ANATOMICOS.map((loc) => (
-                      <option key={loc} value={loc}>{loc}</option>
-                    ))}
-                  </select>
+                    onValueChange={setCurativoLoc}
+                    searchPlaceholder="Buscar localização..."
+                    options={LOCAIS_ANATOMICOS.map((loc) => ({ value: loc, label: loc }))}
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-[11px] font-semibold">Estágio / Classificação da Lesão</Label>
-                  <select
+                  <SearchableSelect
                     value={curativoGrau}
-                    onChange={(e) => setCurativoGrau(e.target.value)}
-                    className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                  >
-                    {GRAUS_LESAO_LPP.map((grau) => (
-                      <option key={grau} value={grau}>{grau}</option>
-                    ))}
-                  </select>
+                    onValueChange={setCurativoGrau}
+                    searchPlaceholder="Buscar classificação..."
+                    options={GRAUS_LESAO_LPP.map((grau) => ({ value: grau, label: grau }))}
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-[11px] font-semibold">Frequência da Troca *</Label>
-                  <select
+                  <SearchableSelect
                     value={curativoFreq}
-                    onChange={(e) => setCurativoFreq(e.target.value)}
-                    className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                  >
-                    {FREQUENCIAS_CURATIVO.map((freq) => (
-                      <option key={freq} value={freq}>{freq}</option>
-                    ))}
-                  </select>
+                    onValueChange={setCurativoFreq}
+                    searchPlaceholder="Buscar frequência..."
+                    options={FREQUENCIAS_CURATIVO.map((freq) => ({ value: freq, label: freq }))}
+                  />
                 </div>
               </div>
 
               <div className="space-y-1">
                 <Label className="text-[11px] font-semibold">Quem deve Executar / Checar *</Label>
-                <select
+                <SearchableSelect
                   value={curativoQuem}
-                  onChange={(e) => setCurativoQuem(e.target.value as 'todos' | 'enfermagem' | 'cuidador')}
-                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                >
-                  <option value="enfermagem">Auxiliar / Técnico / Enfermeiro RT</option>
-                  <option value="cuidador">Cuidadores</option>
-                  <option value="todos">Toda a equipe (Cuidadores e Auxiliares de Enfermagem)</option>
-                </select>
+                  onValueChange={(v) => setCurativoQuem(v as 'todos' | 'enfermagem' | 'cuidador')}
+                  searchPlaceholder="Buscar executores..."
+                  options={[
+                    { value: 'enfermagem', label: 'Auxiliar / Técnico / Enfermeiro RT' },
+                    { value: 'cuidador', label: 'Cuidadores' },
+                    { value: 'todos', label: 'Toda a equipe (Cuidadores e Auxiliares de Enfermagem)' },
+                  ]}
+                />
               </div>
 
               <div className="space-y-1">
@@ -2838,28 +2832,30 @@ export function TabCuidados({ r, cat }: Ctx) {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-[11px] font-semibold">Intervalo de Mudança *</Label>
-                  <select
-                    value={decubitoHoras}
-                    onChange={(e) => setDecubitoHoras(e.target.value)}
-                    className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                  >
-                    <option value={1}>A cada 1 hora (Cadeira/Poltrona)</option>
-                    <option value={2}>A cada 2 horas (Padrão LPP)</option>
-                    <option value={3}>A cada 3 horas</option>
-                    <option value={4}>A cada 4 horas</option>
-                  </select>
+                  <SearchableSelect
+                    value={String(decubitoHoras)}
+                    onValueChange={(v) => setDecubitoHoras(Number(v))}
+                    searchPlaceholder="Buscar intervalo..."
+                    options={[
+                      { value: '1', label: 'A cada 1 hora (Cadeira/Poltrona)' },
+                      { value: '2', label: 'A cada 2 horas (Padrão LPP)' },
+                      { value: '3', label: 'A cada 3 horas' },
+                      { value: '4', label: 'A cada 4 horas' },
+                    ]}
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-[11px] font-semibold">Período de Aplicação *</Label>
-                  <select
+                  <SearchableSelect
                     value={decubitoPeriodo}
-                    onChange={(e) => setDecubitoPeriodo(e.target.value as '24h' | 'noturno' | 'diurno')}
-                    className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                  >
-                    <option value="24h">24 Horas (Dia e Noite)</option>
-                    <option value="diurno">Somente Diurno</option>
-                    <option value="noturno">Somente Noturno</option>
-                  </select>
+                    onValueChange={(v) => setDecubitoPeriodo(v as '24h' | 'noturno' | 'diurno')}
+                    searchPlaceholder="Buscar período..."
+                    options={[
+                      { value: '24h', label: '24 Horas (Dia e Noite)' },
+                      { value: 'diurno', label: 'Somente Diurno' },
+                      { value: 'noturno', label: 'Somente Noturno' },
+                    ]}
+                  />
                 </div>
               </div>
 
@@ -2902,15 +2898,16 @@ export function TabCuidados({ r, cat }: Ctx) {
 
               <div className="space-y-1">
                 <Label className="text-[11px] font-semibold">Executores Responsáveis *</Label>
-                <select
+                <SearchableSelect
                   value={decubitoQuem}
-                  onChange={(e) => setDecubitoQuem(e.target.value as 'todos' | 'enfermagem' | 'cuidador')}
-                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                >
-                  <option value="enfermagem">Auxiliar / Técnico / Enfermeiro</option>
-                  <option value="cuidador">Cuidadores</option>
-                  <option value="todos">Toda a equipe (Cuidadores e Enfermagem)</option>
-                </select>
+                  onValueChange={(v) => setDecubitoQuem(v as 'todos' | 'enfermagem' | 'cuidador')}
+                  searchPlaceholder="Buscar executores..."
+                  options={[
+                    { value: 'enfermagem', label: 'Auxiliar / Técnico / Enfermeiro' },
+                    { value: 'cuidador', label: 'Cuidadores' },
+                    { value: 'todos', label: 'Toda a equipe (Cuidadores e Enfermagem)' },
+                  ]}
+                />
               </div>
             </div>
             <DialogFooter>
@@ -3332,36 +3329,38 @@ export function TabPresc({ r, cat }: Ctx) {
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="pVia" className="text-[11px] font-semibold">Via de Administração</Label>
-                  <select
+                  <SearchableSelect
                     id="pVia"
                     value={via}
-                    onChange={(e) => setVia(e.target.value)}
-                    className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                  >
-                    <option value="EV">Endovenosa (EV)</option>
-                    <option value="Inalatório">Inalatória</option>
-                    <option value="IM">Intramuscular (IM)</option>
-                    <option value="Ocular">Ocular</option>
-                    <option value="VO">Oral (VO)</option>
-                    <option value="VR">Retal (VR)</option>
-                    <option value="SC">Subcutânea (SC)</option>
-                    <option value="Tópico">Tópica</option>
-                  </select>
+                    onValueChange={setVia}
+                    searchPlaceholder="Buscar via..."
+                    options={[
+                      { value: 'EV', label: 'Endovenosa (EV)' },
+                      { value: 'Inalatório', label: 'Inalatória' },
+                      { value: 'IM', label: 'Intramuscular (IM)' },
+                      { value: 'Ocular', label: 'Ocular' },
+                      { value: 'VO', label: 'Oral (VO)' },
+                      { value: 'VR', label: 'Retal (VR)' },
+                      { value: 'SC', label: 'Subcutânea (SC)' },
+                      { value: 'Tópico', label: 'Tópica' },
+                    ]}
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label htmlFor="pTipo" className="text-[11px] font-semibold">Tipo de Posologia</Label>
-                  <select
+                  <SearchableSelect
                     id="pTipo"
                     value={tipo}
-                    onChange={(e) => setTipo(e.target.value as 'diario' | 'sn' | 'dias' | 'intervalo')}
-                    className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                  >
-                    <option value="diario">Diário (horários fixos)</option>
-                    <option value="intervalo">Intervalado</option>
-                    <option value="sn">Se Necessário (SN)</option>
-                  </select>
+                    onValueChange={(v) => setTipo(v as 'diario' | 'sn' | 'dias' | 'intervalo')}
+                    searchPlaceholder="Buscar posologia..."
+                    options={[
+                      { value: 'diario', label: 'Diário (horários fixos)' },
+                      { value: 'intervalo', label: 'Intervalado' },
+                      { value: 'sn', label: 'Se Necessário (SN)' },
+                    ]}
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="pHor" className="text-[11px] font-semibold">Horários (separados por vírgula)</Label>
@@ -4063,18 +4062,21 @@ export function TabEvol({ r, cat, area }: Ctx) {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label htmlFor="evArea" className="text-[11px] font-semibold">Área Técnica *</Label>
-                  <select
+                  <SearchableSelect
                     id="evArea"
                     value={areaEscolhida}
-                    onChange={(e) => setAreaEscolhida(e.target.value)}
-                    className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                  >
-                    <option value="Enfermagem">Enfermagem</option>
-                    <option value="Fisioterapia">Fisioterapia</option>
-                    <option value="Medicina">Medicina</option>
-                    <option value="Nutrição">Nutrição</option>
-                    <option value="Psicologia">Psicologia</option>
-                  </select>
+                    onValueChange={setAreaEscolhida}
+                    searchPlaceholder="Buscar área..."
+                    options={[
+                      { value: 'Enfermagem', label: 'Enfermagem' },
+                      { value: 'Fisioterapia', label: 'Fisioterapia' },
+                      { value: 'Medicina', label: 'Medicina' },
+                      { value: 'Nutrição', label: 'Nutrição' },
+                      { value: 'Psicologia', label: 'Psicologia' },
+                      { value: 'Serviço Social', label: 'Serviço Social' },
+                      { value: 'Terapia Ocupacional', label: 'Terapia Ocupacional' },
+                    ]}
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="evPeso" className="text-[11px] font-semibold">Peso (kg, se aferido)</Label>
@@ -4357,17 +4359,12 @@ export function TabArquivos({ r }: Ctx) {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Categoria *</Label>
-                <select
+                <SearchableSelect
                   value={categoria}
-                  onChange={(e) => setCategoria(e.target.value)}
-                  className="w-full h-9 rounded-xl border border-input bg-transparent px-3 text-xs shadow-2xs outline-none"
-                >
-                  {CATS_ARQ.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={setCategoria}
+                  searchPlaceholder="Buscar categoria..."
+                  options={CATS_ARQ.map((c) => ({ value: c, label: c }))}
+                />
               </div>
 
               <div className="space-y-1.5">
@@ -4383,17 +4380,12 @@ export function TabArquivos({ r }: Ctx) {
 
             <div className="space-y-1.5">
               <Label className="text-xs">Área Técnica Responsável</Label>
-              <select
+              <SearchableSelect
                 value={area}
-                onChange={(e) => setArea(e.target.value)}
-                className="w-full h-9 rounded-xl border border-input bg-transparent px-3 text-xs shadow-2xs outline-none"
-              >
-                {AREAS.map((a) => (
-                  <option key={a} value={a}>
-                    {a}
-                  </option>
-                ))}
-              </select>
+                onValueChange={setArea}
+                searchPlaceholder="Buscar área..."
+                options={AREAS.map((a) => ({ value: a, label: a }))}
+              />
             </div>
 
             <DialogFooter className="pt-2">
