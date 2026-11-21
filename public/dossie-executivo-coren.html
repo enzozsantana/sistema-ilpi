@@ -900,19 +900,22 @@
             </div>
           </div>
 
-          <!-- Seletor 2: Teleconsultas por Residente -->
+          <!-- Seletor 2: Volume Mensal de Teleconsultas (Módulo Aberto / Marketplace) -->
           <div>
             <div class="flex justify-between text-xs font-bold mb-2">
-              <span class="text-slate-300">Média de Teleconsultas por Residente:</span>
-              <span id="range-telemed-val" class="text-emerald-400 font-mono text-base font-bold">0,25 / mês</span>
+              <span class="text-slate-300">Volume de Teleconsultas na Plataforma:</span>
+              <span id="range-telemed-val" class="text-emerald-400 font-mono text-base font-bold">500 consultas / mês</span>
             </div>
-            <input type="range" id="range-telemed" min="0.05" max="1.00" value="0.25" step="0.05" class="w-full accent-emerald-400 cursor-pointer h-2 bg-slate-700 rounded-lg" oninput="calcularSenecurare()" />
+            <input type="range" id="range-telemed" min="0" max="5000" value="500" step="50" class="w-full accent-emerald-400 cursor-pointer h-2 bg-slate-700 rounded-lg" oninput="calcularSenecurare()" />
             <div class="flex justify-between text-[10px] text-slate-500 mt-1 font-mono">
-              <span>0,05 (Rara)</span>
-              <span>0,25 (Padrão)</span>
-              <span>0,50 (Média)</span>
-              <span>1,00 (1/mês)</span>
+              <span>0 (Sem telemed.)</span>
+              <span>500 (Rede Inicial)</span>
+              <span>2.500 (Expansão)</span>
+              <span>5.000+ (Maturidade)</span>
             </div>
+            <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+              *Módulo aberto: especialistas atendem residentes das ILPIs e <strong>adicionam seus próprios pacientes particulares</strong> de consultório.
+            </p>
           </div>
 
           <div class="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-2 text-xs text-slate-400">
@@ -921,7 +924,7 @@
               <strong class="text-white font-mono">R$ 890,00 / mês</strong>
             </div>
             <div class="flex justify-between">
-              <span>Residentes Estimados:</span>
+              <span>Residentes Estimados na Rede:</span>
               <strong id="sim-residentes" class="text-white font-mono">1.250 residentes</strong>
             </div>
             <div class="flex justify-between">
@@ -929,8 +932,8 @@
               <strong id="sim-funcionarios" class="text-white font-mono">600 colaboradores</strong>
             </div>
             <div class="flex justify-between pt-2 border-t border-white/5 text-cyan-300">
-              <span>Teleconsultas Estimadas:</span>
-              <strong id="sim-teleconsultas" class="font-mono text-emerald-400 font-bold">313 consultas / mês</strong>
+              <span>Teleconsultas Totais no Mês:</span>
+              <strong id="sim-teleconsultas" class="font-mono text-emerald-400 font-bold">500 consultas / mês</strong>
             </div>
           </div>
         </div>
@@ -966,11 +969,17 @@
     <!-- Seção 6: Economia Completa da Telemedicina: Valores, Custos e Estimativa de Lucros -->
     <section class="space-y-8">
       <div class="border-b border-white/10 pb-4">
-        <span class="text-xs font-bold uppercase tracking-wider text-cyan-400">Linha de Receita de Saúde Suplementar</span>
-        <h3 class="text-2xl sm:text-3xl font-bold font-heading text-white mt-1">Economia da Telemedicina: Valores, Custos Operacionais & Lucro Projetado</h3>
-        <p class="text-xs sm:text-sm text-slate-400">
-          A telemedicina no Senecurare não é apenas uma funcionalidade: é uma alavanca de monetização de alto retorno financeiro que conecta as ILPIs a especialistas geriátricos sem onerar o plano fixo mensal da instituição.
+        <span class="text-xs font-bold uppercase tracking-wider text-cyan-400">Linha de Receita de Saúde Suplementar & Marketplace Clínico</span>
+        <h3 class="text-2xl sm:text-3xl font-bold font-heading text-white mt-1">Telemedicina Independente: Marketplace Aberto & Consultório Virtual</h3>
+        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mt-2">
+          <strong>A telemedicina do Senecurare é um módulo aberto e independente</strong>: não está atrelada nem limitada à base de residentes das ILPIs. Qualquer profissional com especialização clínica nas áreas cobertas (Medicina Geriátrica, Enfermagem em Estomaterapia, Nutrição Clínica, Psicologia ou Fisioterapia) pode se credenciar na plataforma para atender tanto residentes das ILPIs parceiras quanto <strong>adicionar seus próprios pacientes particulares externos</strong>.
         </p>
+        <div class="p-4 rounded-2xl bg-cyan-950/20 border border-cyan-500/30 text-xs text-cyan-200 mt-3 flex items-start gap-3">
+          <span class="text-base">🩺</span>
+          <div>
+            <strong>Exemplo Prático de Escala:</strong> Um profissional que trabalha em uma ILPI e é especialista em Estomaterapia (manejo de feridas) pode se cadastrar no Senecurare e atender residentes de outras instituições do estado, além de usar o consultório virtual da plataforma para fazer teleconsultas de sua própria carteira particular de pacientes domiciliares. O Senecurare retém 20% como taxa de intermediação tecnológica e repassa 80% líquido diretamente ao profissional.
+          </div>
+        </div>
       </div>
 
       <!-- 6.1 Tabela Oficial de Valores & Split -->
@@ -1306,10 +1315,10 @@
   <script>
     function calcularSenecurare() {
       const ilpis = parseInt(document.getElementById('range-ilpis').value);
-      const freqTelemed = parseFloat(document.getElementById('range-telemed').value);
+      const teleconsultas = parseInt(document.getElementById('range-telemed').value);
 
       document.getElementById('range-ilpis-val').innerText = ilpis + ' ILPIs';
-      document.getElementById('range-telemed-val').innerText = freqTelemed.toFixed(2).replace('.', ',') + ' / mês';
+      document.getElementById('range-telemed-val').innerText = teleconsultas.toLocaleString('pt-BR') + ' consultas / mês';
 
       // Estimativa média por ILPI: 25 residentes + 12 funcionários
       const residentes = ilpis * 25;
@@ -1339,14 +1348,15 @@
       const lucroSaas = Math.max(0, faturamentoSaas - impostosSaas - custoNuvem);
       document.getElementById('sim-lucro-saas').innerText = lucroSaas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-      // 2. MOTOR TELEMEDICINA (dinâmico com o seletor a R$ 27,70 de lucro líquido unitário)
-      const teleconsultas = Math.round(residentes * freqTelemed);
+      // 2. MOTOR TELEMEDICINA INDEPENDENTE (Marketplace Clínico Aberto: R$ 27,70 de lucro líquido unitário)
+      const teleconsultas = parseInt(document.getElementById('range-telemed').value);
+      document.getElementById('range-telemed-val').innerText = teleconsultas.toLocaleString('pt-BR') + ' consultas / mês';
       document.getElementById('sim-teleconsultas').innerText = teleconsultas.toLocaleString('pt-BR') + ' consultas / mês';
 
       const lucroTelemed = teleconsultas * 27.70;
       document.getElementById('sim-lucro-telemed').innerText = '+ ' + lucroTelemed.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-      // 3. RESULTADO TOTAL SENECURARE
+      // 3. RESULTADO TOTAL SENECURARE (SaaS + Telemedicina Desacoplados)
       const lucroTotal = lucroSaas + lucroTelemed;
       const lucroAnual = lucroTotal * 12;
 
