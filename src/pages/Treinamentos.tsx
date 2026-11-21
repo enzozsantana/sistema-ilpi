@@ -9,6 +9,7 @@ import { gerarMiniCertificado } from '../lib/treinamentos/miniCertificadoPdf'
 import { ModalPlayerTreinamento } from '../components/treinamentos/ModalPlayerTreinamento'
 import { ModalNovoTreinamento } from '../components/treinamentos/ModalNovoTreinamento'
 import { ModalAtribuirTreinamento } from '../components/treinamentos/ModalAtribuirTreinamento'
+import { PlanGate } from '../components/PlanGate'
 import type {
   AtribuicaoTreinamento,
   CursoTreinamento,
@@ -223,7 +224,8 @@ export default function Treinamentos() {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <PlanGate feature="treinamentos">
+      <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -805,5 +807,6 @@ export default function Treinamentos() {
         onAtribuido={carregarDados}
       />
     </div>
+    </PlanGate>
   )
 }

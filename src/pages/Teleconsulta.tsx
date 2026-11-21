@@ -36,6 +36,7 @@ import {
 import { ModalPedidoMedico } from '../components/ModalPedidoMedico'
 import { ModalConectarMercadoPago } from '../components/ModalConectarMercadoPago'
 import { ModalCadastroEspecialista } from '../components/ModalCadastroEspecialista'
+import { PlanGate } from '../components/PlanGate'
 import { salvarRascunho, obterRascunho, limparRascunho, temRascunho } from '../lib/draftStorage'
 import { podeSolicitarTeleconsulta } from '../lib/permissions'
 import { calcularSplit, processarPagamentoSplit, gerarPixCopiaECola } from '../lib/mercadopagoService'
@@ -545,7 +546,9 @@ export default function Teleconsulta() {
     await refresh()
   }
 
-  return (
+  const isEspecialista = profissional?.cat === 'tele_especialista'
+
+  const content = (
     <div className="space-y-6">
       {/* Cabeçalho da Página */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -2023,4 +2026,10 @@ export default function Teleconsulta() {
       />
     </div>
   )
+
+  if (isEspecialista) {
+    return content
+  }
+
+  return <PlanGate feature="teleconsulta">{content}</PlanGate>
 }

@@ -19,6 +19,7 @@ const Gestao = lazy(() => import('./pages/Gestao'))
 const Teleconsulta = lazy(() => import('./pages/Teleconsulta'))
 const Treinamentos = lazy(() => import('./pages/Treinamentos'))
 const Perfil = lazy(() => import('./pages/Perfil'))
+const Planos = lazy(() => import('./pages/Planos'))
 
 function PageFallback() {
   return (
@@ -156,6 +157,7 @@ function AuthedRoutes() {
             }
           />
           <Route path="perfil" element={<Perfil />} />
+          <Route path="planos" element={<Planos />} />
         </Route>
       </Routes>
     )

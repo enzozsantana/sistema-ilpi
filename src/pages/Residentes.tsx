@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
+import { verificarLimiteResidentes } from '../lib/plans'
 import { consumoDia, nivelEst } from '../lib/business/estoque'
 import { grau as calcGrau } from '../lib/business/escalas'
 import { carregarConfigEscalas } from '../lib/business/escalasConfig'
@@ -39,6 +40,7 @@ import {
   LayoutGrid,
   List,
   Loader2,
+  Lock,
   Package,
   Search,
   UserCheck,
@@ -187,6 +189,7 @@ export default function Residentes() {
   }, [residentes, busca, filtroGrau])
 
   const totalAtivos = residentes.filter((r) => r.status !== 'obito').length
+  const limiteInfo = useMemo(() => verificarLimiteResidentes(totalAtivos), [totalAtivos])
   const totalG23 = residentes.filter((r) => {
     const g = grau(r)
     return r.status !== 'obito' && (g === 2 || g === 3)
@@ -194,6 +197,22 @@ export default function Residentes() {
   const totalComAlergia = residentes.filter((r) => r.status !== 'obito' && !!r.alergias).length
 
   if (!profissional) return null
+
+  const handleAbrirNovoResidente = () => {
+    if (limiteInfo.atingiu) {
+      toast.error(
+        `Capacidade atingida (${totalAtivos}/${limiteInfo.limite} residentes). Faça upgrade em Planos & Assinatura para acolher novos residentes.`,
+        {
+          action: {
+            label: 'Ver Planos',
+            onClick: () => navigate('/planos'),
+          },
+        }
+      )
+      return
+    }
+    setModalNovo(true)
+  }
 
   return (
     <div className="space-y-6">
@@ -208,7 +227,7 @@ export default function Residentes() {
         actions={
           can(profissional.cat, 'gerir') && (
             <Button
-              onClick={() => setModalNovo(true)}
+              onClick={handleAbrirNovoResidente}
               className="gap-2 rounded-xl text-xs font-semibold shadow-xs bg-[#123F4A] hover:bg-[#123F4A]/90 text-white"
             >
               <UserPlus className="size-4" />
@@ -217,6 +236,32 @@ export default function Residentes() {
           )
         }
       />
+
+      {/* Banner de Limite de Residentes por Plano */}
+      {limiteInfo.atingiu && (
+        <div className="p-4 rounded-xl border border-amber-500/40 bg-amber-500/10 dark:bg-amber-950/20 text-slate-800 dark:text-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
+              <Lock className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-semibold">
+                Capacidade máxima atingida ({totalAtivos}/{limiteInfo.limite} residentes) no {limiteInfo.plano.nome}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Para acolher novos idosos e liberar novos prontuários, faça upgrade para o próximo nível.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/planos"
+            className="text-xs px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium flex items-center gap-1.5 transition-colors whitespace-nowrap shadow-xs"
+          >
+            <span>Fazer Upgrade</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      )}
 
       {/* KPI Stats Strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">

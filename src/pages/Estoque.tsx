@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useIlpiData } from '../contexts/IlpiDataContext'
 import { Avatar, EmptyState, PageHeader, StatusBadge } from '../components/Ui'
 import { ModalPedidoEstoque } from '../components/ModalPedidoEstoque'
+import { PlanGate } from '../components/PlanGate'
 import { OrigemItemSelect } from '../components/OrigemItemSelect'
 import { BadgeTipoEstoque } from '../components/BadgeTipoEstoque'
 import { classificarTipoItem } from '../lib/business/categoriaEstoque'
@@ -348,7 +349,8 @@ export default function Estoque() {
   }
 
   return (
-    <div className="space-y-6">
+    <PlanGate feature="estoque">
+      <div className="space-y-6">
       <PageHeader
         title="Controle de Estoque & Materiais Individuais"
         lede="Medicamentos, produtos de higiene (shampoo, sabonete) e materiais de cuidados de uso individual de cada residente."
@@ -987,5 +989,6 @@ export default function Estoque() {
         instituicaoNome={data.inst || 'ILPI - Residencial para Idosos'}
       />
     </div>
+    </PlanGate>
   )
 }

@@ -1,4 +1,5 @@
 import type { ConsultaVirtual, ProfissionalVirtual } from '../types/teleconsulta'
+import { VALORES_PADRAO_CONSULTA } from '../types/teleconsulta'
 
 export const PROFISSIONAIS_VIRTUAIS: ProfissionalVirtual[] = [
   {
@@ -6,12 +7,12 @@ export const PROFISSIONAIS_VIRTUAIS: ProfissionalVirtual[] = [
     nome: 'Dra. Juliana Mendes',
     titulo: 'Médica Geriatra & Clínica Geral',
     especialidade: 'medica',
-    especialidadeLabel: 'Medicina Geriátrica',
+    especialidadeLabel: VALORES_PADRAO_CONSULTA.medica.rotulo,
     registro: 'CRM-SP 184.290 · RQE 92.104',
     clinica: 'Clínica Longevidade Ativa & Cuidados Integrados',
     foto: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300',
-    preco: 220,
-    duracaoMin: 45,
+    preco: VALORES_PADRAO_CONSULTA.medica.valor, // R$ 240,00
+    duracaoMin: VALORES_PADRAO_CONSULTA.medica.duracaoMin,
     bio: 'Especialista em geriatria clínica pela SBGG e USP. Foco em polifarmácia, desprescrição, declínio cognitivo e acolhimento clínico de residentes em ILPIs.',
     diasAtendimento: [1, 3, 5], // Seg, Qua, Sex
     horariosPadrao: ['08:30', '10:00', '11:15', '14:00', '15:30', '17:00'],
@@ -21,12 +22,12 @@ export const PROFISSIONAIS_VIRTUAIS: ProfissionalVirtual[] = [
     nome: 'Enfª. Patrícia Alencar',
     titulo: 'Enfermeira Estomaterapeuta (SOBEST)',
     especialidade: 'estomaterapia',
-    especialidadeLabel: 'Estomaterapia & Feridas',
+    especialidadeLabel: VALORES_PADRAO_CONSULTA.estomaterapia.rotulo,
     registro: 'COREN-SP 245.890 · Esp. Estomaterapia',
     clinica: 'Centro Avançado de Pele, Lesões e Estomas',
     foto: 'https://images.unsplash.com/photo-1594824813572-c0cb490ad01f?auto=format&fit=crop&q=80&w=300',
-    preco: 160,
-    duracaoMin: 45,
+    preco: VALORES_PADRAO_CONSULTA.estomaterapia.valor, // R$ 180,00
+    duracaoMin: VALORES_PADRAO_CONSULTA.estomaterapia.duracaoMin,
     bio: 'Membro titular da Associação Brasileira de Estomaterapia (SOBEST). Avaliação remota e prescrição de coberturas especiais para LPP (escaras), dermatites e estomas.',
     diasAtendimento: [2, 4, 6], // Ter, Qui, Sab
     horariosPadrao: ['09:00', '10:30', '13:30', '15:00', '16:30'],
@@ -36,12 +37,12 @@ export const PROFISSIONAIS_VIRTUAIS: ProfissionalVirtual[] = [
     nome: 'Nutr. Camila Bittencourt',
     titulo: 'Nutricionista Clínica & Geriátrica',
     especialidade: 'nutricao',
-    especialidadeLabel: 'Nutrição Clínica & Enteral',
+    especialidadeLabel: VALORES_PADRAO_CONSULTA.nutricao.rotulo,
     registro: 'CRN-3 48.910',
     clinica: 'Instituto NutriSênior de Terapia Nutricional',
     foto: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300',
-    preco: 150,
-    duracaoMin: 40,
+    preco: VALORES_PADRAO_CONSULTA.nutricao.valor, // R$ 160,00
+    duracaoMin: VALORES_PADRAO_CONSULTA.nutricao.duracaoMin,
     bio: 'Pós-graduada em Nutrição no Envelhecimento. Ajuste de consistência para disfagia, plano para recuperação de peso, sarcopenia e prescrição de suplementos proteicos.',
     diasAtendimento: [1, 2, 4], // Seg, Ter, Qui
     horariosPadrao: ['08:00', '09:30', '11:00', '14:00', '16:00'],
@@ -51,15 +52,30 @@ export const PROFISSIONAIS_VIRTUAIS: ProfissionalVirtual[] = [
     nome: 'Psic. Felipe Vasconcelos',
     titulo: 'Psicólogo Clínico & Neuropsicólogo',
     especialidade: 'psicologia',
-    especialidadeLabel: 'Psicologia & Neurogerontologia',
+    especialidadeLabel: VALORES_PADRAO_CONSULTA.psicologia.rotulo,
     registro: 'CRP 06/132.450',
     clinica: 'Espaço Viver Bem — Neurogerontologia',
     foto: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300',
-    preco: 170,
-    duracaoMin: 50,
+    preco: VALORES_PADRAO_CONSULTA.psicologia.valor, // R$ 140,00
+    duracaoMin: VALORES_PADRAO_CONSULTA.psicologia.duracaoMin,
     bio: 'Mestre em Neurociências e Comportamento. Apoio psicológico para residentes em adaptação institucional, manejo de sintomas comportamentais na demência e acolhimento familiar.',
     diasAtendimento: [2, 3, 5], // Ter, Qua, Sex
     horariosPadrao: ['09:00', '10:30', '14:00', '15:30', '17:00'],
+  },
+  {
+    id: 'prof_fisio_marcelo',
+    nome: 'Dr. Marcelo Rezende',
+    titulo: 'Fisioterapeuta Geriátrico & Reabilitação',
+    especialidade: 'fisioterapia',
+    especialidadeLabel: VALORES_PADRAO_CONSULTA.fisioterapia.rotulo,
+    registro: 'CREFITO-3 92.140-F',
+    clinica: 'ReabSenior Reabilitação & Mobilidade Funcional',
+    foto: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=300',
+    preco: VALORES_PADRAO_CONSULTA.fisioterapia.valor, // R$ 130,00
+    duracaoMin: VALORES_PADRAO_CONSULTA.fisioterapia.duracaoMin,
+    bio: 'Especialista em fisioterapia motora e funcional geriátrica. Prevenção de quedas, plano de marcha assistida, treino respiratório e ergonomia para cuidadores.',
+    diasAtendimento: [1, 3, 4], // Seg, Qua, Qui
+    horariosPadrao: ['08:00', '09:30', '11:00', '14:30', '16:00'],
   },
 ]
 
@@ -174,7 +190,7 @@ export function obterConsultasVirtuais(): ConsultaVirtual[] {
           residenteNome: 'Sebastião Arruda',
           data: new Date().toISOString().split('T')[0],
           horario: '14:00',
-          valor: 220,
+          valor: 240,
           metodoPagamento: 'pix',
           pago: true,
           linkSala: gerarLinkSalaJitsi('senecurare-teleconsulta-arruda-14h'),

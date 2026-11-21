@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import Teleconsulta from '../../pages/Teleconsulta'
 import { useAuth } from '../../contexts/AuthContext'
 import { useIlpiData } from '../../contexts/IlpiDataContext'
+import { definirPlanoAtivo } from '../../lib/plans'
 
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: vi.fn(),
@@ -35,6 +37,7 @@ describe('Teleconsulta Page', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorage.clear()
+    definirPlanoAtivo('avancado')
 
     vi.mocked(useAuth).mockReturnValue({
       profissional: { id: 'prof_rt', nome: 'Helena Prado', cat: 'rt' },
@@ -47,7 +50,11 @@ describe('Teleconsulta Page', () => {
   })
 
   it('renderiza os 4 especialistas virtuais com foto, clínica e valor', () => {
-    render(<Teleconsulta />)
+    render(
+      <MemoryRouter>
+        <Teleconsulta />
+      </MemoryRouter>
+    )
 
     // Verifica presença da Dra. Juliana (Médica), Enfª Patrícia (Estomaterapia), Camila (Nutri), Felipe (Psico)
     expect(screen.getByText('Dra. Juliana Mendes')).toBeInTheDocument()
@@ -58,12 +65,16 @@ describe('Teleconsulta Page', () => {
     expect(screen.getByText('Psic. Felipe Vasconcelos')).toBeInTheDocument()
 
     // Verifica valores das consultas
-    expect(screen.getByText('R$ 220,00')).toBeInTheDocument()
+    expect(screen.getByText('R$ 240,00')).toBeInTheDocument()
     expect(screen.getByText('R$ 160,00')).toBeInTheDocument()
   })
 
   it('permite filtrar especialistas por especialidade', () => {
-    render(<Teleconsulta />)
+    render(
+      <MemoryRouter>
+        <Teleconsulta />
+      </MemoryRouter>
+    )
 
     // Filtra por Estomaterapia & Feridas
     const botaoEstoma = screen.getByRole('button', { name: 'Estomaterapia & Feridas' })
@@ -74,7 +85,11 @@ describe('Teleconsulta Page', () => {
   })
 
   it('abre o fluxo de agendamento, seleciona residente e horários do mês', () => {
-    render(<Teleconsulta />)
+    render(
+      <MemoryRouter>
+        <Teleconsulta />
+      </MemoryRouter>
+    )
 
     const botoesAgendar = screen.getAllByRole('button', { name: /Agendar Consulta/i })
     fireEvent.click(botoesAgendar[0]) // Clica em agendar na Dra. Juliana
@@ -85,7 +100,11 @@ describe('Teleconsulta Page', () => {
   })
 
   it('avança para a tela de pagamento via PIX ou Cartão e libera a sala virtual', async () => {
-    render(<Teleconsulta />)
+    render(
+      <MemoryRouter>
+        <Teleconsulta />
+      </MemoryRouter>
+    )
 
     const botoesAgendar = screen.getAllByRole('button', { name: /Agendar Consulta/i })
     fireEvent.click(botoesAgendar[0]) // Dra. Juliana
@@ -109,7 +128,11 @@ describe('Teleconsulta Page', () => {
   })
 
   it('exibe a Sala de Espera Virtual com prévia estilo Google Meet e permite controlar microfone e câmera', async () => {
-    render(<Teleconsulta />)
+    render(
+      <MemoryRouter>
+        <Teleconsulta />
+      </MemoryRouter>
+    )
 
     // Vai para a aba de consultas agendadas
     const abaConsultas = screen.getByRole('button', { name: /Consultas Agendadas/i })
@@ -155,7 +178,11 @@ describe('Teleconsulta Page', () => {
       profissional: { id: 'prof_cuid', nome: 'Maria Cuidadora', cat: 'cuid', funcao: 'Cuidadora de Idosos' },
     } as any)
 
-    render(<Teleconsulta />)
+    render(
+      <MemoryRouter>
+        <Teleconsulta />
+      </MemoryRouter>
+    )
 
     // Exibe banner de controle financeiro
     expect(
@@ -176,7 +203,11 @@ describe('Teleconsulta Page', () => {
       profissional: { id: 'prof_fin', nome: 'Carlos Gerente', cat: 'gestao', funcao: 'Gestor Financeiro' },
     } as any)
 
-    render(<Teleconsulta />)
+    render(
+      <MemoryRouter>
+        <Teleconsulta />
+      </MemoryRouter>
+    )
 
     const botoesAgendar = screen.getAllByRole('button', { name: /Agendar Consulta/i })
     fireEvent.click(botoesAgendar[0])
@@ -196,7 +227,11 @@ describe('Teleconsulta Page', () => {
       },
     } as any)
 
-    render(<Teleconsulta />)
+    render(
+      <MemoryRouter>
+        <Teleconsulta />
+      </MemoryRouter>
+    )
 
     // Não exibe o botão de auto-cadastro pois já é um especialista credenciado
     expect(screen.queryByRole('button', { name: /Cadastrar como Especialista/i })).not.toBeInTheDocument()

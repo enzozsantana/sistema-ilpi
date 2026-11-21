@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Treinamentos from '../../pages/Treinamentos'
+import { definirPlanoAtivo } from '../../lib/plans'
 
 const mockProfissional = {
   id: 'prof-rt-1',
@@ -33,6 +34,7 @@ vi.mock('../../contexts/IlpiDataContext', () => ({
 describe('Página Treinamentos & Educação Permanente', () => {
   beforeEach(() => {
     localStorage.clear()
+    definirPlanoAtivo('avancado')
     vi.clearAllMocks()
   })
 

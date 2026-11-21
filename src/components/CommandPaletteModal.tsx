@@ -9,6 +9,7 @@ import {
   Activity,
   BarChart3,
   CalendarCheck2,
+  CreditCard,
   GraduationCap,
   Home,
   PackageCheck,
@@ -35,6 +36,7 @@ const PAGINAS: { view: NavView | 'perfil'; label: string; path: string; icon: an
   { view: 'treinamentos', label: 'Educação Permanente', path: '/treinamentos', icon: GraduationCap, desc: 'Capacitações RDC 502' },
   { view: 'equipe', label: 'Quadro de Equipe', path: '/equipe', icon: UserCheck, desc: 'Escalas e profissionais' },
   { view: 'gestao', label: 'Gestão & Conformidade', path: '/gestao', icon: BarChart3, desc: 'Indicadores e alvarás' },
+  { view: 'gestao', label: 'Planos & Assinatura', path: '/planos', icon: CreditCard, desc: 'Tabela de planos, upgrade e governança' },
   { view: 'perfil', label: 'Meu Perfil', path: '/perfil', icon: User, desc: 'Dados do profissional e senha' },
 ]
 

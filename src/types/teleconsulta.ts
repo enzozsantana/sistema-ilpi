@@ -5,6 +5,57 @@ export type EspecialidadeVirtual =
   | 'psicologia'
   | 'fisioterapia'
 
+/** Tabela Padronizada Oficial de Teleconsultas (CFM / COFEN / Senecurare) */
+export interface TabelaOficialItem {
+  rotulo: string
+  valor: number
+  repasseEspecialista: number // 80% líquido
+  taxaSenecurare: number // 20% retenção
+  duracaoMin: number
+}
+
+export const VALORES_PADRAO_CONSULTA: Record<EspecialidadeVirtual, TabelaOficialItem> = {
+  medica: {
+    rotulo: 'Medicina Geriátrica & Clínica Geral',
+    valor: 240,
+    repasseEspecialista: 192,
+    taxaSenecurare: 48,
+    duracaoMin: 45,
+  },
+  estomaterapia: {
+    rotulo: 'Estomaterapia & Manejo de Feridas/LPP',
+    valor: 180,
+    repasseEspecialista: 144,
+    taxaSenecurare: 36,
+    duracaoMin: 45,
+  },
+  nutricao: {
+    rotulo: 'Nutrição Clínica & Geriátrica (Enteral)',
+    valor: 160,
+    repasseEspecialista: 128,
+    taxaSenecurare: 32,
+    duracaoMin: 40,
+  },
+  psicologia: {
+    rotulo: 'Psicologia Clínica & Demências',
+    valor: 140,
+    repasseEspecialista: 112,
+    taxaSenecurare: 28,
+    duracaoMin: 50,
+  },
+  fisioterapia: {
+    rotulo: 'Fisioterapia Geriátrica & Reabilitação',
+    valor: 130,
+    repasseEspecialista: 104,
+    taxaSenecurare: 26,
+    duracaoMin: 40,
+  },
+}
+
+export function obterValorPadraoEspecialidade(esp: EspecialidadeVirtual): number {
+  return VALORES_PADRAO_CONSULTA[esp]?.valor || 180
+}
+
 export interface ProfissionalVirtual {
   id: string
   nome: string

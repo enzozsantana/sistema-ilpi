@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState, Suspense } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { navVisivel } from '../lib/permissions'
 import { useAuth } from '../contexts/AuthContext'
 import { useIlpiData } from '../contexts/IlpiDataContext'
 import { obterProfissionaisVirtuais } from '../lib/teleconsultaStorage'
 import { CURSOS_PADRAO_ILPI, TreinamentosService } from '../lib/treinamentos/treinamentosService'
+import { obterPlanoAtivo, PLANOS } from '../lib/plans'
+import type { PlanoId } from '../lib/plans'
 import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
 import { NotificacoesMenu } from './NotificacoesMenu'
@@ -48,6 +50,7 @@ function tituloRota(pathname: string) {
   if (pathname.startsWith('/gestao')) return 'Gestão & Conformidade'
   if (pathname.startsWith('/teleconsulta')) return 'Teleconsulta & Especialistas Virtuais'
   if (pathname.startsWith('/treinamentos')) return 'Treinamentos & Educação Permanente (RDC 502)'
+  if (pathname.startsWith('/planos')) return 'Planos & Assinatura'
   if (pathname.startsWith('/perfil')) return 'Meu Perfil'
   return 'Painel de Plantão'
 }
@@ -117,6 +120,19 @@ export function AppShell() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [isOnline, setIsOnline] = useState(() => (typeof navigator !== 'undefined' ? navigator.onLine : true))
   const { canInstall, promptInstall } = usePwaInstall()
+  const [planoAtual, setPlanoAtual] = useState<PlanoId>(() => obterPlanoAtivo())
+
+  useEffect(() => {
+    const handlePlanoChange = () => {
+      setPlanoAtual(obterPlanoAtivo())
+    }
+    window.addEventListener('senecurare_plano_alterado', handlePlanoChange)
+    window.addEventListener('storage', handlePlanoChange)
+    return () => {
+      window.removeEventListener('senecurare_plano_alterado', handlePlanoChange)
+      window.removeEventListener('storage', handlePlanoChange)
+    }
+  }, [])
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true)
@@ -259,13 +275,35 @@ export function AppShell() {
         </div>
 
         {/* Sidebar Footer info */}
-        <div className="p-3 border-t border-border/50 bg-muted/15">
-          <div className="px-3 py-2 rounded-xl bg-card border border-border/50 shadow-2xs flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-[11px] font-medium text-foreground">Padrão RDC 502</span>
-              <span className="text-[10px] text-muted-foreground">ANVISA & COREN</span>
+        <div className="p-3 border-t border-border/50 bg-muted/15 space-y-2">
+          {/* Card do Plano Ativo & Upgrade */}
+          <Link
+            to="/planos"
+            className="block p-2.5 rounded-xl bg-card border border-border/60 hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all group"
+            title="Gerenciar plano e assinatura da ILPI"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground group-hover:text-emerald-600">
+                Plano da ILPI
+              </span>
+              <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
+                {PLANOS[planoAtual]?.nome || 'Clínico'}
+              </span>
             </div>
-            <Badge variant="outline" className="h-5 text-[10px] bg-primary/10 text-primary border-primary/20">
+            <div className="text-[11px] font-medium text-foreground mt-1 flex items-center justify-between">
+              <span>{PLANOS[planoAtual]?.porte}</span>
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 group-hover:underline">
+                Planos →
+              </span>
+            </div>
+          </Link>
+
+          <div className="px-3 py-1.5 rounded-xl bg-card/60 border border-border/40 flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-medium text-foreground">Padrão RDC 502</span>
+              <span className="text-[9px] text-muted-foreground">ANVISA & COREN</span>
+            </div>
+            <Badge variant="outline" className="h-4.5 text-[9px] bg-primary/10 text-primary border-primary/20">
               SaaS v2.4
             </Badge>
           </div>
@@ -292,6 +330,26 @@ export function AppShell() {
                 {brandBlock}
                 <div className="flex-1 overflow-y-auto py-3">
                   {renderNavLinks(() => setMobileOpen(false))}
+                </div>
+                <div className="p-3 border-t border-border/50 bg-muted/15">
+                  <Link
+                    to="/planos"
+                    onClick={() => setMobileOpen(false)}
+                    className="block p-2.5 rounded-xl bg-card border border-border/60 hover:border-emerald-500/50"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Plano Ativo
+                      </span>
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
+                        {PLANOS[planoAtual]?.nome || 'Clínico'}
+                      </span>
+                    </div>
+                    <div className="text-[11px] font-medium text-foreground mt-1 flex items-center justify-between">
+                      <span>{PLANOS[planoAtual]?.porte}</span>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400">Ver Planos →</span>
+                    </div>
+                  </Link>
                 </div>
               </SheetContent>
             </Sheet>
@@ -340,6 +398,18 @@ export function AppShell() {
               <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>{profissional.cat === 'tele_especialista' ? 'Consultório online' : 'Plantão ativo'}</span>
             </div>
+
+            {/* Plano da ILPI Pill */}
+            {profissional.cat !== 'tele_especialista' && (
+              <Link
+                to="/planos"
+                className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 transition-colors"
+                title="Plano ativo da instituição. Clique para ver e gerenciar planos."
+              >
+                <span className="size-1.5 rounded-full bg-emerald-500" />
+                <span>{PLANOS[planoAtual]?.nome || 'Plano Clínico'}</span>
+              </Link>
+            )}
 
             {/* Online / Offline Connectivity Pill */}
             <div

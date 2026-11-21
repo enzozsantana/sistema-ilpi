@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { EmptyState, PageHeader, StatusBadge } from '../components/Ui'
 import { SecaoPops } from '../components/SecaoPops'
+import { PlanGate } from '../components/PlanGate'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
@@ -689,7 +690,9 @@ export default function Rotinas() {
 
       {/* Procedimentos Operacionais Padrão (POPs & Protocolos) */}
       {(abaAtiva === 'todas' || abaAtiva === 'pops') && (
-        <SecaoPops />
+        <PlanGate feature="pops" compacto={abaAtiva === 'todas'}>
+          <SecaoPops />
+        </PlanGate>
       )}
 
       {/* Dialog: Registrar Temperatura */}

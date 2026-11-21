@@ -1,0 +1,73 @@
+import { describe, it, expect, beforeEach } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+import { Planos } from '../../pages/Planos'
+import { definirPlanoAtivo } from '../../lib/plans'
+
+describe('Página de Vendas de Planos (Planos.tsx)', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    definirPlanoAtivo('clinico')
+  })
+
+  it('deve renderizar o cabeçalho, os 4 planos e a tabela comparativa', () => {
+    render(
+      <MemoryRouter>
+        <Planos />
+      </MemoryRouter>
+    )
+
+    // Título principal
+    expect(screen.getByText(/Planos Transparentes para Cada Fase da sua ILPI/i)).toBeInTheDocument()
+
+    // 4 Planos
+    expect(screen.getByText('Plano Compacto')).toBeInTheDocument()
+    expect(screen.getAllByText('Clínico & Compliance').length).toBeGreaterThan(0)
+    expect(screen.getByText('Plano Avançado')).toBeInTheDocument()
+    expect(screen.getByText('Redes & Enterprise')).toBeInTheDocument()
+
+    // Badge de Plano Atual (Clinico)
+    expect(screen.getByText('Plano Ativo na Clínica')).toBeInTheDocument()
+
+    // Tabela comparativa
+    expect(screen.getByText(/Comparativo Técnico & Sanitário Completo/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Usuários Profissionais e Cuidadores/i).length).toBeGreaterThan(0)
+  })
+
+  it('deve alternar preços entre faturamento mensal e anual com 15% de desconto', () => {
+    render(
+      <MemoryRouter>
+        <Planos />
+      </MemoryRouter>
+    )
+
+    // Mensal: Compacto é 450, Clínico é 890
+    expect(screen.getByText('450')).toBeInTheDocument()
+    expect(screen.getByText('890')).toBeInTheDocument()
+
+    // Clica no switch de Anual
+    const toggle = screen.getByRole('switch')
+    fireEvent.click(toggle)
+
+    // Anual com desconto: Compacto é 383 (arredondado pt-BR) ou 382,5, Clínico é 756.5 -> 757
+    expect(screen.getByText('383')).toBeInTheDocument()
+    expect(screen.getByText('757')).toBeInTheDocument()
+  })
+
+  it('deve abrir o modal de checkout ao clicar para assinar um plano', () => {
+    render(
+      <MemoryRouter>
+        <Planos />
+      </MemoryRouter>
+    )
+
+    // Clica para assinar o Plano Avançado
+    const btnAvancado = screen.getByRole('button', { name: /Assinar Plano Avançado/i })
+    fireEvent.click(btnAvancado)
+
+    // Modal deve abrir com detalhes de pagamento
+    expect(screen.getByText('Contratação Direta')).toBeInTheDocument()
+    expect(screen.getByText('PIX Instantâneo')).toBeInTheDocument()
+    expect(screen.getByText('Cartão de Crédito')).toBeInTheDocument()
+  })
+})
