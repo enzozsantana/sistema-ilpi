@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useIlpiData } from '../contexts/IlpiDataContext'
 import { obterProfissionaisVirtuais } from '../lib/teleconsultaStorage'
 import { CURSOS_PADRAO_ILPI, TreinamentosService } from '../lib/treinamentos/treinamentosService'
-import { obterPlanoAtivo, PLANOS } from '../lib/plans'
+import { obterPlanoAtivo, PLANOS, isPlanoVitalicio } from '../lib/plans'
 import type { PlanoId } from '../lib/plans'
 import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
@@ -286,12 +286,19 @@ export function AppShell() {
               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground group-hover:text-emerald-600">
                 Plano da ILPI
               </span>
-              <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
-                {PLANOS[planoAtual]?.nome || 'Clínico'}
+              <span
+                className={cn(
+                  'px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase border',
+                  isPlanoVitalicio()
+                    ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                    : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/20'
+                )}
+              >
+                {isPlanoVitalicio() ? 'Enterprise Vitalício' : PLANOS[planoAtual]?.nome || 'Clínico'}
               </span>
             </div>
             <div className="text-[11px] font-medium text-foreground mt-1 flex items-center justify-between">
-              <span>{PLANOS[planoAtual]?.porte}</span>
+              <span>{isPlanoVitalicio() ? 'Acesso Ilimitado Demo' : PLANOS[planoAtual]?.porte}</span>
               <span className="text-[10px] text-emerald-600 dark:text-emerald-400 group-hover:underline">
                 Planos →
               </span>
@@ -341,12 +348,12 @@ export function AppShell() {
                       <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                         Plano Ativo
                       </span>
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
-                        {PLANOS[planoAtual]?.nome || 'Clínico'}
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                        {isPlanoVitalicio() ? 'Enterprise Vitalício' : PLANOS[planoAtual]?.nome || 'Clínico'}
                       </span>
                     </div>
                     <div className="text-[11px] font-medium text-foreground mt-1 flex items-center justify-between">
-                      <span>{PLANOS[planoAtual]?.porte}</span>
+                      <span>{isPlanoVitalicio() ? 'Acesso Ilimitado Demo' : PLANOS[planoAtual]?.porte}</span>
                       <span className="text-[10px] text-emerald-600 dark:text-emerald-400">Ver Planos →</span>
                     </div>
                   </Link>
@@ -403,11 +410,16 @@ export function AppShell() {
             {profissional.cat !== 'tele_especialista' && (
               <Link
                 to="/planos"
-                className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 transition-colors"
+                className={cn(
+                  'hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-colors',
+                  isPlanoVitalicio()
+                    ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                    : 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/25 text-emerald-700 dark:text-emerald-400'
+                )}
                 title="Plano ativo da instituição. Clique para ver e gerenciar planos."
               >
-                <span className="size-1.5 rounded-full bg-emerald-500" />
-                <span>{PLANOS[planoAtual]?.nome || 'Plano Clínico'}</span>
+                <span className={cn('size-1.5 rounded-full', isPlanoVitalicio() ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500')} />
+                <span>{isPlanoVitalicio() ? 'Enterprise Vitalício' : PLANOS[planoAtual]?.nome || 'Plano Clínico'}</span>
               </Link>
             )}
 

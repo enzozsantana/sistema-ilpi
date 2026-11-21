@@ -2,11 +2,12 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { Planos } from '../../pages/Planos'
-import { definirPlanoAtivo } from '../../lib/plans'
+import { definirPlanoAtivo, desativarPlanoVitalicio, ativarPlanoVitalicio } from '../../lib/plans'
 
 describe('Página de Vendas de Planos (Planos.tsx)', () => {
   beforeEach(() => {
     localStorage.clear()
+    desativarPlanoVitalicio()
     definirPlanoAtivo('clinico')
   })
 
@@ -69,5 +70,19 @@ describe('Página de Vendas de Planos (Planos.tsx)', () => {
     expect(screen.getByText('Contratação Direta')).toBeInTheDocument()
     expect(screen.getByText('PIX Instantâneo')).toBeInTheDocument()
     expect(screen.getByText('Cartão de Crédito')).toBeInTheDocument()
+  })
+
+  it('deve exibir o banner de Licença Vitalícia Ativa quando o plano vitalício está ativo', () => {
+    ativarPlanoVitalicio('enterprise', 'Demonstração Homologada')
+
+    render(
+      <MemoryRouter>
+        <Planos />
+      </MemoryRouter>
+    )
+
+    expect(screen.getByText(/Licença Vitalícia Homologada Ativa \(Plano Enterprise\)/i)).toBeInTheDocument()
+    expect(screen.getByText(/Acesso Perpétuo/i)).toBeInTheDocument()
+    expect(screen.getByText(/Vitalício Ativo/i)).toBeInTheDocument()
   })
 })

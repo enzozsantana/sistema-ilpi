@@ -15,6 +15,7 @@ import { mensagemAuth, mensagemSenha } from '../lib/auth-errors'
 import { mapProfissional } from '../lib/db-map'
 import { redimensionarAvatar } from '../lib/image'
 import { supabase } from '../lib/supabase'
+import { verificarEAtivarDemoVitalicio } from '../lib/plans'
 
 export type PerfilDadosEditaveis = {
   conselho: string
@@ -102,6 +103,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return
       if (data.session) {
+        if (data.session.user?.email) {
+          verificarEAtivarDemoVitalicio(data.session.user.email)
+        }
         setSession(data.session)
         setLoading(false)
         if (data.session.user.id) void loadProf(data.session.user.id)
@@ -111,6 +115,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
     const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
       if (next) {
+        if (next.user?.email) {
+          verificarEAtivarDemoVitalicio(next.user.email)
+        }
         setSession(next)
         if (next.user.id) void loadProf(next.user.id)
       } else {
@@ -132,6 +139,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!email.trim() || !password) {
       return { erro: 'Informe e-mail e senha para entrar.' }
     }
+
+    verificarEAtivarDemoVitalicio(email.trim())
 
     // Suporte a login de especialista independente cadastrado localmente
     if (typeof window !== 'undefined') {

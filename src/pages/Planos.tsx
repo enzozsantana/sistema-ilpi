@@ -10,6 +10,7 @@ import {
   HelpCircle,
   QrCode,
   CreditCard,
+  Crown,
   FileText,
   Video,
   CheckCircle2,
@@ -18,6 +19,7 @@ import {
   PLANOS,
   obterPlanoAtivo,
   definirPlanoAtivo,
+  isPlanoVitalicio,
 } from '../lib/plans'
 import type { PlanoId, PlanoConfig } from '../lib/plans'
 
@@ -92,10 +94,37 @@ export const Planos: React.FC = () => {
           <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           <span>Plano atual da sua instituição:</span>
           <span className="font-bold uppercase text-emerald-700 dark:text-emerald-400">
-            {PLANOS[planoAtual]?.nome || planoAtual}
+            {isPlanoVitalicio() ? 'Plano Enterprise Vitalício' : PLANOS[planoAtual]?.nome || planoAtual}
           </span>
-          <span className="text-slate-400">({PLANOS[planoAtual]?.porte})</span>
+          <span className="text-slate-400">({isPlanoVitalicio() ? 'Acesso Total Vitalício' : PLANOS[planoAtual]?.porte})</span>
         </div>
+
+        {/* Banner de Licença Vitalícia Homologada */}
+        {isPlanoVitalicio() && (
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-teal-500/10 border border-amber-500/30 text-slate-800 dark:text-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-left shadow-sm">
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
+                <Crown className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-extrabold text-sm sm:text-base">
+                    Licença Vitalícia Homologada Ativa (Plano Enterprise)
+                  </h3>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                    Acesso Perpétuo
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                  Esta conta de demonstração possui liberação permanente e vitalícia de 100% das funcionalidades (Prontuário, Estoque, POPs Sanitários, Treinamentos Art. 38 e Telemedicina) com residentes ilimitados.
+                </p>
+              </div>
+            </div>
+            <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/20 px-3 py-1.5 rounded-xl border border-emerald-500/30 whitespace-nowrap">
+              ✓ Vitalício Ativo
+            </span>
+          </div>
+        )}
 
         {/* Toggle Mensal / Anual */}
         <div className="flex items-center justify-center gap-3 pt-3">

@@ -177,32 +177,127 @@ export const RECURSO_NOMES: Record<FeatureKey, string> = {
   multi_unidades: 'Gestão Multi-unidades e Redes Corporativas',
 }
 
-const STORAGE_KEY_PLANO = 'senecurare_plano_ativo'
+export const STORAGE_KEY_PLANO = 'senecurare_plano_ativo'
+export const STORAGE_KEY_VITALICIO = 'senecurare_plano_vitalicio'
+export const STORAGE_KEY_VITALICIO_MOTIVO = 'senecurare_plano_vitalicio_motivo'
 
-export function obterPlanoAtivo(): PlanoId {
-  if (typeof window === 'undefined') return 'clinico'
+export const EMAILS_DEMO_HOMOLOGADOS = [
+  's1@ilpi.demo',
+  's5@ilpi.demo',
+  's9@ilpi.demo',
+  's10@ilpi.demo',
+]
+
+/**
+ * Verifica se um email pertence a uma conta de demonstração/homologação
+ */
+export function isEmailDemo(email?: string | null): boolean {
+  if (!email) return false
+  const e = email.toLowerCase().trim()
+  return (
+    e.endsWith('@ilpi.demo') ||
+    e.includes('.demo') ||
+    e.includes('demo@') ||
+    e.includes('teste@') ||
+    EMAILS_DEMO_HOMOLOGADOS.includes(e)
+  )
+}
+
+/**
+ * Retorna true se a instituição possui licença vitalícia ativa
+ */
+export function isPlanoVitalicio(): boolean {
+  if (typeof window === 'undefined') return true
   try {
-    const salvo = localStorage.getItem(STORAGE_KEY_PLANO) as PlanoId | null
-    if (salvo && PLANOS[salvo]) return salvo
-    // Padrão do sistema: Plano Clínico & Compliance (o mais vendido)
-    return 'clinico'
+    const salvo = localStorage.getItem(STORAGE_KEY_VITALICIO)
+    if (salvo !== null) {
+      return salvo === 'true'
+    }
+    // Por padrão no ambiente de demonstração, o plano vitalício fica ATIVO
+    return true
   } catch {
-    return 'clinico'
+    return true
   }
 }
 
+/**
+ * Ativa o Plano Vitalício permanente (Enterprise por padrão)
+ */
+export function ativarPlanoVitalicio(
+  plano: PlanoId = 'enterprise',
+  motivo: string = 'Demonstração Homologada & Acesso Vitalício',
+): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(STORAGE_KEY_PLANO, plano)
+    localStorage.setItem(STORAGE_KEY_VITALICIO, 'true')
+    localStorage.setItem(STORAGE_KEY_VITALICIO_MOTIVO, motivo)
+    window.dispatchEvent(
+      new CustomEvent('senecurare_plano_alterado', {
+        detail: { plano, vitalicio: true, motivo },
+      }),
+    )
+  } catch (err) {
+    console.error('Erro ao ativar plano vitalício:', err)
+  }
+}
+
+/**
+ * Desativa a flag de vitalício (caso o usuário queira simular ambiente comercial padrão)
+ */
+export function desativarPlanoVitalicio(): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(STORAGE_KEY_VITALICIO, 'false')
+    window.dispatchEvent(new CustomEvent('senecurare_plano_alterado', { detail: obterPlanoAtivo() }))
+  } catch (err) {
+    console.error('Erro ao desativar plano vitalício:', err)
+  }
+}
+
+/**
+ * Retorna o plano atualmente ativo da instituição
+ */
+export function obterPlanoAtivo(): PlanoId {
+  if (typeof window === 'undefined') return 'enterprise'
+  try {
+    const salvo = localStorage.getItem(STORAGE_KEY_PLANO) as PlanoId | null
+    if (salvo && PLANOS[salvo]) return salvo
+
+    // Se a licença vitalícia estiver ativa ou padrão de demo
+    if (isPlanoVitalicio()) {
+      return 'enterprise'
+    }
+
+    return 'clinico'
+  } catch {
+    return 'enterprise'
+  }
+}
+
+/**
+ * Define o plano ativo e notifica os componentes
+ */
 export function definirPlanoAtivo(plano: PlanoId): void {
   if (typeof window === 'undefined') return
   try {
     localStorage.setItem(STORAGE_KEY_PLANO, plano)
-    // Dispara evento customizado para sincronizar componentes em tempo real
     window.dispatchEvent(new CustomEvent('senecurare_plano_alterado', { detail: plano }))
   } catch (err) {
     console.error('Erro ao salvar plano:', err)
   }
 }
 
+/**
+ * Verifica se um recurso está liberado no plano
+ */
 export function isFeatureDisponivel(feature: FeatureKey, planoAtual?: PlanoId): boolean {
+  // Contas com plano vitalício têm 100% dos recursos liberados
+  if (!planoAtual && isPlanoVitalicio()) {
+    const planoEfetivo = obterPlanoAtivo()
+    if (planoEfetivo === 'enterprise') return true
+  }
+
   const plano = planoAtual || obterPlanoAtivo()
   const nivelAtual = PLANO_HIERARQUIA[plano] || 1
   const planoMinimo = RECURSO_PLANO_MINIMO[feature]
@@ -219,6 +314,12 @@ export function verificarLimiteResidentes(
   totalResidentes: number,
   planoAtual?: PlanoId,
 ): { atingiu: boolean; limite: number; restantes: number; plano: PlanoConfig } {
+  // Contas com plano vitalício têm residentes ilimitados
+  if (!planoAtual && isPlanoVitalicio()) {
+    const plano = PLANOS.enterprise
+    return { atingiu: false, limite: 99999, restantes: 99999, plano }
+  }
+
   const planoId = planoAtual || obterPlanoAtivo()
   const plano = PLANOS[planoId]
   const limite = plano.limiteResidentes
@@ -228,4 +329,15 @@ export function verificarLimiteResidentes(
   const atingiu = totalResidentes >= limite
   const restantes = Math.max(0, limite - totalResidentes)
   return { atingiu, limite, restantes, plano }
+}
+
+/**
+ * Helper para ativar o plano vitalício para usuários demo
+ */
+export function verificarEAtivarDemoVitalicio(email?: string | null): boolean {
+  if (isEmailDemo(email)) {
+    ativarPlanoVitalicio('enterprise', `Demonstração Homologada (${email})`)
+    return true
+  }
+  return false
 }

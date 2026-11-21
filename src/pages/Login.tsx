@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { useAuth } from '../contexts/AuthContext'
+import { verificarEAtivarDemoVitalicio } from '../lib/plans'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
@@ -42,12 +43,14 @@ export default function Login() {
     e.preventDefault()
     setBusy(true)
     setErro('')
+    verificarEAtivarDemoVitalicio(email.trim())
     const res = await signIn(email.trim(), password)
     setBusy(false)
     if (res.erro) setErro(res.erro)
   }
 
   function preencherDemo(demoEmail: string = 's1@ilpi.demo') {
+    verificarEAtivarDemoVitalicio(demoEmail)
     setEmail(demoEmail)
     setPassword('ILPI-Demo-2026!')
     setErro('')
@@ -250,7 +253,12 @@ export default function Login() {
                       <Sparkles className="size-3.5 text-primary" />
                       Perfis de Demonstração (1-Clique)
                     </span>
-                    <span className="text-[10px] text-muted-foreground font-mono">Senha: ILPI-Demo-2026!</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                        Plano Vitalício
+                      </span>
+                      <span className="text-[10px] text-muted-foreground font-mono">Senha: ILPI-Demo-2026!</span>
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-1.5">
                     <Button

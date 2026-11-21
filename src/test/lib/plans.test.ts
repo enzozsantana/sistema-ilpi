@@ -6,6 +6,11 @@ import {
   obterPlanoAtivo,
   definirPlanoAtivo,
   verificarLimiteResidentes,
+  isPlanoVitalicio,
+  ativarPlanoVitalicio,
+  desativarPlanoVitalicio,
+  isEmailDemo,
+  verificarEAtivarDemoVitalicio,
 } from '../../lib/plans'
 
 describe('Módulo de Planos & Feature Gating (plans.ts)', () => {
@@ -61,7 +66,8 @@ describe('Módulo de Planos & Feature Gating (plans.ts)', () => {
   })
 
   it('deve persistir e carregar o plano ativo do localStorage', () => {
-    expect(obterPlanoAtivo()).toBe('clinico') // padrão
+    desativarPlanoVitalicio()
+    expect(obterPlanoAtivo()).toBe('clinico') // padrão quando vitalício desativado
 
     definirPlanoAtivo('avancado')
     expect(obterPlanoAtivo()).toBe('avancado')
@@ -83,5 +89,32 @@ describe('Módulo de Planos & Feature Gating (plans.ts)', () => {
     // Enterprise (ilimitado)
     const verifEnterprise = verificarLimiteResidentes(200, 'enterprise')
     expect(verifEnterprise.atingiu).toBe(false)
+  })
+
+  it('deve identificar contas de demonstração e ativar plano Enterprise vitalício', () => {
+    expect(isEmailDemo('s1@ilpi.demo')).toBe(true)
+    expect(isEmailDemo('s9@ilpi.demo')).toBe(true)
+    expect(isEmailDemo('usuario@clinica.com')).toBe(false)
+
+    desativarPlanoVitalicio()
+    expect(isPlanoVitalicio()).toBe(false)
+
+    ativarPlanoVitalicio('enterprise', 'Teste Manual')
+    expect(isPlanoVitalicio()).toBe(true)
+
+    desativarPlanoVitalicio()
+
+    // Ativa demo vitalício
+    const ativou = verificarEAtivarDemoVitalicio('s1@ilpi.demo')
+    expect(ativou).toBe(true)
+    expect(isPlanoVitalicio()).toBe(true)
+    expect(obterPlanoAtivo()).toBe('enterprise')
+
+    // No plano vitalício, todos os módulos são liberados e residentes são ilimitados
+    expect(isFeatureDisponivel('treinamentos')).toBe(true)
+    expect(isFeatureDisponivel('teleconsulta')).toBe(true)
+    expect(isFeatureDisponivel('estoque')).toBe(true)
+    expect(isFeatureDisponivel('pops')).toBe(true)
+    expect(verificarLimiteResidentes(500).atingiu).toBe(false)
   })
 })
