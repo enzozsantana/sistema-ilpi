@@ -24,6 +24,12 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { mascaraConselho } from '../lib/masks'
+import {
+  PLATAFORMAS_PRESCRICAO,
+  obterPlataformaPreferida,
+  salvarPlataformaPreferida,
+  type TipoPlataformaPrescricao,
+} from '../lib/memedService'
 
 export default function Perfil() {
   const {
@@ -47,6 +53,16 @@ export default function Perfil() {
 
   const [erroFoto, setErroFoto] = useState('')
   const [busyFoto, setBusyFoto] = useState(false)
+
+  const [plataformaPrescricao, setPlataformaPrescricao] = useState<TipoPlataformaPrescricao>(() =>
+    obterPlataformaPreferida(profissional?.id)
+  )
+
+  function onTrocarPlataformaPrescricao(p: TipoPlataformaPrescricao) {
+    setPlataformaPrescricao(p)
+    salvarPlataformaPreferida(p, profissional?.id)
+    toast.success('Plataforma preferida de prescrição digital atualizada!')
+  }
 
   const [senhaAtual, setSenhaAtual] = useState('')
   const [senhaNova, setSenhaNova] = useState('')
@@ -315,6 +331,51 @@ export default function Perfil() {
               </Button>
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Plataforma de Prescrição Digital Preferida */}
+      <Card className="border border-border/70 shadow-xs rounded-2xl overflow-hidden">
+        <CardHeader className="pb-3 border-b border-border/40 bg-muted/20 px-5 pt-4">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="size-4 text-emerald-600" />
+            <CardTitle className="text-sm font-bold font-heading">
+              Prescrição Digital Oficial
+            </CardTitle>
+          </div>
+          <CardDescription className="text-xs">
+            Escolha o portal onde você já tem cadastro e assina digitalmente com seu certificado ICP-Brasil.
+            Ele será aberto por padrão quando você prescrever durante teleconsultas ou no prontuário.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {PLATAFORMAS_PRESCRICAO.map((p) => {
+              const isSelected = p.id === plataformaPrescricao
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => onTrocarPlataformaPrescricao(p.id)}
+                  className={`p-3.5 rounded-xl border text-left transition-all flex flex-col justify-between gap-1.5 cursor-pointer ${
+                    isSelected
+                      ? 'border-emerald-600 bg-emerald-500/10 text-emerald-950 dark:text-emerald-100 ring-1 ring-emerald-600 shadow-2xs'
+                      : 'border-border/70 hover:bg-muted/30 text-foreground'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-xs">{p.nome}</span>
+                    <Badge variant="outline" className={`text-[9px] ${p.corBadge}`}>
+                      {p.badge}
+                    </Badge>
+                  </div>
+                  <span className="text-[11px] text-muted-foreground leading-snug">
+                    {p.subtitulo}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         </CardContent>
       </Card>
 

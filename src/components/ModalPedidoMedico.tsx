@@ -25,6 +25,7 @@ import {
   Building2,
   Eye,
   Edit3,
+  ShieldCheck,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { mascaraConselho } from '../lib/masks'
@@ -37,6 +38,7 @@ import {
   GRUPOS_EXAMES,
   PRESETS_INDICACAO_CLINICA,
   PRESETS_ORIENTACOES_COLETA,
+  CIDS_COMUNS_GERIATRIA,
   converterPrescricoesParaReceita,
   formatarDataExtenso,
   gerarTituloResumo,
@@ -48,6 +50,13 @@ import {
 import type { Residente } from '../types/ilpi'
 import { cn } from '@/lib/utils'
 import { salvarRascunho, obterRascunho, limparRascunho, temRascunho } from '../lib/draftStorage'
+import { ModalMemedPrescricao } from './ModalMemedPrescricao'
+import { ModalAssinarReceitaDigital } from './ModalAssinarReceitaDigital'
+import {
+  gerarQrCodeDataUrl,
+  obterUrlValidacaoPublica,
+  type AssinaturaDigitalData,
+} from '../lib/assinaturaDigitalService'
 
 interface ModalPedidoMedicoProps {
   open: boolean
@@ -74,6 +83,11 @@ export function ModalPedidoMedico({
   // Aba ativa: formulário ('edicao') ou folha A4 ('visualizacao')
   const [modo, setModo] = useState<'edicao' | 'visualizacao'>('edicao')
   const [salvando, setSalvando] = useState(false)
+  const [modalMemedOpen, setModalMemedOpen] = useState(false)
+  const [modalAssinarOpen, setModalAssinarOpen] = useState(false)
+  const [codigoValidacao, setCodigoValidacao] = useState<string | undefined>(pedidoExistente?.codigoValidacao)
+  const [assinaturaDigital, setAssinaturaDigital] = useState<AssinaturaDigitalData | undefined>(pedidoExistente?.assinaturaDigital as any)
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('')
 
   // Dados do formulário
   const [tipo, setTipo] = useState<TipoPedido>(tipoInicial)
@@ -129,8 +143,13 @@ export function ModalPedidoMedico({
       setPrescritorNome(pedidoExistente.prescritor.nome)
       setPrescritorConselho(pedidoExistente.prescritor.conselho || '')
       setPrescritorFuncao(pedidoExistente.prescritor.funcao || '')
+      setCodigoValidacao(pedidoExistente.codigoValidacao)
+      setAssinaturaDigital(pedidoExistente.assinaturaDigital as any)
       setModo('visualizacao')
     } else {
+      setCodigoValidacao(undefined)
+      setAssinaturaDigital(undefined)
+      setQrCodeDataUrl('')
       const draftKey = `pedido_medico_draft_${residente.id}`
       const rascunho = obterRascunho<any>(draftKey)
       if (rascunho?.dados) {
@@ -173,6 +192,15 @@ export function ModalPedidoMedico({
       setModo('edicao')
     }
   }, [open, pedidoExistente, tipoInicial, profissional, residente.id])
+
+  useEffect(() => {
+    if (codigoValidacao) {
+      const url = obterUrlValidacaoPublica(codigoValidacao)
+      gerarQrCodeDataUrl(url).then(setQrCodeDataUrl)
+    } else {
+      setQrCodeDataUrl('')
+    }
+  }, [codigoValidacao])
 
   // Auto-save debounced do formulário para evitar perda de dados caso a conexão caia ou a máquina desligue
   useEffect(() => {
@@ -306,6 +334,8 @@ export function ModalPedidoMedico({
       especialidadeDestino: especialidadeDestino.trim() || undefined,
       motivoEncaminhamento: motivoEncaminhamento.trim() || undefined,
       resumoClinico: resumoClinico.trim() || undefined,
+      codigoValidacao,
+      assinaturaDigital,
     }
   }
 
@@ -382,6 +412,24 @@ export function ModalPedidoMedico({
 
   function handleImprimirDireto() {
     window.print()
+  }
+
+  function handleAbrirAssinaturaDigital() {
+    if (tipo === 'receituario' && medicamentos.length === 0) {
+      toast.error('Adicione ao menos um medicamento à receita antes de assinar.')
+      return
+    }
+    const pedido = montarDadosPedido()
+    salvarPedidoLocal(pedido)
+    setModalAssinarOpen(true)
+  }
+
+  function handleAssinaturaConcluida(pedidoAtualizado: PedidoMedicoData) {
+    setCodigoValidacao(pedidoAtualizado.codigoValidacao)
+    setAssinaturaDigital(pedidoAtualizado.assinaturaDigital as any)
+    setModo('visualizacao')
+    onPedidoSalvo?.()
+    void refresh()
   }
 
   if (!residente) return null
@@ -669,6 +717,29 @@ export function ModalPedidoMedico({
             {/* SEÇÃO ESPECÍFICA: RECEITUÁRIO */}
             {tipo === 'receituario' && (
               <div className="space-y-4">
+                {/* Banner de Validade e Integração Memed */}
+                <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-emerald-500/10 dark:bg-emerald-950/20 border border-emerald-500/30 rounded-xl">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="size-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <div>
+                      <span className="font-bold text-xs text-foreground block">
+                        Prescrição Digital Oficial (Memed / ICP-Brasil)
+                      </span>
+                      <span className="text-[11px] text-muted-foreground block">
+                        Para envio digital por WhatsApp/SMS sem recusa em farmácias, assine com ICP-Brasil.
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    size="xs"
+                    onClick={() => setModalMemedOpen(true)}
+                    className="bg-emerald-700 hover:bg-emerald-800 text-white gap-1.5 rounded-lg text-xs font-semibold shadow-xs"
+                  >
+                    <ShieldCheck className="size-3.5" /> Prescrever via Memed
+                  </Button>
+                </div>
+
                 <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-800/40 rounded-xl">
                   <div>
                     <span className="font-bold text-xs text-blue-900 dark:text-blue-200 block">
@@ -809,6 +880,33 @@ export function ModalPedidoMedico({
                     placeholder="ex: Ingerir com bastante líquido. Evitar jejum prolongado."
                     value={orientacoesGerais}
                     onChange={(e) => setOrientacoesGerais(e.target.value)}
+                    className="text-xs"
+                  />
+                </div>
+
+                {/* CID-10 e Hipótese Diagnóstica (Opcional - Exigido para SUS / Farmácia de Alto Custo) */}
+                <div className="space-y-1.5 pt-2 border-t border-border/60">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-semibold">
+                      CID-10 / Hipótese Diagnóstica <span className="text-muted-foreground font-normal">(Opcional · Exigido para Farmácia de Alto Custo / SUS / LME)</span>
+                    </Label>
+                  </div>
+                  <div className="flex flex-wrap gap-1 mb-1">
+                    {CIDS_COMUNS_GERIATRIA.slice(0, 6).map((c) => (
+                      <button
+                        key={c.codigo}
+                        type="button"
+                        onClick={() => setCid10((prev) => (prev ? `${prev}; ${c.codigo}` : `${c.codigo} - ${c.descricao}`))}
+                        className="text-[10px] bg-muted/60 hover:bg-muted px-2 py-0.5 rounded-md border border-border/60 text-muted-foreground transition-colors"
+                      >
+                        + {c.codigo} ({c.descricao})
+                      </button>
+                    ))}
+                  </div>
+                  <Input
+                    placeholder="ex: I10 - Hipertensão Essencial ou G30.9 - Doença de Alzheimer"
+                    value={cid10}
+                    onChange={(e) => setCid10(e.target.value)}
                     className="text-xs"
                   />
                 </div>
@@ -1041,10 +1139,50 @@ export function ModalPedidoMedico({
                 </div>
               )}
 
+              {Boolean(cid10.trim()) && (
+                <div className="border-t border-slate-200 pt-4 mt-6">
+                  <span className="font-bold text-[11px] uppercase tracking-wider text-slate-700 block mb-1">
+                    CID-10 / Hipótese Diagnóstica (A Pedido do Paciente / Dispensação SUS):
+                  </span>
+                  <p className="text-xs text-slate-800 font-semibold">{cid10}</p>
+                </div>
+              )}
+
+              <div className="border border-slate-300 rounded p-3 text-[10px] text-slate-600 bg-slate-50 mt-6 leading-relaxed">
+                <p className="font-bold text-slate-800 mb-0.5">
+                  Aviso de Validade Farmacêutica (Lei Federal nº 5.991/73, Lei nº 14.063/2020 e Portaria SVS/MS nº 344/98):
+                </p>
+                <p>
+                  Receita com validade em todo o território nacional por 30 (trinta) dias a contar da emissão.
+                  {assinaturaDigital
+                    ? ' Documento com assinatura digital ICP-Brasil e QR Code oficial de validação farmacêutica.'
+                    : ' Para dispensação física, este receituário impresso deve conter carimbo legível do CRM e assinatura manuscrita da médica prescritora.'}
+                </p>
+                {tipoReceita === 'controle_especial' && (
+                  <p className="font-bold text-slate-800 mt-1">
+                    1ª Via: Farmácia / Retenção da Receita · 2ª Via: Orientação ao Paciente
+                  </p>
+                )}
+              </div>
+
+              {/* Box de Retenção da Farmácia / Identificação do Comprador e Fornecedor (Portaria 344/98) */}
               {tipoReceita === 'controle_especial' && (
-                <div className="border border-slate-300 rounded p-3 text-[10px] text-slate-600 bg-slate-50 mt-6">
-                  <p className="font-bold text-slate-800 mb-1">1ª Via: Farmácia / Retenção da Receita · 2ª Via: Orientação ao Paciente</p>
-                  <p>Medicamento sujeito a controle especial conforme legislação vigente (Portaria SVS/MS nº 344/98).</p>
+                <div className="border border-slate-300 rounded p-3 text-[10px] bg-slate-50 mt-3 space-y-2">
+                  <span className="font-bold text-slate-900 uppercase block tracking-wider text-[9px] border-b border-slate-200 pb-1">
+                    Identificação do Comprador e Fornecedor (Portaria SVS/MS nº 344/98 · Retenção da 1ª Via pela Farmácia)
+                  </span>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-slate-700 text-[10px]">
+                    <div>Nome do Comprador: _______________________________</div>
+                    <div>RG / Órgão Emissor: _______________________________</div>
+                    <div>CPF do Comprador: ________________________________</div>
+                    <div>Telefone de Contato: ______________________________</div>
+                    <div className="col-span-2">Endereço Residencial: ________________________________________________________________</div>
+                  </div>
+                  <div className="pt-1.5 border-t border-slate-200 flex justify-between items-end text-slate-700 text-[9px]">
+                    <div>Farmácia / Drogaria: ____________________________</div>
+                    <div>Farmacêutico(a): ___________________ CRF: ________</div>
+                    <div>Data: ___/___/______ Assinatura: ___________________</div>
+                  </div>
                 </div>
               )}
             </div>
@@ -1081,21 +1219,48 @@ export function ModalPedidoMedico({
           )}
 
           {/* RODAPÉ DO DOCUMENTO COM DATA E ASSINATURA */}
-          <div className="mt-16 pt-8 border-t border-slate-300">
-            <div className="flex flex-col sm:flex-row items-end justify-between gap-6">
-              <div className="text-xs text-slate-700">
-                <p className="font-medium">{dataExtenso}</p>
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Documento emitido eletronicamente via Sistema ILPI
-                </p>
-              </div>
+          <div className="mt-12 pt-6 border-t border-slate-300">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+              {/* QR Code de Validação Oficial ICP-Brasil */}
+              {qrCodeDataUrl ? (
+                <div className="flex items-center gap-3">
+                  <img src={qrCodeDataUrl} alt="QR Code" className="size-20 border border-slate-300 p-1 bg-white shrink-0 rounded" />
+                  <div className="text-[10px] text-slate-600 max-w-[210px] leading-tight">
+                    <p className="font-bold text-slate-800 uppercase">Validação da Farmácia</p>
+                    <p>Aponte a câmera para conferir a autenticidade ou acesse:</p>
+                    <p className="font-mono font-bold text-emerald-800 break-all select-all mt-0.5">{codigoValidacao}</p>
+                    <p className="text-[9px] text-slate-400 mt-0.5">Válido por 30 dias (Portaria 344/98)</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-xs text-slate-700">
+                  <p className="font-medium">{dataExtenso}</p>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Documento emitido eletronicamente via Sistema ILPI
+                  </p>
+                </div>
+              )}
 
-              <div className="text-center min-w-[260px]">
-                <div className="w-56 border-b border-slate-800 mx-auto mb-2" />
-                <p className="font-bold text-xs text-slate-900 uppercase">{prescritorNome}</p>
-                <p className="text-[11px] text-slate-700 font-medium">{prescritorConselho}</p>
-                <p className="text-[10px] text-slate-500">{prescritorFuncao}</p>
-              </div>
+              {/* Assinatura Digital ICP-Brasil ou Carimbo Físico */}
+              {assinaturaDigital ? (
+                <div className="border-2 border-emerald-700 rounded-lg p-2.5 bg-emerald-50/50 text-left min-w-[280px]">
+                  <div className="flex items-center gap-1.5 font-bold text-[11px] text-emerald-900 border-b border-emerald-300 pb-1 mb-1">
+                    <ShieldCheck className="size-3.5 text-emerald-700 shrink-0" />
+                    DOCUMENTO ASSINADO DIGITALMENTE
+                  </div>
+                  <p className="font-bold text-xs text-slate-900 uppercase">{assinaturaDigital.assinadoPor}</p>
+                  <p className="text-[10px] text-slate-700 font-semibold">{assinaturaDigital.conselho} · CPF: {assinaturaDigital.cpfPrescritor}</p>
+                  <p className="text-[9px] text-slate-500 mt-0.5">Autoridade: {assinaturaDigital.autoridadeCertificadora}</p>
+                  <p className="text-[8px] font-mono text-slate-400 break-all">Hash SHA-256: {assinaturaDigital.hashSha256.substring(0, 32)}...</p>
+                </div>
+              ) : (
+                <div className="text-center min-w-[260px]">
+                  <div className="w-56 border-b border-slate-800 mx-auto mb-2" />
+                  <p className="font-bold text-xs text-slate-900 uppercase">{prescritorNome}</p>
+                  <p className="text-[11px] text-slate-700 font-medium">{prescritorConselho}</p>
+                  <p className="text-[10px] text-slate-500">{prescritorFuncao}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1105,13 +1270,13 @@ export function ModalPedidoMedico({
         <DialogFooter className="no-print p-4 border-t border-border/60 bg-muted/20 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="text-xs text-muted-foreground">
             {modo === 'edicao' ? (
-              <span>Preencha os campos e clique em <b>"Salvar & Imprimir"</b> ou <b>"Visualizar A4"</b>.</span>
+              <span>Preencha os campos e clique em <b>"Salvar & Imprimir"</b> ou <b>"Assinar ICP-Brasil"</b>.</span>
             ) : (
               <span>Folha A4 pronta. Clique em <b>"Imprimir"</b> para enviar à impressora ou salvar PDF.</span>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               type="button"
               variant="outline"
@@ -1121,6 +1286,18 @@ export function ModalPedidoMedico({
             >
               Fechar
             </Button>
+
+            {tipo === 'receituario' && (
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleAbrirAssinaturaDigital}
+                className="text-xs rounded-xl gap-1.5 font-semibold bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs"
+              >
+                <ShieldCheck className="size-3.5" />
+                {assinaturaDigital ? 'Reassinar ICP-Brasil' : 'Assinar Digitalmente (ICP-Brasil)'}
+              </Button>
+            )}
 
             {modo === 'edicao' ? (
               <>
@@ -1139,7 +1316,7 @@ export function ModalPedidoMedico({
                   size="sm"
                   onClick={() => handleSalvarEContinuar(true)}
                   disabled={salvando}
-                  className="text-xs rounded-xl gap-1.5 font-semibold bg-emerald-700 hover:bg-emerald-800 text-white"
+                  className="text-xs rounded-xl gap-1.5 font-semibold bg-blue-700 hover:bg-blue-800 text-white"
                 >
                   <Printer className="size-3.5" /> Salvar & Imprimir A4
                 </Button>
@@ -1159,7 +1336,7 @@ export function ModalPedidoMedico({
                   type="button"
                   size="sm"
                   onClick={handleImprimirDireto}
-                  className="text-xs rounded-xl gap-1.5 font-semibold bg-emerald-700 hover:bg-emerald-800 text-white"
+                  className="text-xs rounded-xl gap-1.5 font-semibold bg-blue-700 hover:bg-blue-800 text-white"
                 >
                   <Printer className="size-3.5" /> Imprimir Agora (PDF / A4)
                 </Button>
@@ -1168,6 +1345,20 @@ export function ModalPedidoMedico({
           </div>
         </DialogFooter>
       </DialogContent>
+
+      <ModalMemedPrescricao
+        open={modalMemedOpen}
+        onOpenChange={setModalMemedOpen}
+        residente={residente}
+      />
+
+      <ModalAssinarReceitaDigital
+        open={modalAssinarOpen}
+        onOpenChange={setModalAssinarOpen}
+        residente={residente}
+        pedido={montarDadosPedido()}
+        onAssinaturaConcluida={handleAssinaturaConcluida}
+      />
     </Dialog>
   )
 }

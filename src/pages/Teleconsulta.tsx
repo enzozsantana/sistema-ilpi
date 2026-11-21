@@ -34,6 +34,7 @@ import {
   DialogTitle,
 } from '../components/ui/dialog'
 import { ModalPedidoMedico } from '../components/ModalPedidoMedico'
+import { ModalMemedPrescricao } from '../components/ModalMemedPrescricao'
 import { ModalConectarMercadoPago } from '../components/ModalConectarMercadoPago'
 import { ModalCadastroEspecialista } from '../components/ModalCadastroEspecialista'
 import { PlanGate } from '../components/PlanGate'
@@ -1799,10 +1800,10 @@ export default function Teleconsulta() {
                         <p className="text-muted-foreground italic">Residente da ILPI</p>
                       )}
 
-                      {/* Ações Rápidas: Receita & Exames */}
+                      {/* Ações Rápidas: Receita Digital Externa (CFM / Memed) */}
                       <div className="space-y-1.5">
                         <Label className="text-xs font-bold text-foreground block">
-                          Prescrição & Pedido de Exames:
+                          Prescrição Médica Digital:
                         </Label>
                         <Button
                           type="button"
@@ -1814,10 +1815,10 @@ export default function Teleconsulta() {
                               setModalReceitaOpen(true)
                             }
                           }}
-                          className="w-full rounded-xl text-xs gap-1.5 border-teal-500/40 text-teal-700 dark:text-teal-300 hover:bg-teal-500/10"
+                          className="w-full rounded-xl text-xs gap-1.5 border-teal-500/40 text-teal-700 dark:text-teal-300 hover:bg-teal-500/10 font-semibold"
                         >
-                          <Pill className="size-3.5" />
-                          <span>Emitir Receita & Pedidos de Exames</span>
+                          <ShieldCheck className="size-3.5" />
+                          <span>Prescrever Receita Digital (CFM / Memed)</span>
                         </Button>
                       </div>
 
@@ -1860,16 +1861,20 @@ export default function Teleconsulta() {
         </DialogContent>
       </Dialog>
 
-      {/* MODAL DE EMISSÃO DE RECEITAS & EXAMES DA CONSULTA */}
+      {/* MODAL DE PRESCRIÇÃO DIGITAL DA TELECONSULTA (CFM / MEMED / RECEITA DIGITAL) */}
       {residenteParaReceita && (
-        <ModalPedidoMedico
+        <ModalMemedPrescricao
           open={modalReceitaOpen}
           onOpenChange={setModalReceitaOpen}
           residente={residenteParaReceita}
-          tipoInicial="receituario"
-          className="!z-[80] !w-[96vw] !max-w-[96vw] sm:!max-w-[96vw] lg:!max-w-[96vw] xl:!max-w-[1600px] !max-h-[94vh] overflow-y-auto overflow-x-hidden"
-          onPedidoSalvo={() => {
-            toast.success('Receita / pedido médico gravado e assinado no prontuário!')
+          onReceitaRegistrada={(link) => {
+            if (link) {
+              setTextoEvolucao((prev) => {
+                const nota = `\n\n[Receita Digital Emitida (CFM/Memed)]: ${link}`
+                return prev.includes(link) ? prev : `${prev}${nota}`
+              })
+              toast.success('Receita digital oficial anexada ao atendimento!')
+            }
           }}
         />
       )}
@@ -1948,8 +1953,8 @@ export default function Teleconsulta() {
               }}
               className="rounded-xl text-xs gap-1.5 shrink-0 border-teal-500/40 text-teal-700 dark:text-teal-300 hover:bg-teal-500/10 font-semibold"
             >
-              <Pill className="size-3.5" />
-              <span>Emitir Receita & Exames</span>
+              <ShieldCheck className="size-3.5" />
+              <span>Prescrever Receita Digital (CFM / Memed)</span>
             </Button>
           </div>
 

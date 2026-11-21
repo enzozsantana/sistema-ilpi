@@ -20,6 +20,7 @@ const Teleconsulta = lazy(() => import('./pages/Teleconsulta'))
 const Treinamentos = lazy(() => import('./pages/Treinamentos'))
 const Perfil = lazy(() => import('./pages/Perfil'))
 const Planos = lazy(() => import('./pages/Planos'))
+const ValidarReceita = lazy(() => import('./pages/ValidarReceita'))
 
 function PageFallback() {
   return (
@@ -172,6 +173,8 @@ export default function App() {
         <Suspense fallback={<PageFallback />}>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/validar-receita/:codigo?" element={<ValidarReceita />} />
+            <Route path="/v/:codigo?" element={<ValidarReceita />} />
             <Route
               path="/*"
               element={

@@ -71,6 +71,19 @@ export const PRESETS_ORIENTACOES_COLETA = [
   'Higienização prévia rigorosa para coleta de urina',
 ]
 
+export const CIDS_COMUNS_GERIATRIA = [
+  { codigo: 'I10', descricao: 'Hipertensão Essencial (Primária)' },
+  { codigo: 'E11.9', descricao: 'Diabetes Mellitus Tipo 2' },
+  { codigo: 'G30.9', descricao: 'Doença de Alzheimer' },
+  { codigo: 'F03', descricao: 'Demência Não Especificada' },
+  { codigo: 'F32.9', descricao: 'Transtorno Depressivo' },
+  { codigo: 'F41.9', descricao: 'Transtorno de Ansiedade' },
+  { codigo: 'M81.9', descricao: 'Osteoporose' },
+  { codigo: 'I50.9', descricao: 'Insuficiência Cardíaca' },
+  { codigo: 'J44.9', descricao: 'Doença Pulmonar Obstrutiva Crônica (DPOC)' },
+  { codigo: 'N39.0', descricao: 'Infecção do Trato Urinário (ITU)' },
+]
+
 export interface MedicamentoReceita {
   nome: string
   dose: string
@@ -107,9 +120,97 @@ export interface PedidoMedicoData {
   especialidadeDestino?: string
   motivoEncaminhamento?: string
   resumoClinico?: string
+  // Memed / Receita Digital ICP-Brasil
+  memedPrescriptionId?: string
+  memedPrescriptionUrl?: string
+  memedValidadoIcp?: boolean
+  // Validação Digital Própria e ICP-Brasil
+  codigoValidacao?: string
+  validadeDias?: number
+  assinaturaDigital?: {
+    assinadoPor: string
+    cpfPrescritor: string
+    conselho: string
+    dataHora: string
+    algoritmo: string
+    hashSha256: string
+    autoridadeCertificadora: string
+    certificadoTipo: string
+    status: 'valido' | 'revogado'
+  }
+  dispensacao?: {
+    dispensadoEm: string
+    farmaciaNome: string
+    farmaciaCnpj?: string
+    farmaceuticoNome: string
+    farmaceuticoCrf: string
+    farmaciaCidadeUf?: string
+    observacoes?: string
+  }
 }
 
 const STORAGE_KEY_PREFIX = 'ilpi_pedidos_medicos_'
+
+export function buscarPedidoPorCodigoOuId(codigoOuId: string): { pedido: PedidoMedicoData; residenteId: string } | null {
+  try {
+    const buscado = codigoOuId.trim().toUpperCase()
+    // Varre as chaves do localStorage com prefixo
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith(STORAGE_KEY_PREFIX)) {
+        const raw = localStorage.getItem(key)
+        if (raw) {
+          const lista: PedidoMedicoData[] = JSON.parse(raw)
+          if (Array.isArray(lista)) {
+            const encontrado = lista.find(
+              (p) =>
+                p.id.toUpperCase() === buscado ||
+                (p.codigoValidacao && p.codigoValidacao.toUpperCase() === buscado)
+            )
+            if (encontrado) {
+              const resId = key.replace(STORAGE_KEY_PREFIX, '')
+              return { pedido: encontrado, residenteId: resId }
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Erro ao buscar pedido por código de validação:', err)
+  }
+  return null
+}
+
+export function registrarDispensacaoFarmacia(
+  codigoOuId: string,
+  dispensacao: {
+    farmaciaNome: string
+    farmaceuticoNome: string
+    farmaceuticoCrf: string
+    farmaciaCnpj?: string
+    farmaciaCidadeUf?: string
+    observacoes?: string
+  }
+): boolean {
+  try {
+    const resultado = buscarPedidoPorCodigoOuId(codigoOuId)
+    if (!resultado) return false
+
+    const { pedido, residenteId } = resultado
+    const pedidoAtualizado: PedidoMedicoData = {
+      ...pedido,
+      dispensacao: {
+        ...dispensacao,
+        dispensadoEm: new Date().toISOString(),
+      },
+    }
+    salvarPedidoLocal(pedidoAtualizado)
+    return true
+  } catch (err) {
+    console.error('Erro ao registrar dispensação na farmácia:', err)
+    return false
+  }
+}
 
 export function getPedidosLocais(residenteId: string): PedidoMedicoData[] {
   try {

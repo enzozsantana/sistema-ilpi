@@ -67,6 +67,7 @@ import {
   Search,
   Settings,
   ShieldAlert,
+  ShieldCheck,
   ShoppingCart,
   Sparkles,
   Star,
@@ -92,6 +93,7 @@ import { toast } from 'sonner'
 import { mascaraTelefone, mascaraPA } from '../../lib/masks'
 import { cn } from '@/lib/utils'
 import { ModalPedidoMedico } from '../../components/ModalPedidoMedico'
+import { ModalMemedPrescricao } from '../../components/ModalMemedPrescricao'
 import { ModalPedidoEstoque } from '../../components/ModalPedidoEstoque'
 import { OrigemItemSelect } from '../../components/OrigemItemSelect'
 import { BadgeTipoEstoque } from '../../components/BadgeTipoEstoque'
@@ -2936,6 +2938,7 @@ export function TabPresc({ r, cat }: Ctx) {
   const { profissional } = useAuth()
   const [modalNova, setModalNova] = useState(false)
   const [modalReceita, setModalReceita] = useState(false)
+  const [modalMemed, setModalMemed] = useState(false)
   const [salvando, setSalvando] = useState(false)
 
   // Prescrição sendo editada (null se for novo cadastro)
@@ -3344,6 +3347,15 @@ export function TabPresc({ r, cat }: Ctx) {
             >
               <Printer className="size-3 text-emerald-600 dark:text-emerald-400" />
               Imprimir Receituário
+            </Button>
+            <Button
+              size="xs"
+              variant="outline"
+              onClick={() => setModalMemed(true)}
+              className="gap-1.5 rounded-lg text-xs font-semibold text-emerald-700 dark:text-emerald-300 border-emerald-600/40 bg-emerald-500/10 hover:bg-emerald-500/20"
+            >
+              <ShieldCheck className="size-3 text-emerald-600 dark:text-emerald-400" />
+              Receita Digital (CFM / Memed)
             </Button>
             {can(cat, 'presc') && (
               <Button
@@ -3905,6 +3917,13 @@ export function TabPresc({ r, cat }: Ctx) {
         residente={r}
         tipoInicial="receituario"
         onPedidoSalvo={() => void data.refresh()}
+      />
+
+      <ModalMemedPrescricao
+        open={modalMemed}
+        onOpenChange={setModalMemed}
+        residente={r}
+        onReceitaRegistrada={() => void data.refresh()}
       />
     </div>
   )

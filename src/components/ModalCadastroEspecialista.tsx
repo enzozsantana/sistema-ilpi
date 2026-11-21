@@ -30,6 +30,11 @@ import { parseMoeda } from '../lib/currency'
 import { mascaraConselho } from '../lib/masks'
 import { cn } from '../lib/utils'
 import { toast } from 'sonner'
+import {
+  PLATAFORMAS_PRESCRICAO,
+  salvarPlataformaPreferida,
+  type TipoPlataformaPrescricao,
+} from '../lib/memedService'
 
 const OPCOES_ESPECIALIDADES: { id: EspecialidadeVirtual; label: string }[] = [
   { id: 'estomaterapia', label: 'Estomaterapia & Feridas (Enfermagem)' },
@@ -61,6 +66,7 @@ export function ModalCadastroEspecialista({
   const [consultorio, setConsultorio] = useState('')
   const [preco, setPreco] = useState('200')
   const [bio, setBio] = useState('')
+  const [plataformaPrescricao, setPlataformaPrescricao] = useState<TipoPlataformaPrescricao>('cfm')
 
   function toggleEspecialidade(id: EspecialidadeVirtual) {
     if (especialidades.includes(id)) {
@@ -145,6 +151,8 @@ export function ModalCadastroEspecialista({
         setBusy(false)
         return
       }
+
+      salvarPlataformaPreferida(plataformaPrescricao, res.profissional?.id)
 
       toast.success('Cadastro realizado com sucesso!', {
         description: 'Bem-vindo ao seu Consultório Virtual. Seu perfil já está visível para agendamentos.',
@@ -413,10 +421,45 @@ export function ModalCadastroEspecialista({
             </div>
           </div>
 
-          {/* SEÇÃO 4: Biografia e Apresentação */}
+          {/* SEÇÃO 4: Plataforma Preferida de Prescrição Digital */}
           <div className="space-y-3 pt-1 border-t border-border/40">
             <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 pt-2">
               <span className="size-5 rounded-full bg-muted flex items-center justify-center text-[10px] text-foreground font-extrabold">4</span>
+              <span>Plataforma de Prescrição Digital Oficial</span>
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Selecione onde você já possui cadastro e assina digitalmente com seu certificado ICP-Brasil:
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {PLATAFORMAS_PRESCRICAO.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setPlataformaPrescricao(p.id)}
+                  className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between gap-1 cursor-pointer ${
+                    plataformaPrescricao === p.id
+                      ? 'border-emerald-600 bg-emerald-500/10 text-emerald-950 dark:text-emerald-100 ring-1 ring-emerald-600 shadow-2xs'
+                      : 'border-border/70 hover:bg-muted/30 text-foreground'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-xs">{p.nome}</span>
+                    <Badge variant="outline" className={`text-[9px] ${p.corBadge}`}>
+                      {p.badge}
+                    </Badge>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground leading-snug">
+                    {p.subtitulo}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* SEÇÃO 5: Biografia e Apresentação */}
+          <div className="space-y-3 pt-1 border-t border-border/40">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 pt-2">
+              <span className="size-5 rounded-full bg-muted flex items-center justify-center text-[10px] text-foreground font-extrabold">5</span>
               <span>Apresentação & Biografia Clínica</span>
             </h3>
             <div className="space-y-1.5">
