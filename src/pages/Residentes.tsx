@@ -12,6 +12,7 @@ import { supabase } from '../lib/supabase'
 import { Allergy, Avatar, EmptyState, PageHeader, ResidentMeta, StatusBadge } from '../components/Ui'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
+import { SearchableSelect } from '../components/ui/select'
 import { mascaraTelefone } from '../lib/masks'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
@@ -536,16 +537,18 @@ export default function Residentes() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1">
                     <Label htmlFor="sexo" className="text-[11px] font-semibold text-muted-foreground">Sexo</Label>
-                    <select
+                    <SearchableSelect
                       id="sexo"
                       value={novoSexo}
-                      onChange={(e) => setNovoSexo(e.target.value as 'M' | 'F' | 'Outro')}
-                      className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                    >
-                      <option value="F">Feminino</option>
-                      <option value="M">Masculino</option>
-                      <option value="Outro">Outro</option>
-                    </select>
+                      onValueChange={(v) => setNovoSexo(v as 'M' | 'F' | 'Outro')}
+                      placeholder="Selecione..."
+                      searchPlaceholder="Buscar sexo..."
+                      options={[
+                        { value: 'F', label: 'Feminino' },
+                        { value: 'M', label: 'Masculino' },
+                        { value: 'Outro', label: 'Outro' },
+                      ]}
+                    />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="nasc" className="text-[11px] font-semibold text-muted-foreground">Data de Nascimento</Label>

@@ -27,6 +27,7 @@ import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
 import { Input } from '../components/ui/input'
 import { Progress } from '../components/ui/progress'
+import { SearchableSelect } from '../components/ui/select'
 import {
   Dialog,
   DialogContent,
@@ -1815,39 +1816,44 @@ export default function Plantao() {
             <div className="space-y-3 py-3 text-xs">
               <div className="space-y-1">
                 <Label htmlFor="snRes" className="text-[11px] font-semibold">Residente *</Label>
-                <select
+                <SearchableSelect
                   id="snRes"
                   value={snResId}
-                  onChange={(e) => {
-                    setSnResId(e.target.value)
-                    const r = data.getResidente(e.target.value)
+                  onValueChange={(novoId) => {
+                    setSnResId(novoId)
+                    const r = data.getResidente(novoId)
                     setSnPrescId(r?.presc[0]?.id || '')
                   }}
-                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                >
-                  {[...ativos(data.residentes)].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')).map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.nome} (Quarto {r.quarto})
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Selecione o residente..."
+                  searchPlaceholder="Buscar por nome ou quarto..."
+                  options={[...ativos(data.residentes)]
+                    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+                    .map((r) => ({
+                      value: r.id,
+                      label: `${r.nome} (Quarto ${r.quarto})`,
+                      keywords: [r.quarto || ''],
+                    }))}
+                />
               </div>
 
               <div className="space-y-1">
                 <Label htmlFor="snPresc" className="text-[11px] font-semibold">Medicamento Prescrito *</Label>
-                <select
+                <SearchableSelect
                   id="snPresc"
                   value={snPrescId}
-                  onChange={(e) => setSnPrescId(e.target.value)}
-                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                >
-                  <option value="">Selecione o medicamento...</option>
-                  {[...(data.getResidente(snResId)?.presc ?? [])].sort((a, b) => a.med.localeCompare(b.med, 'pt-BR')).map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {isMedicamentoControlado(p) ? '⚠️ [CONTROLADO] ' : ''}{p.med} ({p.dose} - {p.via}) [{p.tipo.toUpperCase()}]
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={setSnPrescId}
+                  placeholder="Selecione o medicamento..."
+                  searchPlaceholder="Buscar prescrição..."
+                  emptyMessage="Nenhuma prescrição encontrada para este residente"
+                  options={[...(data.getResidente(snResId)?.presc ?? [])]
+                    .sort((a, b) => a.med.localeCompare(b.med, 'pt-BR'))
+                    .map((p) => ({
+                      value: p.id,
+                      label: `${isMedicamentoControlado(p) ? '⚠️ [CONTROLADO] ' : ''}${p.med}`,
+                      description: `${p.dose} - ${p.via} [${p.tipo.toUpperCase()}]`,
+                      keywords: [p.med, p.via, p.tipo],
+                    }))}
+                />
               </div>
 
               <div className="space-y-1">
@@ -1897,36 +1903,40 @@ export default function Plantao() {
             <div className="space-y-3 py-3 text-xs">
               <div className="space-y-1">
                 <Label htmlFor="ocoRes" className="text-[11px] font-semibold">Residente Envolvido *</Label>
-                <select
+                <SearchableSelect
                   id="ocoRes"
                   value={ocoResId}
-                  onChange={(e) => setOcoResId(e.target.value)}
-                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                >
-                  {[...ativos(data.residentes)].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')).map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.nome} (Quarto {r.quarto})
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={setOcoResId}
+                  placeholder="Selecione o residente..."
+                  searchPlaceholder="Buscar por nome ou quarto..."
+                  options={[...ativos(data.residentes)]
+                    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+                    .map((r) => ({
+                      value: r.id,
+                      label: `${r.nome} (Quarto ${r.quarto})`,
+                      keywords: [r.quarto || ''],
+                    }))}
+                />
               </div>
 
               <div className="space-y-1">
                 <Label htmlFor="ocoTipo" className="text-[11px] font-semibold">Tipo de Evento Sentinela *</Label>
-                <select
+                <SearchableSelect
                   id="ocoTipo"
                   value={ocoTipo}
-                  onChange={(e) => setOcoTipo(e.target.value as EventoTipo)}
-                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                >
-                  <option value="obito">Declaração de Óbito</option>
-                  <option value="desidratacao">Desidratação clínica</option>
-                  <option value="desnutricao">Desnutrição moderada / grave</option>
-                  <option value="dda">Doença Diarreica Aguda (DDA)</option>
-                  <option value="lpp">Lesão por Pressão (LPP)</option>
-                  <option value="queda">Queda da própria altura / leito</option>
-                  <option value="escabiose">Surto / Suspeita de Escabiose</option>
-                </select>
+                  onValueChange={(v) => setOcoTipo(v as EventoTipo)}
+                  placeholder="Selecione o evento..."
+                  searchPlaceholder="Buscar tipo de evento..."
+                  options={[
+                    { value: 'obito', label: 'Declaração de Óbito' },
+                    { value: 'desidratacao', label: 'Desidratação clínica' },
+                    { value: 'desnutricao', label: 'Desnutrição moderada / grave' },
+                    { value: 'dda', label: 'Doença Diarreica Aguda (DDA)' },
+                    { value: 'lpp', label: 'Lesão por Pressão (LPP)' },
+                    { value: 'queda', label: 'Queda da própria altura / leito' },
+                    { value: 'escabiose', label: 'Surto / Suspeita de Escabiose' },
+                  ]}
+                />
               </div>
 
               <div className="space-y-1">
@@ -2238,36 +2248,37 @@ export default function Plantao() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-[11px] font-semibold">Turno que está sendo entregue *</Label>
-                  <select
+                  <SearchableSelect
                     value={passagemTurno}
-                    onChange={(e) => setPassagemTurno(e.target.value as TurnoPlantao)}
-                    className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                  >
-                    {TURNOS_PLANTAO.map((t) => (
-                      <option key={t.key} value={t.key}>
-                        {t.label} ({t.horario})
-                      </option>
-                    ))}
-                  </select>
+                    onValueChange={(v) => setPassagemTurno(v as TurnoPlantao)}
+                    placeholder="Selecione o turno..."
+                    searchPlaceholder="Buscar turno..."
+                    options={TURNOS_PLANTAO.map((t) => ({
+                      value: t.key,
+                      label: `${t.label} (${t.horario})`,
+                    }))}
+                  />
                 </div>
 
                 <div className="space-y-1">
                   <Label className="text-[11px] font-semibold">Profissional / Equipe que assume</Label>
-                  <select
+                  <SearchableSelect
                     value={passagemRecebidoPor}
-                    onChange={(e) => setPassagemRecebidoPor(e.target.value)}
-                    className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                  >
-                    <option value="">Equipe Geral do Próximo Turno</option>
-                    {[...data.equipe]
+                    onValueChange={setPassagemRecebidoPor}
+                    placeholder="Equipe Geral do Próximo Turno"
+                    searchPlaceholder="Buscar profissional..."
+                    allowClear
+                    clearLabel="Equipe Geral do Próximo Turno"
+                    options={[...data.equipe]
                       .filter((p) => p.id !== profissional?.id)
                       .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
-                      .map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.nome} ({p.funcao || p.cat})
-                        </option>
-                      ))}
-                  </select>
+                      .map((p) => ({
+                        value: p.id,
+                        label: p.nome,
+                        description: p.funcao || p.cat,
+                        keywords: [p.funcao || '', p.cat || ''],
+                      }))}
+                  />
                 </div>
               </div>
 
@@ -2442,15 +2453,17 @@ export default function Plantao() {
 
               <div className="space-y-1">
                 <Label className="text-[11px] font-semibold">Prioridade do Comunicado</Label>
-                <select
+                <SearchableSelect
                   value={avisoPrioridade}
-                  onChange={(e) => setAvisoPrioridade(e.target.value as PrioridadeAviso)}
-                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                >
-                  <option value="geral">Geral (Aviso informativo)</option>
-                  <option value="importante">Importante (Atenção redobrada)</option>
-                  <option value="urgente">Urgente (Alerta crítico com prioridade alta)</option>
-                </select>
+                  onValueChange={(v) => setAvisoPrioridade(v as PrioridadeAviso)}
+                  placeholder="Selecione a prioridade..."
+                  searchPlaceholder="Buscar prioridade..."
+                  options={[
+                    { value: 'geral', label: 'Geral', description: 'Aviso informativo' },
+                    { value: 'importante', label: 'Importante', description: 'Atenção redobrada' },
+                    { value: 'urgente', label: 'Urgente', description: 'Alerta crítico com prioridade alta' },
+                  ]}
+                />
               </div>
 
               <div className="space-y-1">

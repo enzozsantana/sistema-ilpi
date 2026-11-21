@@ -17,6 +17,7 @@ import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
+import { SearchableSelect } from '../components/ui/select'
 import {
   Dialog,
   DialogContent,
@@ -686,45 +687,43 @@ export default function Estoque() {
             <div className="space-y-3 py-3 text-xs">
               <div className="space-y-1">
                 <Label htmlFor="entRes" className="text-[11px] font-semibold">Residente *</Label>
-                <select
+                <SearchableSelect
                   id="entRes"
                   value={entradaResId}
-                  onChange={(e) => {
-                    const novoId = e.target.value
+                  onValueChange={(novoId) => {
                     setEntradaResId(novoId)
                     const r = data.getResidente(novoId)
                     setEntradaItemId(r?.estoque[0]?.id || '')
                   }}
-                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                >
-                  {[...residentesAtivos]
+                  placeholder="Selecione o residente..."
+                  searchPlaceholder="Buscar por nome ou quarto..."
+                  options={[...residentesAtivos]
                     .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
-                    .map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.nome} (Quarto {r.quarto})
-                      </option>
-                    ))}
-                </select>
+                    .map((r) => ({
+                      value: r.id,
+                      label: `${r.nome} (Quarto ${r.quarto})`,
+                      keywords: [r.quarto || ''],
+                    }))}
+                />
               </div>
 
               <div className="space-y-1">
                 <Label htmlFor="entItem" className="text-[11px] font-semibold">Material / Medicamento *</Label>
-                <select
+                <SearchableSelect
                   id="entItem"
                   value={entradaItemId}
-                  onChange={(e) => setEntradaItemId(e.target.value)}
-                  required
-                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                >
-                  <option value="">Selecione o item...</option>
-                  {[...(data.getResidente(entradaResId)?.estoque ?? [])]
+                  onValueChange={setEntradaItemId}
+                  placeholder="Selecione o item..."
+                  searchPlaceholder="Buscar material ou medicamento..."
+                  emptyMessage="Nenhum item cadastrado no estoque deste residente"
+                  options={[...(data.getResidente(entradaResId)?.estoque ?? [])]
                     .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
-                    .map((it) => (
-                      <option key={it.id} value={it.id}>
-                        {it.nome} (Saldo atual: {it.qtd} {it.unid})
-                      </option>
-                    ))}
-                </select>
+                    .map((it) => ({
+                      value: it.id,
+                      label: it.nome,
+                      description: `Saldo atual: ${it.qtd} ${it.unid}`,
+                    }))}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -789,20 +788,20 @@ export default function Estoque() {
             <div className="space-y-3 py-3 text-xs">
               <div className="space-y-1">
                 <Label htmlFor="novoRes" className="text-[11px] font-semibold">Residente *</Label>
-                <select
+                <SearchableSelect
                   id="novoRes"
                   value={novoResId}
-                  onChange={(e) => setNovoResId(e.target.value)}
-                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                >
-                  {[...residentesAtivos]
+                  onValueChange={setNovoResId}
+                  placeholder="Selecione o residente..."
+                  searchPlaceholder="Buscar por nome ou quarto..."
+                  options={[...residentesAtivos]
                     .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
-                    .map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.nome} (Quarto {r.quarto})
-                      </option>
-                    ))}
-                </select>
+                    .map((r) => ({
+                      value: r.id,
+                      label: `${r.nome} (Quarto ${r.quarto})`,
+                      keywords: [r.quarto || ''],
+                    }))}
+                />
               </div>
 
               <div className="space-y-1">
@@ -820,20 +819,21 @@ export default function Estoque() {
               <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-1">
                   <Label htmlFor="novoUn" className="text-[11px] font-semibold">Unidade</Label>
-                  <select
+                  <SearchableSelect
                     id="novoUn"
                     value={novoUnidade}
-                    onChange={(e) => setNovoUnidade(e.target.value)}
-                    className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                  >
-                    <option value="cx">caixa (cx)</option>
-                    <option value="frasco">frasco</option>
-                    <option value="pacote">pacote (pct)</option>
-                    <option value="rolo">rolo</option>
-                    <option value="sachê">sachê</option>
-                    <option value="tubo">tubo / bisnaga</option>
-                    <option value="un">unidade (un)</option>
-                  </select>
+                    onValueChange={setNovoUnidade}
+                    searchPlaceholder="Buscar unidade..."
+                    options={[
+                      { value: 'cx', label: 'caixa (cx)' },
+                      { value: 'frasco', label: 'frasco' },
+                      { value: 'pacote', label: 'pacote (pct)' },
+                      { value: 'rolo', label: 'rolo' },
+                      { value: 'sachê', label: 'sachê' },
+                      { value: 'tubo', label: 'tubo / bisnaga' },
+                      { value: 'un', label: 'unidade (un)' },
+                    ]}
+                  />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="novoQtd" className="text-[11px] font-semibold">Saldo Inicial</Label>
@@ -877,17 +877,18 @@ export default function Estoque() {
 
               <div className="space-y-1">
                 <Label htmlFor="novoOrigem" className="text-[11px] font-semibold">Origem / Onde é Adquirido *</Label>
-                <select
+                <SearchableSelect
                   id="novoOrigem"
                   value={novoOrigem}
-                  onChange={(e) => setNovoOrigem(e.target.value)}
-                  className="w-full h-8 text-xs rounded-md border border-input bg-background px-2"
-                >
-                  <option value="Familiar">Familiar (Entregue pela família)</option>
-                  <option value="Farmácia Comercial">Farmácia Comercial (Compra / Cotação)</option>
-                  <option value="Farmácia Popular">Farmácia Popular (Retirada SUS)</option>
-                  <option value="Instituição">Instituição (Uso geral da casa)</option>
-                </select>
+                  onValueChange={setNovoOrigem}
+                  searchPlaceholder="Buscar canal de origem..."
+                  options={[
+                    { value: 'Familiar', label: 'Familiar', description: 'Entregue pela família' },
+                    { value: 'Farmácia Comercial', label: 'Farmácia Comercial', description: 'Compra / Cotação' },
+                    { value: 'Farmácia Popular', label: 'Farmácia Popular', description: 'Retirada SUS' },
+                    { value: 'Instituição', label: 'Instituição', description: 'Uso geral da casa' },
+                  ]}
+                />
               </div>
             </div>
 

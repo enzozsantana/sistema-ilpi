@@ -19,6 +19,7 @@ import { Input } from '../../components/ui/input'
 import { Label } from '../../components/ui/label'
 import { Checkbox } from '../../components/ui/checkbox'
 import { Switch } from '../../components/ui/switch'
+import { SearchableSelect } from '../../components/ui/select'
 import { StatusBadge, Allergy } from '../../components/Ui'
 import {
   Dialog,
@@ -1312,22 +1313,24 @@ export function TabAval({ r, cat, area, profNome }: Ctx) {
 
               <div className="space-y-1">
                 <Label className="text-xs font-semibold">Área / Especialidade Responsável</Label>
-                <select
+                <SearchableSelect
                   value={formArea}
-                  onChange={(e) => setFormArea(e.target.value)}
-                  className="w-full h-8 px-2 text-xs rounded-md border border-input bg-background"
-                >
-                  <option value="Geral">Geral (Multiprofissional)</option>
-                  <option value="Educação Física">Educação Física</option>
-                  <option value="Enfermagem">Enfermagem</option>
-                  <option value="Fisioterapia">Fisioterapia</option>
-                  <option value="Médico">Médico</option>
-                  <option value="Nutrição">Nutrição</option>
-                  <option value="Odontologia">Odontologia</option>
-                  <option value="Psicologia">Psicologia</option>
-                  <option value="Serviço Social">Serviço Social</option>
-                  <option value="Terapia Ocupacional">Terapia Ocupacional</option>
-                </select>
+                  onValueChange={setFormArea}
+                  placeholder="Selecione a especialidade..."
+                  searchPlaceholder="Buscar especialidade..."
+                  options={[
+                    { value: 'Geral', label: 'Geral (Multiprofissional)' },
+                    { value: 'Educação Física', label: 'Educação Física' },
+                    { value: 'Enfermagem', label: 'Enfermagem' },
+                    { value: 'Fisioterapia', label: 'Fisioterapia' },
+                    { value: 'Médico', label: 'Médico' },
+                    { value: 'Nutrição', label: 'Nutrição' },
+                    { value: 'Odontologia', label: 'Odontologia' },
+                    { value: 'Psicologia', label: 'Psicologia' },
+                    { value: 'Serviço Social', label: 'Serviço Social' },
+                    { value: 'Terapia Ocupacional', label: 'Terapia Ocupacional' },
+                  ]}
+                />
               </div>
 
               <div className="sm:col-span-2 space-y-1">

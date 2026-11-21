@@ -24,6 +24,7 @@ import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
+import { SearchableSelect } from '../components/ui/select'
 import {
   Dialog,
   DialogContent,
@@ -867,19 +868,19 @@ export default function Teleconsulta() {
                     {/* Selecionar Residente */}
                     <div className="space-y-1">
                       <Label className="text-xs font-semibold">Residente que receberá a consulta *</Label>
-                      <select
+                      <SearchableSelect
                         value={residenteId}
-                        onChange={(e) => setResidenteId(e.target.value)}
-                        className="w-full h-9 text-xs rounded-xl border border-input bg-background px-3"
-                      >
-                        {[...residentes]
+                        onValueChange={setResidenteId}
+                        placeholder="Selecione o residente que receberá a consulta..."
+                        searchPlaceholder="Buscar por nome ou quarto..."
+                        options={[...residentes]
                           .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
-                          .map((r) => (
-                            <option key={r.id} value={r.id}>
-                              {r.nome} {r.quarto ? `(Quarto ${r.quarto})` : ''}
-                            </option>
-                          ))}
-                      </select>
+                          .map((r) => ({
+                            value: r.id,
+                            label: `${r.nome} ${r.quarto ? `(Quarto ${r.quarto})` : ''}`,
+                            keywords: [r.quarto || ''],
+                          }))}
+                      />
                     </div>
 
                     {/* Selecionar Data do Mês */}

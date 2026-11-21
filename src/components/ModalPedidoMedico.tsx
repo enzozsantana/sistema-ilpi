@@ -11,6 +11,7 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { Badge } from './ui/badge'
+import { SearchableSelect } from './ui/select'
 import {
   FileText,
   Printer,
@@ -690,14 +691,16 @@ export function ModalPedidoMedico({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Tipo de Receituário *</Label>
-                    <select
+                    <SearchableSelect
                       value={tipoReceita}
-                      onChange={(e) => setTipoReceita(e.target.value as 'simples' | 'controle_especial')}
-                      className="w-full h-8 rounded-lg border border-input bg-transparent px-2.5 text-xs shadow-2xs outline-none"
-                    >
-                      <option value="controle_especial">Receita de Controle Especial (Portaria 344/98 - 2 vias)</option>
-                      <option value="simples">Receituário Simples (Branco)</option>
-                    </select>
+                      onValueChange={(v) => setTipoReceita(v as 'simples' | 'controle_especial')}
+                      placeholder="Selecione o tipo..."
+                      searchPlaceholder="Buscar tipo de receituário..."
+                      options={[
+                        { value: 'controle_especial', label: 'Receita de Controle Especial (Portaria 344/98 - 2 vias)' },
+                        { value: 'simples', label: 'Receituário Simples (Branco)' },
+                      ]}
+                    />
                   </div>
                 </div>
 
