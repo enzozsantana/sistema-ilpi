@@ -665,7 +665,209 @@
       </div>
     </section>
 
-    <!-- Seção 4: Simulador Interativo de Lucros & Projeção para os Sócios -->
+    <!-- Seção 4: Matriz Consolidada e Realista do Total Combinado (SaaS + Telemedicina) -->
+    <section class="space-y-6">
+      <div class="border-b border-white/10 pb-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Visão Financeira Completa dos Sócios</span>
+            <h3 class="text-2xl sm:text-3xl font-bold font-heading text-white mt-1">Análise Realista por Faixas: Total Combinado (SaaS + Telemedicina)</h3>
+          </div>
+          <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            Dedução Real: Impostos + Nuvem + Gateways + Suporte CLT
+          </span>
+        </div>
+        <p class="text-xs sm:text-sm text-slate-400 mt-2">
+          Demonstração consolidada dos dois motores de receita com todas as despesas operacionais da vida real: impostos federais progressivos (Simples Nacional a Lucro Presumido), emissão de notas fiscais NFS-e, taxas de cartão/Pix, servidores WebRTC e equipe de suporte e onboarding conforme a carteira cresce:
+        </p>
+      </div>
+
+      <div class="overflow-x-auto exec-card rounded-3xl border border-white/10">
+        <table class="w-full text-left text-xs sm:text-sm">
+          <thead class="bg-black/40 text-slate-300 border-b border-white/10 font-semibold uppercase tracking-wider text-[11px]">
+            <tr>
+              <th class="py-4 px-4">Faixa de Escala</th>
+              <th class="py-4 px-3 text-center">ILPIs / Resid.</th>
+              <th class="py-4 px-3 text-right">Receita SaaS</th>
+              <th class="py-4 px-3 text-right">Telemedicina (20%)</th>
+              <th class="py-4 px-4 text-right font-bold text-white">FATURAMENTO TOTAL</th>
+              <th class="py-4 px-3 text-right text-rose-300">Impostos</th>
+              <th class="py-4 px-3 text-right text-rose-300">Nuvem + WebRTC</th>
+              <th class="py-4 px-3 text-right text-rose-300">Suporte / Op.</th>
+              <th class="py-4 px-4 text-right font-black text-emerald-400">LUCRO LÍQ. TOTAL</th>
+              <th class="py-4 px-3 text-center font-bold text-cyan-300">Margem</th>
+              <th class="py-4 px-4 text-right font-extrabold text-amber-300">POR SÓCIO (50%)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5 text-slate-300">
+            <!-- 100 Usuários -->
+            <tr class="hover:bg-white/[0.02]">
+              <td class="py-3.5 px-4 font-bold text-white">
+                100 usuários
+                <span class="block text-[10px] text-slate-400 font-normal">Piloto</span>
+              </td>
+              <td class="py-3.5 px-3 text-center text-slate-300 font-mono text-[11px]">3 ILPIs<br><span class="text-slate-500">70 res.</span></td>
+              <td class="py-3.5 px-3 text-right font-mono">R$ 2.240</td>
+              <td class="py-3.5 px-3 text-right font-mono text-cyan-300">+ R$ 510</td>
+              <td class="py-3.5 px-4 text-right font-mono font-bold text-white">R$ 2.750</td>
+              <td class="py-3.5 px-3 text-right font-mono text-rose-300 text-[11px]">- R$ 165 <span class="text-[9px] text-slate-500">(6%)</span></td>
+              <td class="py-3.5 px-3 text-right font-mono text-rose-300 text-[11px]">- R$ 356</td>
+              <td class="py-3.5 px-3 text-right font-mono text-slate-500 text-[11px]">R$ 0 <span class="text-[9px]">(Sócios)</span></td>
+              <td class="py-3.5 px-4 text-right font-mono font-black text-emerald-400 text-sm">R$ 2.229 /mês</td>
+              <td class="py-3.5 px-3 text-center font-bold text-cyan-300 text-xs">81,1%</td>
+              <td class="py-3.5 px-4 text-right font-mono font-extrabold text-amber-300 text-xs">R$ 1.114 /mês</td>
+            </tr>
+
+            <!-- 500 Usuários -->
+            <tr class="hover:bg-white/[0.02]">
+              <td class="py-3.5 px-4 font-bold text-white">
+                500 usuários
+                <span class="block text-[10px] text-slate-400 font-normal">Validação</span>
+              </td>
+              <td class="py-3.5 px-3 text-center text-slate-300 font-mono text-[11px]">14 ILPIs<br><span class="text-slate-500">350 res.</span></td>
+              <td class="py-3.5 px-3 text-right font-mono">R$ 11.200</td>
+              <td class="py-3.5 px-3 text-right font-mono text-cyan-300">+ R$ 2.720</td>
+              <td class="py-3.5 px-4 text-right font-mono font-bold text-white">R$ 13.920</td>
+              <td class="py-3.5 px-3 text-right font-mono text-rose-300 text-[11px]">- R$ 835 <span class="text-[9px] text-slate-500">(6%)</span></td>
+              <td class="py-3.5 px-3 text-right font-mono text-rose-300 text-[11px]">- R$ 968</td>
+              <td class="py-3.5 px-3 text-right font-mono text-slate-500 text-[11px]">R$ 0 <span class="text-[9px]">(Sócios)</span></td>
+              <td class="py-3.5 px-4 text-right font-mono font-black text-emerald-400 text-sm">R$ 12.117 /mês</td>
+              <td class="py-3.5 px-3 text-center font-bold text-cyan-300 text-xs">87,0%</td>
+              <td class="py-3.5 px-4 text-right font-mono font-extrabold text-amber-300 text-xs">R$ 6.058 /mês</td>
+            </tr>
+
+            <!-- 1.000 Usuários -->
+            <tr class="hover:bg-white/[0.02]">
+              <td class="py-3.5 px-4 font-bold text-white">
+                1.000 usuários
+                <span class="block text-[10px] text-slate-400 font-normal">Tração</span>
+              </td>
+              <td class="py-3.5 px-3 text-center text-slate-300 font-mono text-[11px]">28 ILPIs<br><span class="text-slate-500">700 res.</span></td>
+              <td class="py-3.5 px-3 text-right font-mono">R$ 22.400</td>
+              <td class="py-3.5 px-3 text-right font-mono text-cyan-300">+ R$ 5.950</td>
+              <td class="py-3.5 px-4 text-right font-mono font-bold text-white">R$ 28.350</td>
+              <td class="py-3.5 px-3 text-right font-mono text-rose-300 text-[11px]">- R$ 1.984 <span class="text-[9px] text-slate-500">(7%)</span></td>
+              <td class="py-3.5 px-3 text-right font-mono text-rose-300 text-[11px]">- R$ 2.088</td>
+              <td class="py-3.5 px-3 text-right font-mono text-rose-300 text-[11px]">- R$ 300 <span class="text-[9px]">(Ferramentas)</span></td>
+              <td class="py-3.5 px-4 text-right font-mono font-black text-emerald-400 text-sm">R$ 23.978 /mês</td>
+              <td class="py-3.5 px-3 text-center font-bold text-cyan-300 text-xs">84,6%</td>
+              <td class="py-3.5 px-4 text-right font-mono font-extrabold text-amber-300 text-xs">R$ 11.989 /mês</td>
+            </tr>
+
+            <!-- 5.000 Usuários -->
+            <tr class="hover:bg-white/[0.02]">
+              <td class="py-3.5 px-4 font-bold text-white">
+                5.000 usuários
+                <span class="block text-[10px] text-slate-400 font-normal">Consolidação</span>
+              </td>
+              <td class="py-3.5 px-3 text-center text-slate-300 font-mono text-[11px]">140 ILPIs<br><span class="text-slate-500">3.500 res.</span></td>
+              <td class="py-3.5 px-3 text-right font-mono">R$ 112.000</td>
+              <td class="py-3.5 px-3 text-right font-mono text-cyan-300">+ R$ 27.200</td>
+              <td class="py-3.5 px-4 text-right font-mono font-bold text-white">R$ 139.200</td>
+              <td class="py-3.5 px-3 text-right font-mono text-rose-300 text-[11px]">- R$ 12.528 <span class="text-[9px] text-slate-500">(9%)</span></td>
+              <td class="py-3.5 px-3 text-right font-mono text-rose-300 text-[11px]">- R$ 7.563</td>
+              <td class="py-3.5 px-3 text-right font-mono text-rose-300 text-[11px]">- R$ 5.700 <span class="text-[9px]">(1 Suporte CLT)</span></td>
+              <td class="py-3.5 px-4 text-right font-mono font-black text-emerald-400 text-sm">R$ 113.409 /mês</td>
+              <td class="py-3.5 px-3 text-center font-bold text-cyan-300 text-xs">81,5%</td>
+              <td class="py-3.5 px-4 text-right font-mono font-extrabold text-amber-300 text-sm">R$ 56.704 /mês</td>
+            </tr>
+
+            <!-- 10.000 Usuários -->
+            <tr class="hover:bg-white/[0.02] bg-cyan-950/15">
+              <td class="py-3.5 px-4 font-bold text-white">
+                10.000 usuários
+                <span class="block text-[10px] text-cyan-300 font-normal">Escala Regional</span>
+              </td>
+              <td class="py-3.5 px-3 text-center text-white font-mono text-[11px] font-bold">280 ILPIs<br><span class="text-slate-400">7.000 res.</span></td>
+              <td class="py-3.5 px-3 text-right font-mono">R$ 224.000</td>
+              <td class="py-3.5 px-3 text-right font-mono text-cyan-300">+ R$ 54.400</td>
+              <td class="py-3.5 px-4 text-right font-mono font-bold text-white text-base">R$ 278.400</td>
+              <td class="py-3.5 px-3 text-right font-mono text-rose-300 text-[11px]">- R$ 30.624 <span class="text-[9px] text-slate-500">(11%)</span></td>
+              <td class="py-3.5 px-3 text-right font-mono text-rose-300 text-[11px]">- R$ 14.604</td>
+              <td class="py-3.5 px-3 text-right font-mono text-rose-300 text-[11px]">- R$ 13.500 <span class="text-[9px]">(2 Suportes + Onb)</span></td>
+              <td class="py-3.5 px-4 text-right font-mono font-black text-emerald-400 text-base">R$ 219.672 /mês</td>
+              <td class="py-3.5 px-3 text-center font-bold text-cyan-300 text-xs">78,9%</td>
+              <td class="py-3.5 px-4 text-right font-mono font-black text-amber-300 text-sm">R$ 109.836 /mês</td>
+            </tr>
+
+            <!-- 25.000 Usuários -->
+            <tr class="hover:bg-white/[0.02]">
+              <td class="py-3.5 px-4 font-bold text-white">
+                25.000 usuários
+                <span class="block text-[10px] text-slate-400 font-normal">Líder Regional</span>
+              </td>
+              <td class="py-3.5 px-3 text-center text-slate-300 font-mono text-[11px]">700 ILPIs<br><span class="text-slate-500">17.500 res.</span></td>
+              <td class="py-3.5 px-3 text-right font-mono">R$ 560.000</td>
+              <td class="py-3.5 px-3 text-right font-mono text-cyan-300">+ R$ 136.000</td>
+              <td class="py-3.5 px-4 text-right font-mono font-bold text-white text-base">R$ 696.000</td>
+              <td class="py-3.5 px-3 text-right font-mono text-rose-300 text-[11px]">- R$ 113.656 <span class="text-[9px] text-slate-500">(16,33% LP)</span></td>
+              <td class="py-3.5 px-3 text-right font-mono text-rose-300 text-[11px]">- R$ 32.624</td>
+              <td class="py-3.5 px-3 text-right font-mono text-rose-300 text-[11px]">- R$ 34.000 <span class="text-[9px]">(Equipe 6 CLT)</span></td>
+              <td class="py-3.5 px-4 text-right font-mono font-black text-emerald-400 text-base">R$ 515.720 /mês</td>
+              <td class="py-3.5 px-3 text-center font-bold text-cyan-300 text-xs">74,1%</td>
+              <td class="py-3.5 px-4 text-right font-mono font-black text-amber-300 text-base">R$ 257.860 /mês</td>
+            </tr>
+
+            <!-- 50.000 Usuários -->
+            <tr class="hover:bg-white/[0.02]">
+              <td class="py-3.5 px-4 font-bold text-white">
+                50.000 usuários
+                <span class="block text-[10px] text-slate-400 font-normal">Nacional</span>
+              </td>
+              <td class="py-3.5 px-3 text-center text-slate-300 font-mono text-[11px]">1.400 ILPIs<br><span class="text-slate-500">35.000 res.</span></td>
+              <td class="py-3.5 px-3 text-right font-mono">R$ 1.120.000</td>
+              <td class="py-3.5 px-3 text-right font-mono text-cyan-300">+ R$ 272.000</td>
+              <td class="py-3.5 px-4 text-right font-mono font-bold text-white text-lg">R$ 1.392.000</td>
+              <td class="py-3.5 px-3 text-right font-mono text-rose-300 text-[11px]">- R$ 227.313 <span class="text-[9px] text-slate-500">(16,33% LP)</span></td>
+              <td class="py-3.5 px-3 text-right font-mono text-rose-300 text-[11px]">- R$ 61.304</td>
+              <td class="py-3.5 px-3 text-right font-mono text-rose-300 text-[11px]">- R$ 67.000 <span class="text-[9px]">(Equipe 10 CLT)</span></td>
+              <td class="py-3.5 px-4 text-right font-mono font-black text-emerald-400 text-lg">R$ 1.036.383 /mês</td>
+              <td class="py-3.5 px-3 text-center font-bold text-cyan-300 text-xs">74,4%</td>
+              <td class="py-3.5 px-4 text-right font-mono font-black text-amber-300 text-lg">R$ 518.191 /mês</td>
+            </tr>
+
+            <!-- 100.000 Usuários -->
+            <tr class="bg-emerald-950/25 border-t-2 border-emerald-500/40">
+              <td class="py-5 px-4 font-black text-emerald-300 text-sm">
+                100.000 usuários
+                <span class="block text-xs font-medium text-slate-300">Maturidade Total</span>
+              </td>
+              <td class="py-5 px-3 text-center text-white font-mono text-xs font-black">2.500 ILPIs<br><span class="text-cyan-300">70.000 res.</span></td>
+              <td class="py-5 px-3 text-right font-mono font-bold text-white">R$ 2.240.000</td>
+              <td class="py-5 px-3 text-right font-mono font-bold text-cyan-300">+ R$ 544.000</td>
+              <td class="py-5 px-4 text-right font-mono font-black text-white text-xl">R$ 2.784.000</td>
+              <td class="py-5 px-3 text-right font-mono text-rose-300 text-xs font-semibold">- R$ 454.627 <span class="text-[9px] text-slate-400">(16,33%)</span></td>
+              <td class="py-5 px-3 text-right font-mono text-rose-300 text-xs font-semibold">- R$ 113.763</td>
+              <td class="py-5 px-3 text-right font-mono text-rose-300 text-xs font-semibold">- R$ 135.000 <span class="text-[9px]">(18 CLT 24/7)</span></td>
+              <td class="py-5 px-4 text-right font-mono font-black text-emerald-400 text-2xl">R$ 2.080.610 /mês</td>
+              <td class="py-5 px-3 text-center font-black text-cyan-300 text-sm">74,7%</td>
+              <td class="py-5 px-4 text-right font-mono font-black text-amber-300 text-xl">R$ 1.040.305 /mês</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Destaques Realistas -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+        <div class="exec-card p-5 rounded-2xl border border-white/5 space-y-1">
+          <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Lucro Líquido Anual dos Sócios (100k)</span>
+          <p class="text-2xl font-black text-emerald-400 font-mono">R$ 24.967.320,00</p>
+          <span class="text-[11px] text-slate-400">Total distribuível anual para a sociedade na maturidade</span>
+        </div>
+        <div class="exec-card p-5 rounded-2xl border border-amber-500/30 bg-amber-950/15 space-y-1">
+          <span class="text-xs text-amber-300 uppercase font-bold tracking-wider">Retirada Anual para CADA Sócio (50%)</span>
+          <p class="text-2xl font-black text-amber-300 font-mono">R$ 12.483.660,00</p>
+          <span class="text-[11px] text-amber-200">Mais de R$ 1 Milhão por mês livre de impostos na pessoa física</span>
+        </div>
+        <div class="exec-card p-5 rounded-2xl border border-white/5 space-y-1">
+          <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Despesas Reais já Descontadas</span>
+          <p class="text-2xl font-black text-cyan-400 font-mono">100% Blindado</p>
+          <span class="text-[11px] text-slate-400">Inclui 18 funcionários CLT, R$ 454k de impostos e servidores</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Seção 5: Simulador Interativo de Lucros & Projeção para os Sócios -->
     <section id="simulador-socios" class="exec-card rounded-3xl p-8 border border-cyan-500/30 space-y-6">
       <div class="border-b border-white/10 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
