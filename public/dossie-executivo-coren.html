@@ -885,17 +885,33 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         <!-- Controles -->
-        <div class="lg:col-span-5 space-y-6">
+        <div class="lg:col-span-5 space-y-5">
+          <!-- Seletor 1: ILPIs -->
           <div>
             <div class="flex justify-between text-xs font-bold mb-2">
               <span class="text-slate-300">Quantidade de ILPIs Pagantes:</span>
-              <span id="range-ilpis-val" class="text-cyan-400 font-mono text-base">50 ILPIs</span>
+              <span id="range-ilpis-val" class="text-cyan-400 font-mono text-base font-bold">50 ILPIs</span>
             </div>
             <input type="range" id="range-ilpis" min="2" max="500" value="50" step="2" class="w-full accent-cyan-400 cursor-pointer h-2 bg-slate-700 rounded-lg" oninput="calcularSenecurare()" />
             <div class="flex justify-between text-[10px] text-slate-500 mt-1 font-mono">
               <span>2 ILPIs (Início)</span>
               <span>100 ILPIs</span>
               <span>500 ILPIs</span>
+            </div>
+          </div>
+
+          <!-- Seletor 2: Teleconsultas por Residente -->
+          <div>
+            <div class="flex justify-between text-xs font-bold mb-2">
+              <span class="text-slate-300">Média de Teleconsultas por Residente:</span>
+              <span id="range-telemed-val" class="text-emerald-400 font-mono text-base font-bold">0,25 / mês</span>
+            </div>
+            <input type="range" id="range-telemed" min="0.05" max="1.00" value="0.25" step="0.05" class="w-full accent-emerald-400 cursor-pointer h-2 bg-slate-700 rounded-lg" oninput="calcularSenecurare()" />
+            <div class="flex justify-between text-[10px] text-slate-500 mt-1 font-mono">
+              <span>0,05 (Rara)</span>
+              <span>0,25 (Padrão)</span>
+              <span>0,50 (Média)</span>
+              <span>1,00 (1/mês)</span>
             </div>
           </div>
 
@@ -913,8 +929,8 @@
               <strong id="sim-funcionarios" class="text-white font-mono">600 colaboradores</strong>
             </div>
             <div class="flex justify-between pt-2 border-t border-white/5 text-cyan-300">
-              <span>Teleconsultas Estimadas (0,25/resid.):</span>
-              <strong id="sim-teleconsultas" class="font-mono text-emerald-400 font-bold">312 consultas / mês</strong>
+              <span>Teleconsultas Estimadas:</span>
+              <strong id="sim-teleconsultas" class="font-mono text-emerald-400 font-bold">313 consultas / mês</strong>
             </div>
           </div>
         </div>
@@ -1290,8 +1306,10 @@
   <script>
     function calcularSenecurare() {
       const ilpis = parseInt(document.getElementById('range-ilpis').value);
+      const freqTelemed = parseFloat(document.getElementById('range-telemed').value);
 
       document.getElementById('range-ilpis-val').innerText = ilpis + ' ILPIs';
+      document.getElementById('range-telemed-val').innerText = freqTelemed.toFixed(2).replace('.', ',') + ' / mês';
 
       // Estimativa média por ILPI: 25 residentes + 12 funcionários
       const residentes = ilpis * 25;
@@ -1321,8 +1339,8 @@
       const lucroSaas = Math.max(0, faturamentoSaas - impostosSaas - custoNuvem);
       document.getElementById('sim-lucro-saas').innerText = lucroSaas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-      // 2. MOTOR TELEMEDICINA (0,25 consulta / residente / mês a R$ 27,70 de lucro líquido unitário)
-      const teleconsultas = Math.round(residentes * 0.25);
+      // 2. MOTOR TELEMEDICINA (dinâmico com o seletor a R$ 27,70 de lucro líquido unitário)
+      const teleconsultas = Math.round(residentes * freqTelemed);
       document.getElementById('sim-teleconsultas').innerText = teleconsultas.toLocaleString('pt-BR') + ' consultas / mês';
 
       const lucroTelemed = teleconsultas * 27.70;
