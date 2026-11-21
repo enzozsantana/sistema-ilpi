@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Senecurare — Dossiê Executivo de Planos, Precificação & Escala</title>
+  
+  <!-- Fontes Oficiais: Geist & Playfair Display -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600;1,700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS v3/v4 Play CDN para layout instantâneo de alta performance -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Geist', 'system-ui', 'sans-serif'],
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+          },
+          colors: {
+            brand: {
+              dark: '#0B191E',
+              card: '#112329',
+              cardHover: '#162C34',
+              border: 'rgba(110, 197, 212, 0.15)',
+              sene: '#6ec5d4',
+              curare: '#f48a73',
+              primary: '#123F4A',
+              emerald: '#10B981',
+              amber: '#F59E0B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #0B191E;
+      color: #E2E8F0;
+      font-family: 'Geist', sans-serif;
+    }
+    .font-heading {
+      font-family: 'Playfair Display', serif;
+    }
+    .glass-card {
+      background: linear-gradient(135deg, rgba(17, 35, 41, 0.95), rgba(11, 25, 30, 0.85));
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(110, 197, 212, 0.15);
+    }
+    .glass-card-featured {
+      background: linear-gradient(135deg, rgba(22, 50, 58, 0.98), rgba(14, 33, 39, 0.92));
+      border: 2px solid rgba(110, 197, 212, 0.45);
+      box-shadow: 0 0 35px -5px rgba(110, 197, 212, 0.2);
+    }
+    @media print {
+      body {
+        background: #FFFFFF !important;
+        color: #0F172A !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .glass-card, .glass-card-featured {
+        background: #FFFFFF !important;
+        border: 1px solid #CBD5E1 !important;
+        box-shadow: none !important;
+        color: #0F172A !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen selection:bg-brand-sene selection:text-brand-dark antialiased">
+
+  <!-- Top Bar de Destaque / Badge Institucional -->
+  <aside aria-label="Aviso Regulatório" class="bg-gradient-to-r from-emerald-950/80 via-emerald-900/60 to-teal-950/80 border-b border-emerald-500/20 py-2.5 px-4 text-center text-xs sm:text-sm font-medium text-emerald-300 flex items-center justify-center gap-2">
+    <span class="inline-block size-2 rounded-full bg-emerald-400 animate-pulse"></span>
+    <span><strong>Chancela Oficial:</strong> Sistema desenvolvido sob mentoria clínica de <strong>Conselheira do COREN</strong> especialista em ILPIs e RDC 502/2021 ANVISA.</span>
+  </aside>
+
+  <!-- Cabeçalho Principal -->
+  <header class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 flex flex-col md:flex-row items-center justify-between gap-6 border-b border-white/5">
+    <div class="flex items-center gap-4">
+      <div class="size-14 rounded-2xl bg-white/95 dark:bg-card p-2 shadow-lg ring-1 ring-border/50 flex items-center justify-center shrink-0">
+        <img src="/logo-icon.png" alt="Senecurare Logo" class="size-full object-contain" onerror="this.src='/logo-192.png'" />
+      </div>
+      <div>
+        <div class="flex items-baseline font-heading tracking-tight text-3xl sm:text-4xl">
+          <span class="font-bold text-[#6ec5d4]">Sene</span>
+          <span class="italic font-medium text-[#f48a73]">curare</span>
+        </div>
+        <p class="font-heading italic text-xs sm:text-sm text-slate-400">Raízes de cuidado, laços de vida.</p>
+      </div>
+    </div>
+
+    <!-- Botões de Ação Executiva -->
+    <div class="flex items-center gap-3 no-print">
+      <button onclick="window.print()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-colors flex items-center gap-2">
+        <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+        Salvar em PDF / Imprimir
+      </button>
+      <a href="/login" class="px-5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-[#123F4A] to-[#1d5b68] hover:brightness-110 text-white shadow-sm ring-1 ring-white/10 transition-all flex items-center gap-2">
+        Acessar Sistema
+        <svg class="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero Executivo & Proposta de Valor -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="text-center max-w-3xl mx-auto space-y-4">
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+        Dossiê Comercial & Proposta de Planos
+      </span>
+      <h1 class="text-3xl sm:text-5xl font-bold font-heading text-white tracking-tight leading-tight">
+        Blindagem Regulatória, Cuidado Clínico e Gestão para ILPIs
+      </h1>
+      <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+        Elimine o prontuário em papel e proteja sua instituição contra multas sanitárias. Modelo de precificação bi-fatorial baseado em <strong>Residentes + Quantidade de Funcionários</strong>, com todas as exigências da RDC 502/2021 em um único ecossistema.
+      </p>
+
+      <!-- Toggle Mensal / Anual -->
+      <div class="pt-6 flex items-center justify-center gap-3">
+        <span id="label-mensal" class="text-sm font-semibold text-white">Faturamento Mensal</span>
+        <button id="billing-toggle" onclick="toggleBilling()" class="relative inline-flex h-7 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-cyan-600 transition-colors duration-200 ease-in-out focus:outline-none" role="switch" aria-checked="false">
+          <span id="toggle-circle" class="pointer-events-none inline-block size-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0"></span>
+        </button>
+        <div class="flex items-center gap-1.5">
+          <span id="label-anual" class="text-sm font-semibold text-slate-400">Plano Anual</span>
+          <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            2 MESES GRÁTIS
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seção 1: Grid dos 3 Planos Comerciais -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 pt-12 items-stretch">
+
+      <!-- 1. Plano Essencial -->
+      <div class="glass-card rounded-3xl p-7 flex flex-col justify-between transition-all duration-200 hover:border-cyan-500/40">
+        <div>
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h2 class="text-xl font-bold text-white font-heading">Plano Essencial</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Operação ágil para lares acolhedores</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white/5 text-slate-300 border border-white/10">Início</span>
+          </div>
+
+          <!-- Preço -->
+          <div class="my-6">
+            <div class="flex items-baseline gap-1">
+              <span class="text-xs font-semibold text-slate-400">R$</span>
+              <span class="text-4xl font-extrabold text-white tracking-tight price-val" data-monthly="380" data-yearly="316">380</span>
+              <span class="text-xs text-slate-400">/mês</span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1 billing-note">Cobrado mensalmente</p>
+          </div>
+
+          <!-- Franquias Inclusas -->
+          <div class="p-3.5 rounded-2xl bg-black/20 border border-white/5 space-y-2 mb-6 text-xs">
+            <div class="flex justify-between items-center text-slate-200">
+              <span>Franquia de Residentes:</span>
+              <strong class="text-white font-semibold">Até 12 residentes</strong>
+            </div>
+            <div class="flex justify-between items-center text-slate-200">
+              <span>Franquia de Funcionários:</span>
+              <strong class="text-white font-semibold">Até 10 funcionários</strong>
+            </div>
+            <div class="pt-2 border-t border-white/5 flex justify-between text-[11px] text-slate-400">
+              <span>Residente adicional: <strong>+ R$ 25/mês</strong></span>
+              <span>Funcionário adic.: <strong>+ R$ 12/mês</strong></span>
+            </div>
+          </div>
+
+          <!-- Lista de Recursos -->
+          <ul class="space-y-3 text-xs text-slate-300">
+            <li class="flex items-center gap-2.5">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Painel de Plantão & Checagem Horária</span>
+            </li>
+            <li class="flex items-center gap-2.5">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Passagem de Plantão Digital em 3 Turnos</span>
+            </li>
+            <li class="flex items-center gap-2.5">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Prontuário Multidisciplinar Digital</span>
+            </li>
+            <li class="flex items-center gap-2.5">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Escalas Clínicas (Fugulin, Morse, Braden, MNA)</span>
+            </li>
+            <li class="flex items-center gap-2.5">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Prescrições & Farmácia Popular RENAME</span>
+            </li>
+            <li class="flex items-center gap-2.5">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Busca Rápida Global Ctrl+K & PWA Offline</span>
+            </li>
+            <li class="flex items-center gap-2.5 text-slate-400">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span><strong>Tier 1 Cursos:</strong> 2 cursos básicos RDC 502</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="pt-8">
+          <a href="#simulador" class="w-full py-2.5 px-4 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-colors flex items-center justify-center gap-1.5">
+            Simular Este Plano
+          </a>
+        </div>
+      </div>
+
+      <!-- 2. Plano Clínico & Compliance (CARRO-CHEFE) -->
+      <div class="glass-card-featured rounded-3xl p-7 flex flex-col justify-between relative shadow-2xl">
+        <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[11px] font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md uppercase tracking-wider flex items-center gap-1.5">
+          <svg class="size-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          Recomendado · Padrão COREN
+        </div>
+
+        <div>
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h2 class="text-xl font-bold text-white font-heading">Clínico & Compliance</h2>
+              <p class="text-xs text-cyan-200 mt-0.5">Plena blindagem sanitária RDC 502</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Mais Escolhido</span>
+          </div>
+
+          <!-- Preço -->
+          <div class="my-6">
+            <div class="flex items-baseline gap-1">
+              <span class="text-xs font-semibold text-slate-400">R$</span>
+              <span class="text-5xl font-extrabold text-white tracking-tight price-val" data-monthly="780" data-yearly="650">780</span>
+              <span class="text-xs text-slate-400">/mês</span>
+            </div>
+            <p class="text-[11px] text-cyan-300 mt-1 billing-note">Cobrado mensalmente</p>
+          </div>
+
+          <!-- Franquias Inclusas -->
+          <div class="p-3.5 rounded-2xl bg-cyan-950/40 border border-cyan-500/20 space-y-2 mb-6 text-xs">
+            <div class="flex justify-between items-center text-slate-100">
+              <span>Franquia de Residentes:</span>
+              <strong class="text-white font-bold text-sm">Até 25 residentes</strong>
+            </div>
+            <div class="flex justify-between items-center text-slate-100">
+              <span>Franquia de Funcionários:</span>
+              <strong class="text-white font-bold text-sm">Até 25 funcionários</strong>
+            </div>
+            <div class="pt-2 border-t border-cyan-500/20 flex justify-between text-[11px] text-cyan-200">
+              <span>Residente adicional: <strong>+ R$ 28/mês</strong></span>
+              <span>Funcionário adic.: <strong>+ R$ 15/mês</strong></span>
+            </div>
+          </div>
+
+          <!-- Lista de Recursos -->
+          <ul class="space-y-3 text-xs text-slate-200">
+            <li class="flex items-center gap-2.5">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span><strong>Tudo do Plano Essencial</strong> incluso</span>
+            </li>
+            <li class="flex items-center gap-2.5 font-medium text-white">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span><strong>Controle Fotográfico de LPP</strong> com Mapa e Linha do Tempo</span>
+            </li>
+            <li class="flex items-center gap-2.5 font-medium text-white">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span><strong>Cadeia de Frio (2°C a 8°C)</strong> bimarginal com gráfico</span>
+            </li>
+            <li class="flex items-center gap-2.5 font-medium text-white">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span><strong>Biblioteca de POPs</strong> com controle de vigência e anexos</span>
+            </li>
+            <li class="flex items-center gap-2.5 font-medium text-white">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span><strong>Dimensionamento Fugulin</strong> automático (COFEN/RDC 502)</span>
+            </li>
+            <li class="flex items-center gap-2.5 font-medium text-white">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span><strong>Tier 2 Cursos:</strong> 5 cursos oficiais RDC 502 com QR Code</span>
+            </li>
+            <li class="flex items-center gap-2.5 font-medium text-white">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Acesso ao módulo de <strong>Teleconsulta</strong> com split financeiro</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="pt-8">
+          <a href="#simulador" class="w-full py-3 px-4 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 text-white shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2">
+            Contratar Plano Recomendado
+            <svg class="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- 3. Plano Enterprise & Redes -->
+      <div class="glass-card rounded-3xl p-7 flex flex-col justify-between transition-all duration-200 hover:border-cyan-500/40">
+        <div>
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h2 class="text-xl font-bold text-white font-heading">Enterprise & Redes</h2>
+              <p class="text-xs text-slate-400 mt-0.5">Grandes residenciais e redes com filiais</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white/5 text-slate-300 border border-white/10">VIP</span>
+          </div>
+
+          <!-- Preço -->
+          <div class="my-6">
+            <div class="flex items-baseline gap-1">
+              <span class="text-xs font-semibold text-slate-400">R$</span>
+              <span class="text-4xl font-extrabold text-white tracking-tight price-val" data-monthly="1890" data-yearly="1575">1.890</span>
+              <span class="text-xs text-slate-400">/mês</span>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1 billing-note">Cobrado mensalmente</p>
+          </div>
+
+          <!-- Franquias Inclusas -->
+          <div class="p-3.5 rounded-2xl bg-black/20 border border-white/5 space-y-2 mb-6 text-xs">
+            <div class="flex justify-between items-center text-slate-200">
+              <span>Franquia de Residentes:</span>
+              <strong class="text-white font-semibold">Até 50 residentes</strong>
+            </div>
+            <div class="flex justify-between items-center text-slate-200">
+              <span>Franquia de Funcionários:</span>
+              <strong class="text-white font-semibold">Até 50 funcionários</strong>
+            </div>
+            <div class="pt-2 border-t border-white/5 flex justify-between text-[11px] text-slate-400">
+              <span>Residente adicional: <strong>+ R$ 32/mês</strong></span>
+              <span>Funcionário adic.: <strong>+ R$ 18/mês</strong></span>
+            </div>
+          </div>
+
+          <!-- Lista de Recursos -->
+          <ul class="space-y-3 text-xs text-slate-300">
+            <li class="flex items-center gap-2.5">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span><strong>Tudo do Plano Clínico</strong> incluso</span>
+            </li>
+            <li class="flex items-center gap-2.5">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span><strong>Criador de Cursos Próprios da ILPI</strong></span>
+            </li>
+            <li class="flex items-center gap-2.5">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span><strong>Tier 3 Cursos:</strong> Trilha Completa (8 cursos avançados)</span>
+            </li>
+            <li class="flex items-center gap-2.5">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span><strong>Gestão Multiunidade</strong> consolidada</span>
+            </li>
+            <li class="flex items-center gap-2.5">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Consultório Virtual com taxa reduzida</span>
+            </li>
+            <li class="flex items-center gap-2.5">
+              <svg class="size-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Gerente de Conta & Suporte Prioritário VIP</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="pt-8">
+          <a href="#simulador" class="w-full py-2.5 px-4 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-white border border-white/10 transition-colors flex items-center justify-center gap-1.5">
+            Simular Este Plano
+          </a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Seção 2: Simulador Interativo de Preço -->
+    <section id="simulador" class="mt-20 p-8 sm:p-10 rounded-3xl glass-card border border-cyan-500/20">
+      <div class="max-w-3xl mx-auto">
+        <div class="text-center space-y-2 mb-8">
+          <span class="text-xs font-bold uppercase tracking-wider text-cyan-400">Calculadora Comercial em Tempo Real</span>
+          <h2 class="text-2xl sm:text-3xl font-bold font-heading text-white">Simule o Plano Ideal para a sua Instituição</h2>
+          <p class="text-xs sm:text-sm text-slate-400">Ajuste o número de residentes e colaboradores para calcular automaticamente o melhor investimento.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 bg-black/30 p-6 rounded-2xl border border-white/5 mb-8">
+          <!-- Slider Residentes -->
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <label for="res-slider" class="text-xs font-semibold text-slate-300">Número de Residentes:</label>
+              <span id="res-val" class="text-base font-bold text-cyan-400">20 residentes</span>
+            </div>
+            <input type="range" id="res-slider" min="5" max="120" value="20" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-400" oninput="calculateCustom()" />
+            <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+              <span>5</span>
+              <span>30</span>
+              <span>60</span>
+              <span>120+</span>
+            </div>
+          </div>
+
+          <!-- Slider Funcionários -->
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <label for="func-slider" class="text-xs font-semibold text-slate-300">Equipe / Funcionários:</label>
+              <span id="func-val" class="text-base font-bold text-emerald-400">18 funcionários</span>
+            </div>
+            <input type="range" id="func-slider" min="3" max="100" value="18" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-400" oninput="calculateCustom()" />
+            <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+              <span>3</span>
+              <span>25</span>
+              <span>50</span>
+              <span>100+</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resultado do Cálculo -->
+        <div class="flex flex-col sm:flex-row items-center justify-between p-6 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-teal-950/40 to-slate-900 border border-cyan-500/30 gap-6">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-400">Plano Recomendado:</span>
+              <span id="calc-plano" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                Plano Clínico & Compliance
+              </span>
+            </div>
+            <p id="calc-excedentes" class="text-[11px] text-slate-400 mt-1">Dentro da franquia inclusa (sem cobrança adicional de excedente).</p>
+          </div>
+
+          <div class="text-right shrink-0">
+            <span class="text-[11px] text-slate-400 block">Mensalidade Estimada:</span>
+            <div class="flex items-baseline gap-1 justify-end">
+              <span class="text-sm font-semibold text-slate-400">R$</span>
+              <span id="calc-total" class="text-3xl sm:text-4xl font-extrabold text-white">780,00</span>
+              <span class="text-xs text-slate-400">/mês</span>
+            </div>
+            <span id="calc-economy" class="text-[10px] text-emerald-400 block mt-0.5 font-medium">No plano anual: economize R$ 1.560,00/ano</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Seção 3: Tabela Oficial de Teleconsultas & Split Financeiro -->
+    <section class="mt-20">
+      <div class="text-center max-w-2xl mx-auto space-y-2 mb-10">
+        <span class="text-xs font-bold uppercase tracking-wider text-cyan-400">Consultório Virtual Integrado</span>
+        <h2 class="text-2xl sm:text-3xl font-bold font-heading text-white">Tabela Oficial Padronizada de Teleconsultas</h2>
+        <p class="text-xs sm:text-sm text-slate-400">
+          Valores fixos baseados na média de mercado da saúde suplementar geriátrica. Divisão automática via Split Mercado Pago sem bitributação.
+        </p>
+      </div>
+
+      <div class="overflow-x-auto glass-card rounded-3xl border border-white/10">
+        <table class="w-full text-left text-xs sm:text-sm">
+          <thead class="bg-black/40 text-slate-300 border-b border-white/10 font-semibold uppercase tracking-wider text-[11px]">
+            <tr>
+              <th class="py-4 px-6">Especialidade Clínica</th>
+              <th class="py-4 px-4 text-center">Duração</th>
+              <th class="py-4 px-6 text-right font-bold text-white">Valor Tabelado</th>
+              <th class="py-4 px-6 text-right text-cyan-300">Especialista (75%)</th>
+              <th class="py-4 px-6 text-right text-emerald-300">Comissão ILPI (18%)</th>
+              <th class="py-4 px-6 text-right text-slate-400">Tecnologia (7%)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5 text-slate-300">
+            <tr class="hover:bg-white/[0.02]">
+              <td class="py-4 px-6 font-semibold text-white flex items-center gap-2.5">
+                <span class="size-2 rounded-full bg-cyan-400"></span>
+                Medicina Geriátrica & Clínica Geral
+              </td>
+              <td class="py-4 px-4 text-center text-slate-400">45 a 60 min</td>
+              <td class="py-4 px-6 text-right font-bold text-white text-base">R$ 240,00</td>
+              <td class="py-4 px-6 text-right text-cyan-300 font-semibold">R$ 180,00</td>
+              <td class="py-4 px-6 text-right text-emerald-300 font-semibold">R$ 43,20</td>
+              <td class="py-4 px-6 text-right text-slate-400">R$ 16,80</td>
+            </tr>
+            <tr class="hover:bg-white/[0.02]">
+              <td class="py-4 px-6 font-semibold text-white flex items-center gap-2.5">
+                <span class="size-2 rounded-full bg-rose-400"></span>
+                Estomaterapia & Manejo de Feridas/LPP
+              </td>
+              <td class="py-4 px-4 text-center text-slate-400">40 a 45 min</td>
+              <td class="py-4 px-6 text-right font-bold text-white text-base">R$ 180,00</td>
+              <td class="py-4 px-6 text-right text-cyan-300 font-semibold">R$ 135,00</td>
+              <td class="py-4 px-6 text-right text-emerald-300 font-semibold">R$ 32,40</td>
+              <td class="py-4 px-6 text-right text-slate-400">R$ 12,60</td>
+            </tr>
+            <tr class="hover:bg-white/[0.02]">
+              <td class="py-4 px-6 font-semibold text-white flex items-center gap-2.5">
+                <span class="size-2 rounded-full bg-amber-400"></span>
+                Nutrição Clínica & Geriátrica (Enteral/Disfagia)
+              </td>
+              <td class="py-4 px-4 text-center text-slate-400">40 min</td>
+              <td class="py-4 px-6 text-right font-bold text-white text-base">R$ 160,00</td>
+              <td class="py-4 px-6 text-right text-cyan-300 font-semibold">R$ 120,00</td>
+              <td class="py-4 px-6 text-right text-emerald-300 font-semibold">R$ 28,80</td>
+              <td class="py-4 px-6 text-right text-slate-400">R$ 11,20</td>
+            </tr>
+            <tr class="hover:bg-white/[0.02]">
+              <td class="py-4 px-6 font-semibold text-white flex items-center gap-2.5">
+                <span class="size-2 rounded-full bg-purple-400"></span>
+                Psicologia Clínica & Demências (Neuropsicologia)
+              </td>
+              <td class="py-4 px-4 text-center text-slate-400">50 min</td>
+              <td class="py-4 px-6 text-right font-bold text-white text-base">R$ 140,00</td>
+              <td class="py-4 px-6 text-right text-cyan-300 font-semibold">R$ 105,00</td>
+              <td class="py-4 px-6 text-right text-emerald-300 font-semibold">R$ 25,20</td>
+              <td class="py-4 px-6 text-right text-slate-400">R$ 9,80</td>
+            </tr>
+            <tr class="hover:bg-white/[0.02]">
+              <td class="py-4 px-6 font-semibold text-white flex items-center gap-2.5">
+                <span class="size-2 rounded-full bg-emerald-400"></span>
+                Fisioterapia Geriátrica & Reabilitação Motora
+              </td>
+              <td class="py-4 px-4 text-center text-slate-400">40 min</td>
+              <td class="py-4 px-6 text-right font-bold text-white text-base">R$ 130,00</td>
+              <td class="py-4 px-6 text-right text-cyan-300 font-semibold">R$ 97,50</td>
+              <td class="py-4 px-6 text-right text-emerald-300 font-semibold">R$ 23,40</td>
+              <td class="py-4 px-6 text-right text-slate-400">R$ 9,10</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Seção 4: LMS de Treinamentos por Tiers (RDC 502 Art. 38) -->
+    <section class="mt-20">
+      <div class="text-center max-w-2xl mx-auto space-y-2 mb-10">
+        <span class="text-xs font-bold uppercase tracking-wider text-cyan-400">Educação Permanente & Compliance</span>
+        <h2 class="text-2xl sm:text-3xl font-bold font-heading text-white">Catálogo de Cursos & Certificação por Tiers</h2>
+        <p class="text-xs sm:text-sm text-slate-400">
+          Atenda 100% das exigências do Art. 38 da RDC 502 com quizzes avaliativos e emissão oficial de certificados com QR Code de autenticidade.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Tier 1 -->
+        <div class="glass-card rounded-2xl p-6 border border-white/10 space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Tier 1 · Essencial</span>
+            <span class="text-xs text-slate-400">2 Cursos</span>
+          </div>
+          <h3 class="text-base font-bold text-white font-heading">Segurança Básica Beira-Leito</h3>
+          <ul class="space-y-2 text-xs text-slate-300">
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-400 font-bold">1.</span>
+              <span>Higiene das Mãos, Precauções de Contato & Biossegurança</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-emerald-400 font-bold">2.</span>
+              <span>Prevenção de Quedas & Adaptação Ambiental para Idosos Frágeis</span>
+            </li>
+          </ul>
+          <p class="text-[11px] text-slate-400 pt-2 border-t border-white/5">Até 2 certificações por funcionário/ano.</p>
+        </div>
+
+        <!-- Tier 2 -->
+        <div class="glass-card-featured rounded-2xl p-6 border border-cyan-500/30 space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Tier 2 · Clínico & Compliance</span>
+            <span class="text-xs text-cyan-300 font-bold">5 Cursos RDC 502</span>
+          </div>
+          <h3 class="text-base font-bold text-white font-heading">Trilha Oficial da ANVISA</h3>
+          <ul class="space-y-2 text-xs text-slate-200">
+            <li class="flex items-start gap-2 text-slate-400">
+              <span>✓</span>
+              <span>Todos os 2 cursos do Tier 1 inclusos</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-cyan-400 font-bold">3.</span>
+              <span>Prevenção, Estadiamento & Manejo de LPP (Escaras)</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-cyan-400 font-bold">4.</span>
+              <span>Cuidados com Dietas, Disfagia & Prevenção de Broncoaspiração</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-cyan-400 font-bold">5.</span>
+              <span>Boas Práticas na Cadeia de Frio de Medicamentos (2°C a 8°C)</span>
+            </li>
+          </ul>
+          <p class="text-[11px] text-cyan-200 pt-2 border-t border-cyan-500/20 font-medium">Certificados oficiais com QR Code ilimitados.</p>
+        </div>
+
+        <!-- Tier 3 -->
+        <div class="glass-card rounded-2xl p-6 border border-white/10 space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">Tier 3 · Enterprise</span>
+            <span class="text-xs text-slate-400">8 Cursos + Personalizados</span>
+          </div>
+          <h3 class="text-base font-bold text-white font-heading">Gestão Avançada & Custom</h3>
+          <ul class="space-y-2 text-xs text-slate-300">
+            <li class="flex items-start gap-2 text-slate-400">
+              <span>✓</span>
+              <span>Todos os 5 cursos da RDC 502 inclusos</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-purple-400 font-bold">6.</span>
+              <span>Manejo de Demências, Alzheimer & Agitação Psicomotora</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-purple-400 font-bold">7.</span>
+              <span>Cuidados Paliativos & Diretivas Antecipadas</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="text-purple-400 font-bold">8.</span>
+              <span>Liderança e Gestão de Plantão para RTs</span>
+            </li>
+          </ul>
+          <p class="text-[11px] text-purple-200 pt-2 border-t border-white/5 font-semibold">✨ Criador de Cursos Próprios da ILPI incluso.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Seção 5: Custos de Infraestrutura Graduais & Unit Economics (100 a 100k) -->
+    <section class="mt-20">
+      <div class="text-center max-w-2xl mx-auto space-y-2 mb-10">
+        <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Solidez & Eficiência Técnica</span>
+        <h2 class="text-2xl sm:text-3xl font-bold font-heading text-white">Escalabilidade de Nuvem & Unit Economics</h2>
+        <p class="text-xs sm:text-sm text-slate-400">
+          Projeção financeira gradual de 100 a 100.000 usuários ativos. O custo de servidor cai para menos de R$ 0,20 por residente, assegurando margens brutas superiores a 98%.
+        </p>
+      </div>
+
+      <div class="overflow-x-auto glass-card rounded-3xl border border-white/10">
+        <table class="w-full text-left text-xs sm:text-sm">
+          <thead class="bg-black/40 text-slate-300 border-b border-white/10 font-semibold uppercase tracking-wider text-[11px]">
+            <tr>
+              <th class="py-3.5 px-5">Faixa de Escala</th>
+              <th class="py-3.5 px-4 text-center">Residentes</th>
+              <th class="py-3.5 px-4 text-center">Funcionários</th>
+              <th class="py-3.5 px-4 text-right">Custo Nuvem</th>
+              <th class="py-3.5 px-4 text-right">Custo / Residente</th>
+              <th class="py-3.5 px-5 text-right font-bold text-white">Faturamento (MRR)</th>
+              <th class="py-3.5 px-5 text-right font-bold text-emerald-400">Margem Bruta</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5 text-slate-300">
+            <tr>
+              <td class="py-3 px-5 font-semibold text-white">100 usuários</td>
+              <td class="py-3 px-4 text-center text-slate-400">~70</td>
+              <td class="py-3 px-4 text-center text-slate-400">~30</td>
+              <td class="py-3 px-4 text-right font-mono text-slate-300">R$ 261/mês</td>
+              <td class="py-3 px-4 text-right font-mono text-slate-300">R$ 3,73</td>
+              <td class="py-3 px-5 text-right font-bold text-white">R$ 2.240/mês</td>
+              <td class="py-3 px-5 text-right font-semibold text-emerald-400">88,3%</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-5 font-semibold text-white">500 usuários</td>
+              <td class="py-3 px-4 text-center text-slate-400">~350</td>
+              <td class="py-3 px-4 text-center text-slate-400">~150</td>
+              <td class="py-3 px-4 text-right font-mono text-slate-300">R$ 464/mês</td>
+              <td class="py-3 px-4 text-right font-mono text-slate-300">R$ 1,33</td>
+              <td class="py-3 px-5 text-right font-bold text-white">R$ 11.200/mês</td>
+              <td class="py-3 px-5 text-right font-semibold text-emerald-400">95,9%</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-5 font-semibold text-white">1.000 usuários</td>
+              <td class="py-3 px-4 text-center text-slate-400">~700</td>
+              <td class="py-3 px-4 text-center text-slate-400">~300</td>
+              <td class="py-3 px-4 text-right font-mono text-slate-300">R$ 986/mês</td>
+              <td class="py-3 px-4 text-right font-mono text-slate-300">R$ 1,41</td>
+              <td class="py-3 px-5 text-right font-bold text-white">R$ 22.400/mês</td>
+              <td class="py-3 px-5 text-right font-semibold text-emerald-400">95,6%</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-5 font-semibold text-white">5.000 usuários</td>
+              <td class="py-3 px-4 text-center text-slate-400">~3.500</td>
+              <td class="py-3 px-4 text-center text-slate-400">~1.500</td>
+              <td class="py-3 px-4 text-right font-mono text-slate-300">R$ 2.523/mês</td>
+              <td class="py-3 px-4 text-right font-mono text-slate-300">R$ 0,72</td>
+              <td class="py-3 px-5 text-right font-bold text-white">R$ 112.000/mês</td>
+              <td class="py-3 px-5 text-right font-semibold text-emerald-400">97,7%</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-5 font-semibold text-white">10.000 usuários</td>
+              <td class="py-3 px-4 text-center text-slate-400">~7.000</td>
+              <td class="py-3 px-4 text-center text-slate-400">~3.000</td>
+              <td class="py-3 px-4 text-right font-mono text-slate-300">R$ 4.524/mês</td>
+              <td class="py-3 px-4 text-right font-mono text-slate-300">R$ 0,65</td>
+              <td class="py-3 px-5 text-right font-bold text-white">R$ 224.000/mês</td>
+              <td class="py-3 px-5 text-right font-semibold text-emerald-400">98,0%</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-5 font-semibold text-white">25.000 usuários</td>
+              <td class="py-3 px-4 text-center text-slate-400">~17.500</td>
+              <td class="py-3 px-4 text-center text-slate-400">~7.500</td>
+              <td class="py-3 px-4 text-right font-mono text-slate-300">R$ 7.424/mês</td>
+              <td class="py-3 px-4 text-right font-mono text-slate-300">R$ 0,42</td>
+              <td class="py-3 px-5 text-right font-bold text-white">R$ 560.000/mês</td>
+              <td class="py-3 px-5 text-right font-semibold text-emerald-400">98,7%</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-5 font-semibold text-white">50.000 usuários</td>
+              <td class="py-3 px-4 text-center text-slate-400">~35.000</td>
+              <td class="py-3 px-4 text-center text-slate-400">~15.000</td>
+              <td class="py-3 px-4 text-right font-mono text-slate-300">R$ 10.904/mês</td>
+              <td class="py-3 px-4 text-right font-mono text-slate-300">R$ 0,31</td>
+              <td class="py-3 px-5 text-right font-bold text-white">R$ 1.120.000/mês</td>
+              <td class="py-3 px-5 text-right font-semibold text-emerald-400">99,0%</td>
+            </tr>
+            <tr class="bg-cyan-950/20">
+              <td class="py-3.5 px-5 font-bold text-cyan-300">100.000 usuários</td>
+              <td class="py-3.5 px-4 text-center font-semibold text-white">~70.000</td>
+              <td class="py-3.5 px-4 text-center font-semibold text-white">~30.000</td>
+              <td class="py-3.5 px-4 text-right font-mono text-cyan-200">R$ 12.963/mês</td>
+              <td class="py-3.5 px-4 text-right font-mono font-bold text-emerald-400">R$ 0,19</td>
+              <td class="py-3.5 px-5 text-right font-extrabold text-white text-base">R$ 2.240.000/mês</td>
+              <td class="py-3.5 px-5 text-right font-extrabold text-emerald-400 text-base">99,42%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Rodapé Executivo -->
+  <footer class="border-t border-white/5 py-8 mt-20 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <span class="font-heading font-bold text-[#6ec5d4]">Sene</span><span class="font-heading italic text-[#f48a73]">curare</span>
+        <span>© 2026 · Raízes de cuidado, laços de vida.</span>
+      </div>
+      <p>Desenvolvido para conformidade RDC 502/2021 ANVISA e COREN.</p>
+    </div>
+  </footer>
+
+  <!-- Script Interativo do Simulador e Toggle -->
+  <script>
+    let isYearly = false;
+
+    function toggleBilling() {
+      isYearly = !isYearly;
+      const toggleCircle = document.getElementById('toggle-circle');
+      const toggleBtn = document.getElementById('billing-toggle');
+      const labelMensal = document.getElementById('label-mensal');
+      const labelAnual = document.getElementById('label-anual');
+
+      if (isYearly) {
+        toggleCircle.classList.remove('translate-x-0');
+        toggleCircle.classList.add('translate-x-7');
+        toggleBtn.classList.remove('bg-cyan-600');
+        toggleBtn.classList.add('bg-emerald-600');
+        labelMensal.classList.remove('text-white');
+        labelMensal.classList.add('text-slate-400');
+        labelAnual.classList.remove('text-slate-400');
+        labelAnual.classList.add('text-white');
+      } else {
+        toggleCircle.classList.remove('translate-x-7');
+        toggleCircle.classList.add('translate-x-0');
+        toggleBtn.classList.remove('bg-emerald-600');
+        toggleBtn.classList.add('bg-cyan-600');
+        labelMensal.classList.add('text-white');
+        labelMensal.classList.remove('text-slate-400');
+        labelAnual.classList.add('text-slate-400');
+        labelAnual.classList.remove('text-white');
+      }
+
+      // Atualiza os preços nos cards
+      document.querySelectorAll('.price-val').forEach(el => {
+        const val = isYearly ? el.getAttribute('data-yearly') : el.getAttribute('data-monthly');
+        el.textContent = val;
+      });
+
+      document.querySelectorAll('.billing-note').forEach(el => {
+        el.textContent = isYearly ? 'Cobrado anualmente (10x valor mensal)' : 'Cobrado mensalmente';
+      });
+
+      calculateCustom();
+    }
+
+    function calculateCustom() {
+      const res = parseInt(document.getElementById('res-slider').value, 10);
+      const func = parseInt(document.getElementById('func-slider').value, 10);
+
+      document.getElementById('res-val').textContent = res + ' residentes';
+      document.getElementById('func-val').textContent = func + ' funcionários';
+
+      let plano = 'Plano Essencial';
+      let precoBase = 380;
+      let resInclusos = 12;
+      let funcInclusos = 10;
+      let excRes = 25;
+      let excFunc = 12;
+
+      if (res > 25 || func > 25) {
+        plano = 'Plano Enterprise & Redes';
+        precoBase = 1890;
+        resInclusos = 50;
+        funcInclusos = 50;
+        excRes = 32;
+        excFunc = 18;
+      } else if (res > 12 || func > 10) {
+        plano = 'Plano Clínico & Compliance';
+        precoBase = 780;
+        resInclusos = 25;
+        funcInclusos = 25;
+        excRes = 28;
+        excFunc = 15;
+      }
+
+      // Calcula excedentes
+      const addRes = Math.max(0, res - resInclusos);
+      const addFunc = Math.max(0, func - funcInclusos);
+      const custoAdicional = (addRes * excRes) + (addFunc * excFunc);
+      let totalMensal = precoBase + custoAdicional;
+
+      document.getElementById('calc-plano').textContent = plano;
+
+      if (addRes === 0 && addFunc === 0) {
+        document.getElementById('calc-excedentes').textContent = 'Dentro das franquias do plano (sem taxa de excedente).';
+      } else {
+        document.getElementById('calc-excedentes').textContent = `Adicionais: +${addRes} residentes (+R$ ${addRes * excRes}) e +${addFunc} funcionários (+R$ ${addFunc * excFunc}).`;
+      }
+
+      if (isYearly) {
+        const totalYearlyEquiv = Math.round((totalMensal * 10) / 12);
+        document.getElementById('calc-total').textContent = totalYearlyEquiv.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        document.getElementById('calc-economy').textContent = `Economia no anual: R$ ${(totalMensal * 2).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}/ano (2 meses grátis)`;
+      } else {
+        document.getElementById('calc-total').textContent = totalMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        document.getElementById('calc-economy').textContent = `No plano anual: economize R$ ${(totalMensal * 2).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}/ano`;
+      }
+    }
+
+    // Inicializa cálculo na carga da página
+    calculateCustom();
+  </script>
+</body>
+</html>
