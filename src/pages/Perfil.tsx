@@ -8,6 +8,7 @@ import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Badge } from '../components/ui/badge'
+import { SearchableSelect } from '../components/ui/select'
 import { Alert, AlertDescription } from '../components/ui/alert'
 import {
   Camera,
@@ -189,7 +190,7 @@ export default function Perfil() {
               {erroFoto && <p className="text-xs text-destructive font-medium pt-1">{erroFoto}</p>}
             </div>
 
-            <div className="p-3.5 rounded-xl bg-muted/40 border border-border/50 text-xs space-y-1 w-full sm:w-64">
+            <div className="p-3.5 rounded-xl bg-muted/40 border border-border/50 text-xs space-y-1 w-full sm:flex-1 sm:max-w-md">
               <span className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1.5 uppercase tracking-wider">
                 <Mail className="size-3" /> E-mail de Acesso
               </span>
@@ -230,7 +231,7 @@ export default function Perfil() {
                   value={conselho}
                   onChange={(e) => setConselho(mascaraConselho(e.target.value))}
                   placeholder="Ex.: COREN-SP 123.456-ENF"
-                  className="h-9 text-xs rounded-xl"
+                  className="h-9 text-xs rounded-xl w-full"
                 />
               </div>
 
@@ -238,38 +239,30 @@ export default function Perfil() {
                 <Label htmlFor="setor" className="text-xs font-semibold">
                   Setor Assistencial
                 </Label>
-                <select
+                <SearchableSelect
                   id="setor"
                   value={setor}
-                  onChange={(e) => setSetor(e.target.value)}
-                  className="w-full h-9 text-xs rounded-xl border border-input bg-background px-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
-                >
-                  <option value="">Selecione o setor...</option>
-                  {SETORES.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={setSetor}
+                  placeholder="Selecione o setor..."
+                  searchPlaceholder="Buscar setor..."
+                  triggerClassName="h-9 text-xs rounded-xl"
+                  options={SETORES.map((s) => ({ value: s, label: s }))}
+                />
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="area" className="text-xs font-semibold">
                   Área Multiprofissional
                 </Label>
-                <select
+                <SearchableSelect
                   id="area"
                   value={area}
-                  onChange={(e) => setArea(e.target.value)}
-                  className="w-full h-9 text-xs rounded-xl border border-input bg-background px-3 focus:outline-none focus:ring-2 focus:ring-primary/50 text-foreground"
-                >
-                  <option value="">Selecione a área...</option>
-                  {AREAS.map((a) => (
-                    <option key={a} value={a}>
-                      {a}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={setArea}
+                  placeholder="Selecione a área..."
+                  searchPlaceholder="Buscar área..."
+                  triggerClassName="h-9 text-xs rounded-xl"
+                  options={AREAS.map((a) => ({ value: a, label: a }))}
+                />
               </div>
 
               <div className="space-y-1.5">

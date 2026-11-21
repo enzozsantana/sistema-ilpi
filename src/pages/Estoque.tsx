@@ -487,14 +487,14 @@ export default function Estoque() {
           </Button>
         </div>
 
-        <div className="relative flex-1 max-w-sm">
+        <div className="relative flex-1 max-w-lg">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Buscar por residente ou material (shampoo, fralda, medicamento)..."
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            className="pl-9 h-8 text-xs rounded-xl bg-background"
+            className="pl-9 h-8 text-xs rounded-xl bg-background w-full"
           />
         </div>
       </div>

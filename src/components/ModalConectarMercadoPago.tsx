@@ -274,9 +274,9 @@ export function ModalConectarMercadoPago({
               <span className="text-[10px] text-muted-foreground">Retenção no ato do pagamento</span>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="space-y-1 w-32">
-                <Label htmlFor="taxaInput" className="text-[10px] text-muted-foreground">Comissão SaaS (%)</Label>
+            <div className="flex flex-col sm:flex-row sm:items-end gap-3 pt-1">
+              <div className="space-y-1 flex-1 sm:max-w-xs">
+                <Label htmlFor="taxaInput" className="text-[10px] text-muted-foreground font-semibold">Comissão SaaS (%)</Label>
                 <div className="relative">
                   <Input
                     id="taxaInput"
@@ -286,7 +286,7 @@ export function ModalConectarMercadoPago({
                     step="0.5"
                     value={taxaEditada}
                     onChange={(e) => setTaxaEditada(parseFloat(e.target.value) || 0)}
-                    className="h-8 text-xs pr-6 rounded-lg font-bold"
+                    className="h-8 text-xs pr-6 rounded-lg font-bold w-full"
                   />
                   <span className="absolute right-2.5 top-2 text-[10px] text-muted-foreground font-bold">%</span>
                 </div>
@@ -296,7 +296,7 @@ export function ModalConectarMercadoPago({
                 size="sm"
                 variant="outline"
                 onClick={handleSalvarTaxa}
-                className="mt-4 rounded-lg text-xs h-8"
+                className="rounded-lg text-xs h-8 w-full sm:w-auto"
               >
                 Salvar Taxa
               </Button>

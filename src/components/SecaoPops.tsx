@@ -547,14 +547,14 @@ export function SecaoPops({ className, mostrarApenasConsulta = false }: SecaoPop
       <CardContent className="p-5 space-y-4">
         {/* Barra de Busca e Filtros Rápidos */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="relative flex-1 max-w-sm">
+          <div className="relative flex-1 max-w-lg">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
             <Input
               type="search"
               placeholder="Buscar por nome do POP ou protocolo..."
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              className="h-8 pl-8 text-xs rounded-xl"
+              className="h-8 pl-8 text-xs rounded-xl w-full"
             />
           </div>
 
@@ -1174,7 +1174,7 @@ export function SecaoPops({ className, mostrarApenasConsulta = false }: SecaoPop
 
       {/* Dialog: Confirmar Exclusão de POP */}
       <Dialog open={!!popParaExcluir} onOpenChange={(open) => !open && setPopParaExcluir(null)}>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="w-[95vw] sm:max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-sm font-bold text-rose-600 flex items-center gap-2">
               <Trash2 className="size-4" /> Excluir Procedimento

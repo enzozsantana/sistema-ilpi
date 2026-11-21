@@ -2033,13 +2033,13 @@ export function TabPia({ r, cat }: Ctx) {
                   </div>
 
                   {/* Busca Rápida */}
-                  <div className="relative w-full sm:w-64">
+                  <div className="relative w-full sm:flex-1 sm:max-w-md">
                     <Search className="size-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
                     <Input
                       placeholder="Buscar diagnóstico, meta ou cuidado..."
                       value={buscaNanda}
                       onChange={(e) => setBuscaNanda(e.target.value)}
-                      className="pl-8 text-xs h-8"
+                      className="pl-8 text-xs h-8 w-full"
                     />
                   </div>
                 </div>
@@ -2804,7 +2804,7 @@ export function TabCuidados({ r, cat }: Ctx) {
                   value={curativoInstrucoes}
                   onChange={(e) => setCurativoInstrucoes(e.target.value)}
                   rows={3}
-                  className="w-full text-xs rounded-md border border-input bg-background p-2 leading-relaxed"
+                  className="w-full text-xs rounded-md border border-input bg-background p-2 leading-relaxed resize-none min-h-[72px]"
                   placeholder="Orientações detalhadas de assepsia, aplicação e observação..."
                 />
               </div>
@@ -3854,7 +3854,7 @@ export function TabAnot({ r, cat }: Ctx) {
                   rows={3}
                   required={fotos.length === 0}
                   placeholder="Relato detalhado do estado do residente, mudança de decúbito, curativos, queixas..."
-                  className="w-full text-xs rounded-md border border-input bg-background p-2 focus-visible:outline-ring"
+                  className="w-full text-xs rounded-md border border-input bg-background p-2 focus-visible:outline-ring resize-none min-h-[80px]"
                 />
               </div>
             </div>
@@ -4416,7 +4416,7 @@ export function TabArquivos({ r }: Ctx) {
 
       {/* Modal: Confirmar Exclusão de Arquivo */}
       <Dialog open={!!arqParaExcluir} onOpenChange={(open) => !open && setArqParaExcluir(null)}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="w-[95vw] sm:max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-rose-600 flex items-center gap-2">
               <Trash2 className="size-4" /> Remover Arquivo

@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
 import { Input } from '../components/ui/input'
+import { SearchableSelect } from '../components/ui/select'
 import {
   AlertTriangle,
   Award,
@@ -651,29 +652,31 @@ export default function Treinamentos() {
 
               <CardContent className="p-5 space-y-4">
                 {/* Search & Filter bar */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <div className="relative w-full sm:w-80">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                  <div className="relative flex-1 max-w-md">
                     <Search className="size-4 absolute left-3 top-2.5 text-muted-foreground" />
                     <Input
                       placeholder="Buscar por colaborador ou curso..."
                       value={buscaConformidade}
                       onChange={(e) => setBuscaConformidade(e.target.value)}
-                      className="pl-9 text-xs"
+                      className="pl-9 text-xs w-full"
                     />
                   </div>
 
                   <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <span className="text-xs text-muted-foreground shrink-0">Filtrar status:</span>
-                    <select
+                    <span className="text-xs text-muted-foreground shrink-0 font-medium">Status:</span>
+                    <SearchableSelect
                       value={filtroStatus}
-                      onChange={(e) => setFiltroStatus(e.target.value)}
-                      className="text-xs rounded-xl border border-border/70 bg-background px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
-                    >
-                      <option value="todos">Todos os Registros</option>
-                      <option value="concluido">Concluídos</option>
-                      <option value="pendente">Pendentes</option>
-                      <option value="atrasado">Atrasados</option>
-                    </select>
+                      onValueChange={setFiltroStatus}
+                      triggerClassName="w-full sm:w-48 text-xs h-8"
+                      searchPlaceholder="Filtrar status..."
+                      options={[
+                        { value: 'todos', label: 'Todos os Registros' },
+                        { value: 'concluido', label: 'Concluídos' },
+                        { value: 'pendente', label: 'Pendentes' },
+                        { value: 'atrasado', label: 'Atrasados' },
+                      ]}
+                    />
                   </div>
                 </div>
 

@@ -1153,7 +1153,7 @@ export default function Gestao() {
 
       {/* Dialog: Confirmar Exclusão de Licença */}
       <Dialog open={!!docParaExcluir} onOpenChange={(open) => !open && setDocParaExcluir(null)}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="w-[95vw] sm:max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-rose-600 flex items-center gap-2">
               <Trash2 className="size-4" /> Excluir Licença
@@ -1413,7 +1413,7 @@ export default function Gestao() {
                   value={ocoRelato}
                   onChange={(e) => setOcoRelato(e.target.value)}
                   placeholder="Se preenchido, será registrado também no prontuário de anotações do residente."
-                  className="w-full text-xs rounded-md border border-input bg-background p-2 focus-visible:outline-ring"
+                  className="w-full text-xs rounded-md border border-input bg-background p-2 focus-visible:outline-ring resize-none min-h-[64px]"
                 />
               </div>
             )}
@@ -1449,7 +1449,7 @@ export default function Gestao() {
         open={!!ocoParaExcluir}
         onOpenChange={(open) => !open && setOcoParaExcluir(null)}
       >
-        <DialogContent className="max-w-sm">
+        <DialogContent className="w-[95vw] sm:max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-rose-600 flex items-center gap-2">
               <Trash2 className="size-4" /> Excluir Ocorrência Sanitária

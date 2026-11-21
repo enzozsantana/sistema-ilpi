@@ -590,15 +590,15 @@ export default function Equipe() {
                 </CardTitle>
               </div>
 
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="relative">
+              <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+                <div className="relative flex-1 sm:flex-none">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
                   <Input
                     type="search"
                     placeholder="Buscar profissional..."
                     value={busca}
                     onChange={(e) => setBusca(e.target.value)}
-                    className="pl-8 h-8 text-xs rounded-xl bg-background w-44 sm:w-52"
+                    className="pl-8 h-8 text-xs rounded-xl bg-background w-full sm:w-64 md:w-72"
                   />
                 </div>
 
@@ -1083,7 +1083,7 @@ export default function Equipe() {
 
       {/* Dialog: Alterar Código de Escala */}
       <Dialog open={dialogEscalaOpen} onOpenChange={setDialogEscalaOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="w-[95vw] sm:max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Clock className="size-4 text-primary" />

@@ -1947,7 +1947,7 @@ export default function Plantao() {
                   value={ocoRelato}
                   onChange={(e) => setOcoRelato(e.target.value)}
                   placeholder="Descreva o que ocorreu, socorro prestado, acionamento do SAMU ou médico assistente..."
-                  className="w-full text-xs rounded-md border border-input bg-background p-2 focus-visible:outline-ring"
+                  className="w-full text-xs rounded-md border border-input bg-background p-2 focus-visible:outline-ring resize-none min-h-[80px]"
                 />
               </div>
             </div>
@@ -2315,7 +2315,7 @@ export default function Plantao() {
                   rows={4}
                   required
                   placeholder="Descreva como foi o turno: alimentação, hidratação, sono/repouso, comportamento dos residentes, ocorrências e procedimentos..."
-                  className="w-full text-xs rounded-md border border-input bg-background p-2.5 focus-visible:outline-ring leading-relaxed"
+                  className="w-full text-xs rounded-md border border-input bg-background p-2.5 focus-visible:outline-ring leading-relaxed resize-none min-h-[96px]"
                 />
               </div>
 
@@ -2330,7 +2330,7 @@ export default function Plantao() {
                   onChange={(e) => setPassagemPendencias(e.target.value)}
                   rows={2}
                   placeholder="Ex: Residente Iracema em observação de febre; lembrar de checar dextro às 20h; fraldas repostas no quarto 2..."
-                  className="w-full text-xs rounded-md border border-amber-500/40 bg-amber-500/5 p-2 focus-visible:outline-ring"
+                  className="w-full text-xs rounded-md border border-amber-500/40 bg-amber-500/5 p-2 focus-visible:outline-ring resize-none min-h-[64px]"
                 />
               </div>
 
@@ -2475,7 +2475,7 @@ export default function Plantao() {
                   rows={4}
                   required
                   placeholder="Descreva a instrução técnica ou aviso que toda a equipe deve cumprir..."
-                  className="w-full text-xs rounded-md border border-input bg-background p-2.5 focus-visible:outline-ring leading-relaxed"
+                  className="w-full text-xs rounded-md border border-input bg-background p-2.5 focus-visible:outline-ring leading-relaxed resize-none min-h-[96px]"
                 />
               </div>
             </div>

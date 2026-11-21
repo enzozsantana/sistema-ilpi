@@ -649,13 +649,13 @@ export default function Teleconsulta() {
               ))}
             </div>
 
-            <div className="relative w-full sm:w-64">
+            <div className="relative w-full sm:w-80 md:w-96">
               <Search className="size-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Buscar especialista, clínica..."
                 value={busca}
                 onChange={(e) => setBusca(e.target.value)}
-                className="pl-8 text-xs h-8.5 rounded-xl bg-card border-border/70"
+                className="pl-8 text-xs h-8.5 rounded-xl bg-card border-border/70 w-full"
               />
             </div>
           </div>

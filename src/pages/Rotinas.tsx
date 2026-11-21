@@ -953,7 +953,7 @@ export default function Rotinas() {
         open={!!tempParaExcluir}
         onOpenChange={(open) => !open && setTempParaExcluir(null)}
       >
-        <DialogContent className="max-w-sm">
+        <DialogContent className="w-[95vw] sm:max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-rose-600 flex items-center gap-2">
               <Trash2 className="size-4" />
@@ -991,7 +991,7 @@ export default function Rotinas() {
         open={!!tarefaParaExcluir}
         onOpenChange={(open) => !open && setTarefaParaExcluir(null)}
       >
-        <DialogContent className="max-w-sm">
+        <DialogContent className="w-[95vw] sm:max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-rose-600 flex items-center gap-2">
               <Trash2 className="size-4" />
