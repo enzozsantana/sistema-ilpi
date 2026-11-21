@@ -981,7 +981,7 @@ export default function Equipe() {
                   value={colabCat}
                   onValueChange={(val: Categoria) => setColabCat(val)}
                 >
-                  <SelectTrigger className="text-xs">
+                  <SelectTrigger className="text-xs w-full">
                     <SelectValue placeholder="Selecione categoria" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1024,7 +1024,7 @@ export default function Equipe() {
                   value={colabSetor}
                   onValueChange={(val) => setColabSetor(val)}
                 >
-                  <SelectTrigger className="text-xs">
+                  <SelectTrigger className="text-xs w-full">
                     <SelectValue placeholder="Selecione setor" />
                   </SelectTrigger>
                   <SelectContent>

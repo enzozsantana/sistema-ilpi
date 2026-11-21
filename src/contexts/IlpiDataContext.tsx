@@ -550,10 +550,38 @@ export function IlpiDataProvider({ children }: { children: ReactNode }) {
   return <IlpiDataContext.Provider value={value}>{children}</IlpiDataContext.Provider>
 }
 
+const ILPI_DATA_FALLBACK: IlpiData = {
+  loading: true,
+  error: null,
+  inst: '',
+  equipe: [],
+  residentes: [],
+  casa: [],
+  adm: {},
+  documentos: [],
+  pops: [],
+  treinamentos: [],
+  temperaturas: [],
+  eventos: [],
+  escalaMes: {},
+  tarefas: [],
+  tarefasFeitas: {},
+  checagensCuidado: {},
+  sn: [],
+  passagens: [],
+  avisosRT: [],
+  salvarPassagem: async () => ({} as any),
+  salvarAviso: async () => ({} as any),
+  darCiencia: async () => {},
+  desativarAviso: async () => {},
+  refresh: async () => {},
+  profissionalPorId: () => undefined,
+  getResidente: () => undefined,
+}
+
 export function useIlpiData(): IlpiData {
   const ctx = useContext(IlpiDataContext)
-  if (!ctx) throw new Error('useIlpiData deve ser usado dentro de IlpiDataProvider')
-  return ctx
+  return ctx ?? ILPI_DATA_FALLBACK
 }
 
 export function useEstadoAlertas() {

@@ -1,32 +1,64 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { IlpiDataProvider } from './contexts/IlpiDataContext'
 import { AppShell } from './components/AppShell'
 import { canNav } from './lib/permissions'
 import type { NavView } from './types/ilpi'
-import Login from './pages/Login'
-import Plantao from './pages/Plantao'
-import Residentes from './pages/Residentes'
-import ResidentePasta from './pages/ResidentePasta'
-import Estoque from './pages/Estoque'
-import Rotinas from './pages/Rotinas'
-import Equipe from './pages/Equipe'
-import Gestao from './pages/Gestao'
-import Teleconsulta from './pages/Teleconsulta'
-import Perfil from './pages/Perfil'
+import { Skeleton } from './components/ui/skeleton'
+
+// Code-Splitting com React.lazy para redução drástica do bundle inicial
+const Login = lazy(() => import('./pages/Login'))
+const Plantao = lazy(() => import('./pages/Plantao'))
+const Residentes = lazy(() => import('./pages/Residentes'))
+const ResidentePasta = lazy(() => import('./pages/ResidentePasta'))
+const Estoque = lazy(() => import('./pages/Estoque'))
+const Rotinas = lazy(() => import('./pages/Rotinas'))
+const Equipe = lazy(() => import('./pages/Equipe'))
+const Gestao = lazy(() => import('./pages/Gestao'))
+const Teleconsulta = lazy(() => import('./pages/Teleconsulta'))
+const Treinamentos = lazy(() => import('./pages/Treinamentos'))
+const Perfil = lazy(() => import('./pages/Perfil'))
+
+function PageFallback() {
+  return (
+    <div className="space-y-4 p-4 max-w-6xl mx-auto animate-pulse" aria-busy="true" aria-live="polite">
+      <div className="flex items-center justify-between pb-4 border-b border-border/40">
+        <Skeleton className="h-8 w-48 rounded-lg" />
+        <Skeleton className="h-9 w-32 rounded-lg" />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Skeleton className="h-24 rounded-xl" />
+        <Skeleton className="h-24 rounded-xl" />
+        <Skeleton className="h-24 rounded-xl" />
+        <Skeleton className="h-24 rounded-xl" />
+      </div>
+      <Skeleton className="h-72 rounded-2xl" />
+    </div>
+  )
+}
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { session, loading, profissional } = useAuth()
-  if (loading) return <p className="muted" style={{ padding: 24 }}>Carregando…</p>
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background space-y-3">
+        <div className="size-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <p className="text-sm font-medium text-muted-foreground animate-pulse">Carregando Senecurare…</p>
+      </div>
+    )
+  }
   if (!session) return <Navigate to="/login" replace />
   if (!profissional) {
     return (
-      <main style={{ padding: 24 }}>
-        <p className="err">Seu usuário não está vinculado a um profissional (tabela profissionais.user_id).</p>
+      <main className="p-8 max-w-lg mx-auto text-center space-y-3">
+        <p className="text-sm font-semibold text-destructive">
+          Seu usuário não está vinculado a um profissional (tabela profissionais.user_id).
+        </p>
       </main>
     )
   }
-  return children
+  return <IlpiDataProvider>{children}</IlpiDataProvider>
 }
 
 function RootRedirect() {
@@ -48,8 +80,7 @@ function GuardView({ view, children }: { view: NavView; children: React.ReactNod
 
 function AuthedRoutes() {
   return (
-    <IlpiDataProvider>
-      <Routes>
+    <Routes>
         <Route element={<AppShell />}>
           <Route index element={<RootRedirect />} />
           <Route
@@ -116,12 +147,19 @@ function AuthedRoutes() {
               </GuardView>
             }
           />
+          <Route
+            path="treinamentos"
+            element={
+              <GuardView view="treinamentos">
+                <Treinamentos />
+              </GuardView>
+            }
+          />
           <Route path="perfil" element={<Perfil />} />
         </Route>
       </Routes>
-    </IlpiDataProvider>
-  )
-}
+    )
+  }
 
 import { Toaster } from './components/ui/sonner'
 
@@ -129,17 +167,19 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/*"
-            element={
-              <RequireAuth>
-                <AuthedRoutes />
-              </RequireAuth>
-            }
-          />
-        </Routes>
+        <Suspense fallback={<PageFallback />}>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/*"
+              element={
+                <RequireAuth>
+                  <AuthedRoutes />
+                </RequireAuth>
+              }
+            />
+          </Routes>
+        </Suspense>
         <Toaster richColors position="top-right" />
       </AuthProvider>
     </BrowserRouter>

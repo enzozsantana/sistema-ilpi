@@ -43,6 +43,7 @@ export const NAV_ACESSO: Record<NavView, '*' | Categoria[]> = {
   residentes: [...NURSE, 'cuid', 'med', 'multi', 'gestao'],
   rotinas: TODAS_CATEGORIAS_ILPI,
   teleconsulta: '*',
+  treinamentos: TODAS_CATEGORIAS_ILPI,
 }
 
 /** Acesso às abas do residente (TAB_ACESSO). */

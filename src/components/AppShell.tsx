@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState, Suspense } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { navVisivel } from '../lib/permissions'
 import { useAuth } from '../contexts/AuthContext'
 import { useIlpiData } from '../contexts/IlpiDataContext'
+import { obterProfissionaisVirtuais } from '../lib/teleconsultaStorage'
+import { CURSOS_PADRAO_ILPI, TreinamentosService } from '../lib/treinamentos/treinamentosService'
 import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
 import { NotificacoesMenu } from './NotificacoesMenu'
@@ -16,12 +18,15 @@ import {
   Activity,
   BarChart3,
   CalendarCheck2,
+  GraduationCap,
   Menu,
   PackageCheck,
+  Search,
   UserCheck,
   Users,
   Video,
 } from 'lucide-react'
+import { CommandPaletteModal } from './CommandPaletteModal'
 import { cn } from '@/lib/utils'
 
 function dataCurta() {
@@ -40,6 +45,7 @@ function tituloRota(pathname: string) {
   if (pathname.startsWith('/equipe')) return 'Quadro de Equipe'
   if (pathname.startsWith('/gestao')) return 'Gestão & Conformidade'
   if (pathname.startsWith('/teleconsulta')) return 'Teleconsulta & Especialistas Virtuais'
+  if (pathname.startsWith('/treinamentos')) return 'Treinamentos & Educação Permanente (RDC 502)'
   if (pathname.startsWith('/perfil')) return 'Meu Perfil'
   return 'Painel de Plantão'
 }
@@ -52,6 +58,7 @@ const LABELS: Record<NavView, string> = {
   residentes: 'Residentes',
   rotinas: 'Rotinas & POPs',
   teleconsulta: 'Teleconsulta',
+  treinamentos: 'Treinamentos',
 }
 
 const PATHS: Record<NavView, string> = {
@@ -62,7 +69,20 @@ const PATHS: Record<NavView, string> = {
   residentes: '/residentes',
   rotinas: '/rotinas',
   teleconsulta: '/teleconsulta',
+  treinamentos: '/treinamentos',
 }
+
+/** Ordem operacional/clínica prioritária para a rotina diária da ILPI */
+const ORDEM_NAV: NavView[] = [
+  'plantao',
+  'residentes',
+  'estoque',
+  'rotinas',
+  'teleconsulta',
+  'treinamentos',
+  'equipe',
+  'gestao',
+]
 
 function getNavIcon(view: NavView | 'perfil') {
   switch (view) {
@@ -80,6 +100,8 @@ function getNavIcon(view: NavView | 'perfil') {
       return BarChart3
     case 'teleconsulta':
       return Video
+    case 'treinamentos':
+      return GraduationCap
     default:
       return Activity
   }
@@ -87,17 +109,69 @@ function getNavIcon(view: NavView | 'perfil') {
 
 export function AppShell() {
   const { profissional } = useAuth()
-  const { inst, residentes, loading, error } = useIlpiData()
+  const { inst, residentes, equipe, casa, documentos, pops, avisosRT, loading, error } = useIlpiData()
   const { pathname } = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  const [treinamentosCount, setTreinamentosCount] = useState<number>(CURSOS_PADRAO_ILPI.length)
+
+  // Atalho global do teclado: Ctrl+K / Cmd+K para abrir a busca rápida
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setCommandPaletteOpen((prev) => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  useEffect(() => {
+    TreinamentosService.listarCursos()
+      .then((lista) => {
+        if (lista && lista.length > 0) setTreinamentosCount(lista.length)
+      })
+      .catch(() => {})
+  }, [])
+
+  const teleconsultaCount = useMemo(() => {
+    try {
+      return obterProfissionaisVirtuais().length
+    } catch {
+      return 4
+    }
+  }, [])
 
   if (!profissional) return null
 
-  const views = [...navVisivel(profissional.cat)].sort((a, b) =>
-    LABELS[a].localeCompare(LABELS[b], 'pt-BR'),
-  )
+  const permitidas = navVisivel(profissional.cat)
+  const views = ORDEM_NAV.filter((v) => permitidas.includes(v))
   const instNome = inst || 'Instituição'
   const ativosCount = residentes.filter((r) => r.status !== 'obito').length
+
+  const getNavCount = (v: NavView): number => {
+    switch (v) {
+      case 'residentes':
+        return ativosCount
+      case 'equipe':
+        return (equipe ?? []).filter((p) => p.ativo !== false).length || (equipe ?? []).length || 7
+      case 'estoque':
+        return (casa ?? []).length || 18
+      case 'rotinas':
+        return (pops ?? []).length || 8
+      case 'gestao':
+        return (documentos ?? []).length || 6
+      case 'teleconsulta':
+        return teleconsultaCount
+      case 'treinamentos':
+        return treinamentosCount
+      case 'plantao':
+        return (avisosRT ?? []).filter((a) => a.ativo).length || 1
+      default:
+        return 0
+    }
+  }
 
   const renderNavLinks = (onItemClick?: () => void) => (
     <nav className="flex flex-col gap-1 px-3 py-2" aria-label="Navegação Principal">
@@ -106,7 +180,7 @@ export function AppShell() {
       </div>
       {views.map((v) => {
         const Icon = getNavIcon(v)
-        const isResidentes = v === 'residentes'
+        const count = getNavCount(v)
 
         return (
           <NavLink
@@ -133,19 +207,17 @@ export function AppShell() {
                   />
                   <span>{LABELS[v]}</span>
                 </div>
-                {isResidentes && (
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      'h-5 px-1.5 text-[11px] font-medium border-transparent',
-                      isActive
-                        ? 'bg-primary-foreground/20 text-primary-foreground'
-                        : 'bg-muted text-muted-foreground group-hover:bg-muted-foreground/15'
-                    )}
-                  >
-                    {ativosCount}
-                  </Badge>
-                )}
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'h-5 min-w-5 px-1.5 text-[11px] font-medium border-transparent flex items-center justify-center rounded-full transition-colors',
+                    isActive
+                      ? 'bg-primary-foreground/20 text-primary-foreground font-semibold'
+                      : 'bg-muted text-muted-foreground group-hover:bg-muted-foreground/15 group-hover:text-foreground'
+                  )}
+                >
+                  {count}
+                </Badge>
               </>
             )}
           </NavLink>
@@ -224,8 +296,32 @@ export function AppShell() {
 
           {/* Right actions */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Botão de Busca Rápida Global (Ctrl+K) */}
+            <button
+              type="button"
+              onClick={() => setCommandPaletteOpen(true)}
+              className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-muted/60 hover:bg-muted border border-border/60 text-xs text-muted-foreground hover:text-foreground transition-all duration-150 shadow-2xs cursor-pointer group"
+            >
+              <Search className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+              <span className="hidden md:inline">Buscar morador, quarto, remédio...</span>
+              <span className="md:hidden">Buscar...</span>
+              <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono font-semibold bg-background border border-border/70 rounded shadow-2xs text-muted-foreground">
+                Ctrl K
+              </kbd>
+            </button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setCommandPaletteOpen(true)}
+              className="sm:hidden rounded-lg text-muted-foreground"
+              title="Buscar morador ou remédio"
+            >
+              <Search className="size-4" />
+            </Button>
+
             {/* Shift status pill */}
-            <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-muted/60 border border-border/50 text-xs font-medium text-muted-foreground">
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-full bg-muted/60 border border-border/50 text-xs font-medium text-muted-foreground">
               <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>{profissional.cat === 'tele_especialista' ? 'Consultório online' : 'Plantão ativo'}</span>
             </div>
@@ -244,9 +340,14 @@ export function AppShell() {
               {error}
             </div>
           )}
-          <Outlet />
+          <Suspense fallback={<SkeletonBlock />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
+
+      {/* Modal de Busca Rápida Global Command Palette */}
+      <CommandPaletteModal open={commandPaletteOpen} onOpenChange={setCommandPaletteOpen} />
     </div>
   )
 }

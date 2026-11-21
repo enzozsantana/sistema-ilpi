@@ -649,16 +649,55 @@ export default function Plantao() {
       ? modalRes.estoque.find((e) => e.id === modal.presc.estoqueId)
       : undefined
 
+  async function checarDoseRapida(e: React.MouseEvent, x: DoseComRes) {
+    e.stopPropagation()
+    if (!profissional) return
+
+    // Medicamentos controlados exigem abertura do modal deliberado para segurança do paciente
+    if (isMedicamentoControlado(x.presc)) {
+      setModal(x)
+      return
+    }
+
+    setSavingDose(true)
+    const sig = { id: profissional.id, d: T, h: agoraHM() }
+    const res = await checarAdministracao({
+      data: T,
+      residenteId: x.resid,
+      prescricaoId: x.presc.id,
+      horario: x.hora,
+      status: 'dado',
+      assinatura: sig,
+      prescricao: x.presc,
+    })
+    setSavingDose(false)
+
+    if (!res.ok) {
+      toast.error(res.erro ?? 'Erro ao registrar administração rápida')
+      return
+    }
+
+    toast.success(`Dose de ${x.presc.med} (${x.hora}) administrada para ${primeiro(x.r.nome)}!`)
+    await data.refresh()
+  }
+
   function DoseChip({ x }: { x: DoseComRes }) {
     const g = regAdm(data.adm, x.key, T)
     const late = isDoseLate(x.hora, !!g)
 
     return (
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setModal(x)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            setModal(x)
+          }
+        }}
         className={cn(
-          'group flex items-start gap-3 p-3.5 rounded-xl border text-left transition-all duration-150 cursor-pointer w-full relative overflow-hidden',
+          'group flex items-center justify-between gap-3 p-3.5 rounded-xl border text-left transition-all duration-150 cursor-pointer w-full relative overflow-hidden select-none',
           g?.st === 'dado'
             ? 'bg-emerald-500/10 border-emerald-500/25 hover:bg-emerald-500/15'
             : g?.st === 'recusado' || g?.st === 'nao'
@@ -668,60 +707,76 @@ export default function Plantao() {
                 : 'bg-card border-border/80 hover:border-primary/50 hover:shadow-xs hover:bg-muted/30'
         )}
       >
-        <Avatar r={x.r} size="sm" className="mt-0.5" />
-        <div className="flex flex-col min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-bold text-foreground truncate group-hover:text-primary transition-colors">
-              {primeiro(x.r.nome)}
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          <Avatar r={x.r} size="sm" className="mt-0.5" />
+          <div className="flex flex-col min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-foreground truncate group-hover:text-primary transition-colors">
+                {primeiro(x.r.nome)}
+              </span>
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-secondary text-muted-foreground shrink-0">
+                Q.{x.r.quarto}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+              <span className="text-xs text-foreground/90 font-medium truncate">
+                {x.presc.med}
+              </span>
+              {isMedicamentoControlado(x.presc) && (
+                <Badge
+                  variant="outline"
+                  className="text-[9px] px-1 py-0 h-3.5 bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/35 font-semibold gap-0.5 shrink-0"
+                  title="Medicamento Controlado (Portaria 344/98)"
+                >
+                  <ShieldAlert className="size-2 text-amber-600 dark:text-amber-400" />
+                  Controlado
+                </Badge>
+              )}
+            </div>
+            <span className="text-[11px] text-muted-foreground truncate">
+              {x.presc.dose} · {x.presc.via}
             </span>
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-secondary text-muted-foreground shrink-0">
-              Q.{x.r.quarto}
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-            <span className="text-xs text-foreground/90 font-medium truncate">
-              {x.presc.med}
-            </span>
-            {isMedicamentoControlado(x.presc) && (
-              <Badge
-                variant="outline"
-                className="text-[9px] px-1 py-0 h-3.5 bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/35 font-semibold gap-0.5 shrink-0"
-                title="Medicamento Controlado (Portaria 344/98)"
-              >
-                <ShieldAlert className="size-2 text-amber-600 dark:text-amber-400" />
-                Controlado
-              </Badge>
+
+            {g ? (
+              <div className="flex items-center gap-1.5 mt-2 pt-1.5 border-t border-border/30 text-[10px] font-medium text-muted-foreground">
+                {g.st === 'dado' ? (
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                    <CheckCircle2 className="size-3" /> Administrado
+                  </span>
+                ) : (
+                  <span className="text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
+                    <AlertCircle className="size-3" /> {g.st === 'recusado' ? 'Recusado' : 'Não adm.'}
+                  </span>
+                )}
+                <span>· {sigCurta(g.sig, data.profissionalPorId(g.sig.id)?.nome)}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 mt-2 pt-1.5 border-t border-border/30 text-[10px]">
+                <span className={cn('font-semibold flex items-center gap-1', late ? 'text-rose-600 dark:text-rose-400' : 'text-muted-foreground')}>
+                  <Clock className="size-3" /> {x.hora}
+                </span>
+              </div>
             )}
           </div>
-          <span className="text-[11px] text-muted-foreground truncate">
-            {x.presc.dose} · {x.presc.via}
-          </span>
-
-          {g ? (
-            <div className="flex items-center gap-1.5 mt-2 pt-1.5 border-t border-border/30 text-[10px] font-medium text-muted-foreground">
-              {g.st === 'dado' ? (
-                <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                  <CheckCircle2 className="size-3" /> Administrado
-                </span>
-              ) : (
-                <span className="text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1">
-                  <AlertCircle className="size-3" /> {g.st === 'recusado' ? 'Recusado' : 'Não adm.'}
-                </span>
-              )}
-              <span>· {sigCurta(g.sig, data.profissionalPorId(g.sig.id)?.nome)}</span>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-border/30 text-[10px]">
-              <span className={cn('font-semibold flex items-center gap-1', late ? 'text-rose-600 dark:text-rose-400' : 'text-muted-foreground')}>
-                <Clock className="size-3" /> {x.hora}
-              </span>
-              <span className="text-primary font-semibold group-hover:translate-x-0.5 transition-transform">
-                Checar →
-              </span>
-            </div>
-          )}
         </div>
-      </button>
+
+        {/* Botão de Ação Rápida Beira-Leito (Touch Target otimizado >= 44px) */}
+        {!g ? (
+          <button
+            type="button"
+            title="Administrar agora (1 toque)"
+            onClick={(e) => void checarDoseRapida(e, x)}
+            className="size-11 min-w-11 min-h-11 sm:size-10 sm:min-w-10 sm:min-h-10 rounded-xl bg-emerald-500/10 hover:bg-emerald-600 text-emerald-600 hover:text-white border border-emerald-500/30 flex items-center justify-center shrink-0 transition-all duration-150 active:scale-95 shadow-2xs"
+          >
+            <CheckCircle2 className="size-5 sm:size-4.5" />
+            <span className="sr-only">Checar dose</span>
+          </button>
+        ) : (
+          <div className="size-10 min-w-10 min-h-10 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400">
+            <CheckCircle2 className="size-5" />
+          </div>
+        )}
+      </div>
     )
   }
 
@@ -1347,8 +1402,8 @@ export default function Plantao() {
                               </span>
                             </div>
 
-                            {/* Fileira de Horários com Checagem e Foto */}
-                            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                            {/* Fileira de Horários com Checagem e Foto (Touch Target Otimizado) */}
+                            <div className="flex flex-wrap items-center gap-2 pt-1.5">
                               {horarios.map((hora) => {
                                 const checkKey = `${r.id}|${c.id}|${hora}`
                                 const check = chk[checkKey] || chk[`${r.id}|${c.id}`]
@@ -1358,16 +1413,16 @@ export default function Plantao() {
                                   <div
                                     key={hora}
                                     className={cn(
-                                      'inline-flex items-center rounded-lg border text-xs transition-all overflow-hidden',
+                                      'inline-flex items-stretch rounded-xl border text-xs transition-all overflow-hidden shadow-2xs select-none',
                                       checado
                                         ? 'bg-emerald-500/15 border-emerald-500/35 text-emerald-800 dark:text-emerald-300 font-bold'
-                                        : 'bg-background/80 hover:bg-muted border-border/70 text-foreground'
+                                        : 'bg-background hover:bg-muted border-border/80 text-foreground'
                                     )}
                                   >
                                     <button
                                       type="button"
                                       onClick={() => void toggleCuidado(r.id, c.id, hora)}
-                                      className="px-2 py-1 flex items-center gap-1 cursor-pointer hover:opacity-85 text-xs"
+                                      className="min-h-[38px] px-3 py-1.5 flex items-center gap-1.5 cursor-pointer hover:opacity-85 text-xs font-semibold active:scale-95 transition-transform"
                                       title={
                                         checado
                                           ? `Checado às ${check?.h} por ${primeiro(data.profissionalPorId(check?.id)?.nome)}. Clique para desmarcar.`
@@ -1376,7 +1431,7 @@ export default function Plantao() {
                                     >
                                       <span>{hora}</span>
                                       {checado ? (
-                                        <CheckCircle2 className="size-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                        <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                                       ) : null}
                                     </button>
 
@@ -1394,9 +1449,9 @@ export default function Plantao() {
                                         )
                                       }}
                                       className={cn(
-                                        'px-1.5 py-1 border-l border-border/40 hover:bg-muted/60 transition-colors flex items-center justify-center',
+                                        'min-h-[38px] min-w-[34px] px-2 border-l border-border/40 hover:bg-muted/80 transition-colors flex items-center justify-center active:scale-95 cursor-pointer',
                                         check?.foto
-                                          ? 'text-emerald-600 dark:text-emerald-400'
+                                          ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
                                           : 'text-muted-foreground hover:text-primary'
                                       )}
                                       title={
@@ -1405,7 +1460,7 @@ export default function Plantao() {
                                           : `Tirar foto de comprovação das ${hora}`
                                       }
                                     >
-                                      <Camera className="size-3 shrink-0" />
+                                      <Camera className="size-3.5 shrink-0" />
                                     </button>
                                   </div>
                                 )

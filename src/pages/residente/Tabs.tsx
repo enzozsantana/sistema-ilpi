@@ -122,14 +122,26 @@ const RTABS: Record<AbaResidente, string> = {
   pasta: 'Resumo Clínico',
 }
 
+const ORDEM_TABS: AbaResidente[] = [
+  'pasta',
+  'presc',
+  'cuidados',
+  'anot',
+  'evol',
+  'aval',
+  'pia',
+  'arquivos',
+  'estoque',
+  'ficha',
+  'tudo',
+]
+
 export function tabsVisiveis(cat: Categoria, area?: string): AbaResidente[] {
-  return (Object.keys(RTABS) as AbaResidente[])
-    .filter((k) => {
-      if (!canTab(cat, k)) return false
-      if (k === 'aval' && cat === 'multi' && escalasVisiveis(cat, area).length === 0) return false
-      return true
-    })
-    .sort((a, b) => RTABS[a].localeCompare(RTABS[b], 'pt-BR'))
+  return ORDEM_TABS.filter((k) => {
+    if (!canTab(cat, k)) return false
+    if (k === 'aval' && cat === 'multi' && escalasVisiveis(cat, area).length === 0) return false
+    return true
+  })
 }
 
 export { RTABS }
