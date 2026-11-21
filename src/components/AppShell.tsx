@@ -18,6 +18,7 @@ import {
   Activity,
   BarChart3,
   CalendarCheck2,
+  Download,
   GraduationCap,
   Menu,
   PackageCheck,
@@ -28,6 +29,7 @@ import {
 } from 'lucide-react'
 import { CommandPaletteModal } from './CommandPaletteModal'
 import { cn } from '@/lib/utils'
+import { usePwaInstall } from '../hooks/usePwaInstall'
 
 function dataCurta() {
   return new Date().toLocaleDateString('pt-BR', {
@@ -114,6 +116,7 @@ export function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [isOnline, setIsOnline] = useState(() => (typeof navigator !== 'undefined' ? navigator.onLine : true))
+  const { canInstall, promptInstall } = usePwaInstall()
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true)
@@ -351,6 +354,20 @@ export function AppShell() {
               <span className={cn("size-1.5 rounded-full", isOnline ? "bg-emerald-500" : "bg-amber-500")} />
               <span>{isOnline ? "Sincronizado" : "Modo Local"}</span>
             </div>
+
+            {/* Botão para instalar app nativo no computador (PWA) */}
+            {canInstall && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void promptInstall()}
+                className="hidden sm:inline-flex items-center gap-1.5 h-8 px-2.5 text-xs font-semibold rounded-lg border-primary/40 bg-primary/5 text-primary hover:bg-primary/15 transition-all shadow-2xs"
+                title="Instalar Senecurare como aplicativo de desktop"
+              >
+                <Download className="size-3.5" />
+                <span>Instalar App</span>
+              </Button>
+            )}
 
             <NotificacoesMenu />
             <ThemeToggle compact />

@@ -11,11 +11,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu'
-import { ChevronDown, LogOut, ShieldCheck, User } from 'lucide-react'
+import { ChevronDown, Download, CheckCircle2, LogOut, ShieldCheck, User } from 'lucide-react'
+import { usePwaInstall } from '../hooks/usePwaInstall'
 
 export function UserMenu({ profissional }: { profissional: Profissional }) {
   const { signOut, session } = useAuth()
   const navigate = useNavigate()
+  const { canInstall, isInstalled, promptInstall } = usePwaInstall()
 
   async function onSair() {
     await signOut()
@@ -59,6 +61,23 @@ export function UserMenu({ profissional }: { profissional: Profissional }) {
           <User className="size-4 text-muted-foreground" />
           <span>Meu perfil</span>
         </DropdownMenuItem>
+
+        {canInstall && (
+          <DropdownMenuItem
+            className="gap-2 text-xs py-2 cursor-pointer text-primary focus:text-primary font-medium rounded-lg"
+            onClick={() => void promptInstall()}
+          >
+            <Download className="size-4 text-primary" />
+            <span>Instalar Senecurare (App)</span>
+          </DropdownMenuItem>
+        )}
+
+        {isInstalled && (
+          <div className="px-2 py-1.5 text-[11px] text-muted-foreground flex items-center gap-1.5">
+            <CheckCircle2 className="size-3.5 text-emerald-500" />
+            <span>App Senecurare instalado</span>
+          </div>
+        )}
 
         <DropdownMenuSeparator />
 
