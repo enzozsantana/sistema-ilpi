@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Senecurare — Dossiê Executivo de Negócios e Custos (Apresentação COREN)</title>
+  
+  <!-- Fontes Oficiais: Geist & Playfair Display -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,500;1,600;1,700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Geist', 'system-ui', 'sans-serif'],
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+          },
+          colors: {
+            brand: {
+              dark: '#081317',
+              card: '#0E1F25',
+              cardHover: '#132830',
+              border: 'rgba(110, 197, 212, 0.15)',
+              sene: '#6ec5d4',
+              curare: '#f48a73',
+              primary: '#123F4A',
+              emerald: '#10B981',
+              amber: '#F59E0B',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #081317;
+      color: #E2E8F0;
+      font-family: 'Geist', sans-serif;
+    }
+    .font-heading {
+      font-family: 'Playfair Display', serif;
+    }
+    .exec-card {
+      background: linear-gradient(135deg, rgba(14, 31, 37, 0.95), rgba(8, 19, 23, 0.9));
+      border: 1px solid rgba(110, 197, 212, 0.18);
+    }
+    .badge-coren {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(13, 148, 136, 0.25));
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34D399;
+    }
+    @media print {
+      body {
+        background: #FFFFFF !important;
+        color: #0F172A !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .exec-card {
+        background: #FFFFFF !important;
+        border: 1px solid #CBD5E1 !important;
+        box-shadow: none !important;
+        color: #0F172A !important;
+      }
+      table {
+        color: #0F172A !important;
+      }
+      th {
+        background: #F1F5F9 !important;
+        color: #0F172A !important;
+      }
+      .page-break {
+        page-break-before: always;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen selection:bg-brand-sene selection:text-brand-dark antialiased">
+
+  <!-- Faixa de Cabeçalho Institucional / Documento Confidencial -->
+  <aside aria-label="Aviso de Confidencialidade" class="bg-black/60 border-b border-white/10 py-2 px-4 text-xs font-medium text-slate-400 flex items-center justify-between max-w-7xl mx-auto">
+    <div class="flex items-center gap-2">
+      <span class="inline-block size-2 rounded-full bg-emerald-400"></span>
+      <span class="text-white font-semibold uppercase tracking-wider text-[11px]">Relatório Executivo Confidencial</span>
+      <span class="hidden sm:inline text-slate-500">|</span>
+      <span class="hidden sm:inline">Uso Interno e Apresentação ao Comitê Consultivo de Enfermagem</span>
+    </div>
+    <div class="flex items-center gap-3 no-print">
+      <button onclick="window.print()" class="text-cyan-300 hover:text-white transition-colors flex items-center gap-1.5 font-semibold text-xs">
+        <svg class="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+        Gerar PDF / Imprimir
+      </button>
+    </div>
+  </aside>
+
+  <!-- Cabeçalho Principal -->
+  <header class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-10 border-b border-white/5">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div class="flex items-center gap-4">
+        <div class="size-16 rounded-2xl bg-white/95 dark:bg-card p-2.5 shadow-xl ring-1 ring-border/50 flex items-center justify-center shrink-0">
+          <img src="/logo-icon.png" alt="Senecurare Logo" class="size-full object-contain" onerror="this.src='/logo-192.png'" />
+        </div>
+        <div>
+          <div class="flex items-baseline font-heading tracking-tight text-3xl sm:text-4xl">
+            <span class="font-bold text-[#6ec5d4]">Sene</span>
+            <span class="italic font-medium text-[#f48a73]">curare</span>
+          </div>
+          <p class="font-heading italic text-xs sm:text-sm text-slate-400">Raízes de cuidado, laços de vida.</p>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:items-end text-left sm:text-right">
+        <span class="badge-coren px-3 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 mb-1.5">
+          <svg class="size-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+          Comitê Consultivo COREN / ILPI
+        </span>
+        <h1 class="text-xs font-medium text-slate-300">Dossiê Estratégico: Visão de Negócio, Modelo e Custos de Escala</h1>
+        <p class="text-[11px] text-slate-500">Documento de Alinhamento Técnico-Regulatório e Financeiro</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Conteúdo Principal -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-14">
+
+    <!-- Introdução Executiva -->
+    <section class="exec-card rounded-3xl p-8 sm:p-10 border border-cyan-500/30">
+      <div class="max-w-4xl space-y-4">
+        <span class="text-xs font-bold uppercase tracking-wider text-cyan-400">Objetivo deste Dossiê</span>
+        <h2 class="text-2xl sm:text-3xl font-bold font-heading text-white">
+          Apresentação da Estrutura Econômica e Operacional à Especialista COREN
+        </h2>
+        <p class="text-sm sm:text-base text-slate-300 leading-relaxed">
+          Este documento formaliza para nossa <strong>Conselheira do COREN especialista em ILPIs</strong> como o sistema transforma as dores diárias de fiscalização, enfermagem e rotina clínica em uma solução tecnicamente blindada e comercialmente viável.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-white/10 text-xs">
+          <div class="p-4 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+            <span class="text-slate-400 block font-medium">1. O Fosso Competitivo:</span>
+            <strong class="text-white text-sm">Mentoria COREN Especialista</strong>
+            <p class="text-slate-400 text-[11px]">O sistema não é genérico: cada rotina reflete o que os fiscais cobram na prática.</p>
+          </div>
+          <div class="p-4 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+            <span class="text-slate-400 block font-medium">2. Viabilidade Econômica:</span>
+            <strong class="text-white text-sm">Margem Bruta de 99,4%</strong>
+            <p class="text-slate-400 text-[11px]">Custo de infraestrutura cai para R$ 0,19 por residente com arquitetura moderna.</p>
+          </div>
+          <div class="p-4 rounded-2xl bg-black/30 border border-white/5 space-y-1">
+            <span class="text-slate-400 block font-medium">3. Segurança Jurídica:</span>
+            <strong class="text-white text-sm">RDC 502 + COFEN + LGPD</strong>
+            <p class="text-slate-400 text-[11px]">Proteção da Responsável Técnica (RT) e da instituição contra multas e processos.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Seção 1: As Dores Mapeadas e a Resposta Tecnológica -->
+    <section class="space-y-6">
+      <div class="border-b border-white/10 pb-4">
+        <span class="text-xs font-bold uppercase tracking-wider text-cyan-400">Alinhamento Técnico de Necessidades</span>
+        <h3 class="text-2xl font-bold font-heading text-white mt-1">Como o Sistema Soluciona as Dores Críticas das ILPIs</h3>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Dor 1 -->
+        <div class="exec-card rounded-2xl p-6 space-y-3">
+          <div class="size-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center font-bold">01</div>
+          <h4 class="text-base font-bold text-white">Dimensionamento de Equipe</h4>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            <strong>Dor da ILPI:</strong> Autuações severas do COREN por déficit de cuidadores e técnicos nos turnos 12x36.<br>
+            <strong>Solução Senecurare:</strong> Cálculo algorítmico automático por Grau Fugulin da ANVISA (I, II e III), respaldando a RT com laudo formal.
+          </p>
+        </div>
+
+        <!-- Dor 2 -->
+        <div class="exec-card rounded-2xl p-6 space-y-3">
+          <div class="size-10 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center font-bold">02</div>
+          <h4 class="text-base font-bold text-white">Erros na Medicação</h4>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            <strong>Dor da ILPI:</strong> Doses esquecidas, atrasadas ou dadas em duplicidade na troca de plantão.<br>
+            <strong>Solução Senecurare:</strong> Checagem horária beira-leito com alertas, baixa atômica no estoque e justificativa clínica obrigatória de recusa.
+          </p>
+        </div>
+
+        <!-- Dor 3 -->
+        <div class="exec-card rounded-2xl p-6 space-y-3">
+          <div class="size-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold">03</div>
+          <h4 class="text-base font-bold text-white">Cadeia de Frio & Termolábeis</h4>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            <strong>Dor da ILPI:</strong> Multas da Vigilância Sanitária por esquecimento de anotação de temperatura da geladeira.<br>
+            <strong>Solução Senecurare:</strong> Registro bimarginal obrigatório com trava rígida fora de 2°C a 8°C e histórico gráfico para auditoria.
+          </p>
+        </div>
+
+        <!-- Dor 4 -->
+        <div class="exec-card rounded-2xl p-6 space-y-3">
+          <div class="size-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold">04</div>
+          <h4 class="text-base font-bold text-white">Capacitação Obrigatória</h4>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            <strong>Dor da ILPI:</strong> O Art. 38 da RDC 502 exige educação continuada anual da equipe, mas a ILPI não tem tempo nem material.<br>
+            <strong>Solução Senecurare:</strong> LMS embutido com cursos da ANVISA, quizzes avaliativos e emissão de certificados oficiais com QR Code.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Seção 2: Modelo Comercial e Tabela de Planos -->
+    <section class="space-y-6">
+      <div class="border-b border-white/10 pb-4">
+        <span class="text-xs font-bold uppercase tracking-wider text-cyan-400">Modelo de Negócio Sustentável</span>
+        <h3 class="text-2xl font-bold font-heading text-white mt-1">Precificação Bi-fatorial: Residentes + Franquia de Funcionários</h3>
+        <p class="text-xs sm:text-sm text-slate-400">
+          Não cobramos por login individual avulso para evitar o compartilhamento de senhas na enfermagem, mas estruturamos os planos para cobrir os dois volumes de dados da instituição:
+        </p>
+      </div>
+
+      <div class="overflow-x-auto exec-card rounded-3xl border border-white/10">
+        <table class="w-full text-left text-xs sm:text-sm">
+          <thead class="bg-black/40 text-slate-300 border-b border-white/10 font-semibold uppercase tracking-wider text-[11px]">
+            <tr>
+              <th class="py-4 px-6">Plano Comercial</th>
+              <th class="py-4 px-4 text-center">Mensalidade Mínima (Piso)</th>
+              <th class="py-4 px-4 text-center">Residentes Inclusos</th>
+              <th class="py-4 px-4 text-center">Funcionários Inclusos</th>
+              <th class="py-4 px-4 text-right">Residente Adicional</th>
+              <th class="py-4 px-4 text-right">Funcionário Adicional</th>
+              <th class="py-4 px-6 text-left">Público e Posicionamento</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5 text-slate-300">
+            <tr class="hover:bg-white/[0.02]">
+              <td class="py-4 px-6 font-bold text-white">Plano Essencial</td>
+              <td class="py-4 px-4 text-center font-bold text-white text-base">R$ 380,00</td>
+              <td class="py-4 px-4 text-center text-cyan-300 font-semibold">Até 12</td>
+              <td class="py-4 px-4 text-center text-emerald-300 font-semibold">Até 10</td>
+              <td class="py-4 px-4 text-right font-mono">+ R$ 25,00/mês</td>
+              <td class="py-4 px-4 text-right font-mono">+ R$ 12,00/mês</td>
+              <td class="py-4 px-6 text-slate-400 text-xs">Pequenas casas familiares com rotina beira-leito sem papel.</td>
+            </tr>
+            <tr class="bg-cyan-950/20 hover:bg-cyan-950/30">
+              <td class="py-4 px-6 font-bold text-white flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">CARRO-CHEFE</span>
+                Plano Clínico & Compliance
+              </td>
+              <td class="py-4 px-4 text-center font-extrabold text-white text-lg">R$ 780,00</td>
+              <td class="py-4 px-4 text-center text-cyan-300 font-bold text-sm">Até 25</td>
+              <td class="py-4 px-4 text-center text-emerald-300 font-bold text-sm">Até 25</td>
+              <td class="py-4 px-4 text-right font-mono font-semibold text-white">+ R$ 28,00/mês</td>
+              <td class="py-4 px-4 text-right font-mono font-semibold text-white">+ R$ 15,00/mês</td>
+              <td class="py-4 px-6 text-cyan-100 text-xs font-medium"><strong>Padrão Oficial COREN/RDC 502:</strong> LPP fotográfica, Cadeia de Frio, POPs e Certificados.</td>
+            </tr>
+            <tr class="hover:bg-white/[0.02]">
+              <td class="py-4 px-6 font-bold text-white">Plano Enterprise & Redes</td>
+              <td class="py-4 px-4 text-center font-bold text-white text-base">R$ 1.890,00</td>
+              <td class="py-4 px-4 text-center text-cyan-300 font-semibold">Até 50</td>
+              <td class="py-4 px-4 text-center text-emerald-300 font-semibold">Até 50</td>
+              <td class="py-4 px-4 text-right font-mono">+ R$ 32,00/mês</td>
+              <td class="py-4 px-4 text-right font-mono">+ R$ 18,00/mês</td>
+              <td class="py-4 px-6 text-slate-400 text-xs">Grandes instituições e redes com filiais, telemedicina e cursos próprios.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-black/30 border border-white/5 text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <span><strong>Taxa de Implantação e Onboarding Clínico:</strong> R$ 1.200,00 (100% isenta na assinatura do Plano Anual com 2 meses grátis).</span>
+        <span class="text-emerald-400 font-medium">Alavanca de fluxo de caixa antecipado e redução de churn.</span>
+      </div>
+    </section>
+
+    <!-- Seção 3: Tabela Oficial de Teleconsultas & Split -->
+    <section class="space-y-6">
+      <div class="border-b border-white/10 pb-4">
+        <span class="text-xs font-bold uppercase tracking-wider text-cyan-400">Serviços Clínicos Especializados</span>
+        <h3 class="text-2xl font-bold font-heading text-white mt-1">Valores Padronizados de Teleconsultas & Modelo de Split</h3>
+        <p class="text-xs sm:text-sm text-slate-400">
+          A tabela é unificada para evitar guerra de preços. O split é automático via Mercado Pago, remunerando de forma justa o especialista, a ILPI e a tecnologia:
+        </p>
+      </div>
+
+      <div class="overflow-x-auto exec-card rounded-3xl border border-white/10">
+        <table class="w-full text-left text-xs sm:text-sm">
+          <thead class="bg-black/40 text-slate-300 border-b border-white/10 font-semibold uppercase tracking-wider text-[11px]">
+            <tr>
+              <th class="py-3.5 px-6">Especialidade</th>
+              <th class="py-3.5 px-4 text-center">Duração</th>
+              <th class="py-3.5 px-6 text-right font-bold text-white">Valor Tabelado</th>
+              <th class="py-3.5 px-6 text-right text-cyan-300">Especialista (75%)</th>
+              <th class="py-3.5 px-6 text-right text-emerald-300">Comissão ILPI (18%)</th>
+              <th class="py-3.5 px-6 text-right text-slate-400">Tecnologia (7%)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5 text-slate-300">
+            <tr>
+              <td class="py-3 px-6 font-semibold text-white">Medicina Geriátrica & Clínica Geral</td>
+              <td class="py-3 px-4 text-center text-slate-400">45-60 min</td>
+              <td class="py-3 px-6 text-right font-bold text-white">R$ 240,00</td>
+              <td class="py-3 px-6 text-right text-cyan-300">R$ 180,00</td>
+              <td class="py-3 px-6 text-right text-emerald-300 font-semibold">R$ 43,20</td>
+              <td class="py-3 px-6 text-right text-slate-400">R$ 16,80</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-6 font-semibold text-white">Estomaterapia & Manejo de Feridas/LPP</td>
+              <td class="py-3 px-4 text-center text-slate-400">40-45 min</td>
+              <td class="py-3 px-6 text-right font-bold text-white">R$ 180,00</td>
+              <td class="py-3 px-6 text-right text-cyan-300">R$ 135,00</td>
+              <td class="py-3 px-6 text-right text-emerald-300 font-semibold">R$ 32,40</td>
+              <td class="py-3 px-6 text-right text-slate-400">R$ 12,60</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-6 font-semibold text-white">Nutrição Clínica & Geriátrica (Enteral)</td>
+              <td class="py-3 px-4 text-center text-slate-400">40 min</td>
+              <td class="py-3 px-6 text-right font-bold text-white">R$ 160,00</td>
+              <td class="py-3 px-6 text-right text-cyan-300">R$ 120,00</td>
+              <td class="py-3 px-6 text-right text-emerald-300 font-semibold">R$ 28,80</td>
+              <td class="py-3 px-6 text-right text-slate-400">R$ 11,20</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-6 font-semibold text-white">Psicologia Clínica & Demências</td>
+              <td class="py-3 px-4 text-center text-slate-400">50 min</td>
+              <td class="py-3 px-6 text-right font-bold text-white">R$ 140,00</td>
+              <td class="py-3 px-6 text-right text-cyan-300">R$ 105,00</td>
+              <td class="py-3 px-6 text-right text-emerald-300 font-semibold">R$ 25,20</td>
+              <td class="py-3 px-6 text-right text-slate-400">R$ 9,80</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-6 font-semibold text-white">Fisioterapia Geriátrica & Reabilitação</td>
+              <td class="py-3 px-4 text-center text-slate-400">40 min</td>
+              <td class="py-3 px-6 text-right font-bold text-white">R$ 130,00</td>
+              <td class="py-3 px-6 text-right text-cyan-300">R$ 97,50</td>
+              <td class="py-3 px-6 text-right text-emerald-300 font-semibold">R$ 23,40</td>
+              <td class="py-3 px-6 text-right text-slate-400">R$ 9,10</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Seção 4: LMS de Cursos por Tiers -->
+    <section class="space-y-6">
+      <div class="border-b border-white/10 pb-4">
+        <span class="text-xs font-bold uppercase tracking-wider text-cyan-400">Educação Permanente (Art. 38 RDC 502)</span>
+        <h3 class="text-2xl font-bold font-heading text-white mt-1">Estruturação dos Cursos por Tiers nos Planos</h3>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="exec-card rounded-2xl p-6 space-y-3">
+          <span class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-white/10 text-slate-300">Tier 1 · Plano Essencial</span>
+          <h4 class="text-base font-bold text-white">Segurança Básica Beira-Leito</h4>
+          <ul class="text-xs text-slate-300 space-y-2">
+            <li>• <strong>Curso 1:</strong> Higiene das Mãos & Biossegurança em ILPI</li>
+            <li>• <strong>Curso 2:</strong> Prevenção de Quedas & Escala de Morse</li>
+          </ul>
+          <p class="text-[11px] text-slate-500 pt-2 border-t border-white/5">Até 2 certificações anuais por colaborador.</p>
+        </div>
+
+        <div class="exec-card rounded-2xl p-6 border-cyan-500/40 space-y-3 bg-cyan-950/10">
+          <span class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Tier 2 · Plano Clínico (RDC 502)</span>
+          <h4 class="text-base font-bold text-white">Trilha Oficial da ANVISA</h4>
+          <ul class="text-xs text-slate-200 space-y-2">
+            <li>✓ Todos do Tier 1 inclusos</li>
+            <li>• <strong>Curso 3:</strong> Manejo e Estadiamento de LPP (Escaras)</li>
+            <li>• <strong>Curso 4:</strong> Disfagia, Dietas & Prevenção de Broncoaspiração</li>
+            <li>• <strong>Curso 5:</strong> Cadeia de Frio de Medicamentos (2°C a 8°C)</li>
+          </ul>
+          <p class="text-[11px] text-cyan-300 pt-2 border-t border-cyan-500/20 font-medium">Certificados oficiais com QR Code ilimitados.</p>
+        </div>
+
+        <div class="exec-card rounded-2xl p-6 space-y-3">
+          <span class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">Tier 3 · Plano Enterprise</span>
+          <h4 class="text-base font-bold text-white">Gestão Avançada & Custom</h4>
+          <ul class="text-xs text-slate-300 space-y-2">
+            <li>✓ Todos os 5 cursos da RDC 502 inclusos</li>
+            <li>• <strong>Curso 6:</strong> Manejo de Demências & Agitação Psicomotora</li>
+            <li>• <strong>Curso 7:</strong> Cuidados Paliativos & Diretivas Antecipadas</li>
+            <li>• <strong>Curso 8:</strong> Liderança e Supervisão de Plantão para RTs</li>
+            <li class="text-purple-300 font-semibold">• ✨ Criador de Cursos Próprios da ILPI</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Seção 5: Engenharia e Custos de Escala (100 a 100k Usuários) -->
+    <section class="space-y-6">
+      <div class="border-b border-white/10 pb-4">
+        <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Viabilidade Financeira & Escalabilidade</span>
+        <h3 class="text-2xl font-bold font-heading text-white mt-1">Engenharia de Custos Gradual (De 100 a 100.000 Usuários)</h3>
+        <p class="text-xs sm:text-sm text-slate-400">
+          Demonstração do custo de servidor e infraestrutura em cada estágio de crescimento, comprovando a altíssima margem e solidez do modelo:
+        </p>
+      </div>
+
+      <div class="overflow-x-auto exec-card rounded-3xl border border-white/10">
+        <table class="w-full text-left text-xs sm:text-sm">
+          <thead class="bg-black/40 text-slate-300 border-b border-white/10 font-semibold uppercase tracking-wider text-[11px]">
+            <tr>
+              <th class="py-3.5 px-5">Degrau de Escala</th>
+              <th class="py-3.5 px-4 text-center">Residentes (~70%)</th>
+              <th class="py-3.5 px-4 text-center">Funcionários (~30%)</th>
+              <th class="py-3.5 px-4 text-right">Custo Nuvem / Mês</th>
+              <th class="py-3.5 px-4 text-right">Custo / Residente</th>
+              <th class="py-3.5 px-5 text-right font-bold text-white">Receita Recorrente (MRR)</th>
+              <th class="py-3.5 px-5 text-right font-bold text-emerald-400">Margem Bruta (%)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5 text-slate-300">
+            <tr>
+              <td class="py-3 px-5 font-semibold text-white">100 usuários (Piloto)</td>
+              <td class="py-3 px-4 text-center text-slate-400">~70</td>
+              <td class="py-3 px-4 text-center text-slate-400">~30</td>
+              <td class="py-3 px-4 text-right font-mono">R$ 261,00</td>
+              <td class="py-3 px-4 text-right font-mono">R$ 3,73</td>
+              <td class="py-3 px-5 text-right font-bold text-white">R$ 2.240,00</td>
+              <td class="py-3 px-5 text-right font-semibold text-emerald-400">88,3%</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-5 font-semibold text-white">500 usuários</td>
+              <td class="py-3 px-4 text-center text-slate-400">~350</td>
+              <td class="py-3 px-4 text-center text-slate-400">~150</td>
+              <td class="py-3 px-4 text-right font-mono">R$ 464,00</td>
+              <td class="py-3 px-4 text-right font-mono">R$ 1,33</td>
+              <td class="py-3 px-5 text-right font-bold text-white">R$ 11.200,00</td>
+              <td class="py-3 px-5 text-right font-semibold text-emerald-400">95,9%</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-5 font-semibold text-white">1.000 usuários</td>
+              <td class="py-3 px-4 text-center text-slate-400">~700</td>
+              <td class="py-3 px-4 text-center text-slate-400">~300</td>
+              <td class="py-3 px-4 text-right font-mono">R$ 986,00</td>
+              <td class="py-3 px-4 text-right font-mono">R$ 1,41</td>
+              <td class="py-3 px-5 text-right font-bold text-white">R$ 22.400,00</td>
+              <td class="py-3 px-5 text-right font-semibold text-emerald-400">95,6%</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-5 font-semibold text-white">5.000 usuários</td>
+              <td class="py-3 px-4 text-center text-slate-400">~3.500</td>
+              <td class="py-3 px-4 text-center text-slate-400">~1.500</td>
+              <td class="py-3 px-4 text-right font-mono">R$ 2.523,00</td>
+              <td class="py-3 px-4 text-right font-mono">R$ 0,72</td>
+              <td class="py-3 px-5 text-right font-bold text-white">R$ 112.000,00</td>
+              <td class="py-3 px-5 text-right font-semibold text-emerald-400">97,7%</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-5 font-semibold text-white">10.000 usuários</td>
+              <td class="py-3 px-4 text-center text-slate-400">~7.000</td>
+              <td class="py-3 px-4 text-center text-slate-400">~3.000</td>
+              <td class="py-3 px-4 text-right font-mono">R$ 4.524,00</td>
+              <td class="py-3 px-4 text-right font-mono">R$ 0,65</td>
+              <td class="py-3 px-5 text-right font-bold text-white">R$ 224.000,00</td>
+              <td class="py-3 px-5 text-right font-semibold text-emerald-400">98,0%</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-5 font-semibold text-white">25.000 usuários</td>
+              <td class="py-3 px-4 text-center text-slate-400">~17.500</td>
+              <td class="py-3 px-4 text-center text-slate-400">~7.500</td>
+              <td class="py-3 px-4 text-right font-mono">R$ 7.424,00</td>
+              <td class="py-3 px-4 text-right font-mono">R$ 0,42</td>
+              <td class="py-3 px-5 text-right font-bold text-white">R$ 560.000,00</td>
+              <td class="py-3 px-5 text-right font-semibold text-emerald-400">98,7%</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-5 font-semibold text-white">50.000 usuários</td>
+              <td class="py-3 px-4 text-center text-slate-400">~35.000</td>
+              <td class="py-3 px-4 text-center text-slate-400">~15.000</td>
+              <td class="py-3 px-4 text-right font-mono">R$ 10.904,00</td>
+              <td class="py-3 px-4 text-right font-mono">R$ 0,31</td>
+              <td class="py-3 px-5 text-right font-bold text-white">R$ 1.120.000,00</td>
+              <td class="py-3 px-5 text-right font-semibold text-emerald-400">99,0%</td>
+            </tr>
+            <tr class="bg-cyan-950/30">
+              <td class="py-3.5 px-5 font-bold text-cyan-300">100.000 usuários (Maturidade)</td>
+              <td class="py-3.5 px-4 text-center font-bold text-white">~70.000</td>
+              <td class="py-3.5 px-4 text-center font-bold text-white">~30.000</td>
+              <td class="py-3.5 px-4 text-right font-mono text-cyan-200 font-bold">R$ 12.963,00</td>
+              <td class="py-3.5 px-4 text-right font-mono font-extrabold text-emerald-400">R$ 0,19</td>
+              <td class="py-3.5 px-5 text-right font-extrabold text-white text-base">R$ 2.240.000,00</td>
+              <td class="py-3.5 px-5 text-right font-extrabold text-emerald-400 text-base">99,42%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Seção 6: Fatores Críticos de Governança, Riscos e Mitigações -->
+    <section class="space-y-6">
+      <div class="border-b border-white/10 pb-4">
+        <span class="text-xs font-bold uppercase tracking-wider text-amber-400">Governança & Riscos Mapeados</span>
+        <h3 class="text-2xl font-bold font-heading text-white mt-1">Mitigações de Riscos Técnicos e Regulatórios</h3>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-300">
+        <div class="exec-card rounded-2xl p-6 space-y-3">
+          <div class="flex items-center gap-2">
+            <span class="size-2 rounded-full bg-cyan-400"></span>
+            <h4 class="text-sm font-bold text-white">Migração do Jitsi Gratuito para VPS Privada</h4>
+          </div>
+          <p class="leading-relaxed text-slate-300">
+            O servidor público do Jitsi (`meet.jit.si`) impôs login obrigatório e não garante sigilo médico nem conformidade LGPD (Art. 11). Em produção, o Senecurare utilizará uma <strong>instância privada própria do Jitsi (Self-hosted)</strong> rodando em VPS dedicada com JWT gerado pelo Supabase. Custo mínimo de apenas <strong>R$ 150 a R$ 230/mês</strong>, garantindo salas 100% privadas e com SLA médico.
+          </p>
+        </div>
+
+        <div class="exec-card rounded-2xl p-6 space-y-3">
+          <div class="flex items-center gap-2">
+            <span class="size-2 rounded-full bg-emerald-400"></span>
+            <h4 class="text-sm font-bold text-white">Guarda de Prontuários por 20 Anos (Lei 13.787/2018)</h4>
+          </div>
+          <p class="leading-relaxed text-slate-300">
+            A legislação proíbe apagar dados clínicos de residentes inativos por 20 anos. O sistema arquiva automaticamente cadastros encerrados em <strong>Cold Storage (Cloudflare R2 Archive / S3 Glacier)</strong> a um custo irrisório de <strong>R$ 0,006 por GB/mês</strong> (menos de R$ 60/mês para manter todo o acervo histórico de 50 mil pacientes por décadas).
+          </p>
+        </div>
+
+        <div class="exec-card rounded-2xl p-6 space-y-3">
+          <div class="flex items-center gap-2">
+            <span class="size-2 rounded-full bg-purple-400"></span>
+            <h4 class="text-sm font-bold text-white">Comunicação Familiar sem Custo de API</h4>
+          </div>
+          <p class="leading-relaxed text-slate-300">
+            Em vez de pagar APIs caras de WhatsApp por mensagem enviada, o sistema utiliza <strong>gerador inteligente de links diretos (`wa.me`)</strong>. A mensagem é formatada automaticamente e o cuidador/RT abre seu próprio WhatsApp com 1 toque. Custo: <strong>R$ 0,00 (Zero)</strong>.
+          </p>
+        </div>
+
+        <div class="exec-card rounded-2xl p-6 space-y-3">
+          <div class="flex items-center gap-2">
+            <span class="size-2 rounded-full bg-amber-400"></span>
+            <h4 class="text-sm font-bold text-white">Tributação e Margem Líquida Real</h4>
+          </div>
+          <p class="leading-relaxed text-slate-300">
+            Calculamos a transição do <strong>Simples Nacional (6% a 9%)</strong> para o <strong>Lucro Presumido (~16,33%)</strong>. Mesmo deduzindo 16,33% de impostos sobre um faturamento de R$ 2,24 Milhões/mês, a receita líquida permanece em R$ 1,87 Milhão/mês, assegurando margem líquida superior a <strong>80%</strong>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Conclusão / Alinhamento de Parceria -->
+    <section class="exec-card rounded-3xl p-8 border border-emerald-500/30 bg-emerald-950/10 text-center max-w-3xl mx-auto space-y-4">
+      <span class="badge-coren px-3 py-1 rounded-full text-xs font-semibold inline-block">Conclusão do Alinhamento</span>
+      <h3 class="text-2xl font-bold font-heading text-white">Prontos para Transformar a Gestão de ILPIs no Brasil</h3>
+      <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+        A união entre a <strong>autoridade técnica da Conselheira do COREN</strong> e uma <strong>engenharia de software moderna e escalável</strong> posiciona o Senecurare como a solução mais completa, segura e financeiramente viável do mercado brasileiro.
+      </p>
+      <div class="pt-4 flex justify-center gap-4 text-xs font-semibold no-print">
+        <button onclick="window.print()" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg transition-all flex items-center gap-2">
+          <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          Exportar Dossiê em PDF
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Rodapé -->
+  <footer class="border-t border-white/5 py-8 mt-16 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <span class="font-heading font-bold text-[#6ec5d4]">Sene</span><span class="font-heading italic text-[#f48a73]">curare</span>
+        <span>© 2026 · Documento Executivo de Alinhamento COREN/ILPI.</span>
+      </div>
+      <p>Desenvolvido sob rigorosa conformidade com a RDC 502/2021 ANVISA e COFEN.</p>
+    </div>
+  </footer>
+
+</body>
+</html>
