@@ -181,43 +181,51 @@ function HomeRoute() {
   return <LandingPage />
 }
 
+function PlanosPublicPage() {
+  return (
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-background/90 border-b border-border/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center">
+            <SenecurareLogo variant="horizontal" size="sm" showTagline />
+          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/landing"
+              className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            >
+              ← Página Inicial
+            </Link>
+            <ThemeToggle />
+            <Button size="sm" asChild className="rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-9 shadow-xs">
+              <Link to="/login">Entrar no Sistema</Link>
+            </Button>
+          </div>
+        </div>
+      </header>
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        <Planos />
+      </main>
+      <footer className="border-t border-border/60 py-6 text-center text-xs text-muted-foreground bg-muted/20">
+        © 2026 Senecurare Healthcare · Planos & Preços Transparentes para ILPIs
+      </footer>
+    </div>
+  )
+}
+
 function PlanosRoute() {
   const { session, loading } = useAuth()
   if (loading) return <PageFallback />
   if (!session) {
-    return (
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
-        <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-background/90 border-b border-border/60">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <Link to="/" className="flex items-center">
-              <SenecurareLogo variant="horizontal" size="sm" showTagline />
-            </Link>
-            <div className="flex items-center gap-3">
-              <Link
-                to="/landing"
-                className="text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
-              >
-                ← Página Inicial
-              </Link>
-              <ThemeToggle />
-              <Button size="sm" asChild className="rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-9 shadow-xs">
-                <Link to="/login">Entrar no Sistema</Link>
-              </Button>
-            </div>
-          </div>
-        </header>
-        <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-          <Planos />
-        </main>
-        <footer className="border-t border-border/60 py-6 text-center text-xs text-muted-foreground bg-muted/20">
-          © 2026 Senecurare Healthcare · Planos & Preços Transparentes para ILPIs
-        </footer>
-      </div>
-    )
+    return <PlanosPublicPage />
   }
   return (
     <RequireAuth>
-      <AuthedRoutes />
+      <Routes>
+        <Route element={<AppShell />}>
+          <Route index element={<Planos />} />
+        </Route>
+      </Routes>
     </RequireAuth>
   )
 }
