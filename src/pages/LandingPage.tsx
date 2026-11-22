@@ -159,7 +159,7 @@ export default function LandingPage() {
                     <div className="w-3 h-3 rounded-full bg-[#ffb4a8]" />
                     <div className="w-3 h-3 rounded-full bg-[#9acee1]" />
                     <div className="w-3 h-3 rounded-full bg-[#75daa8]" />
-                    <span className="ml-2 text-xs font-mono text-[#c0c8cb]">senecare.app/ronda-matutina</span>
+                    <span className="ml-2 text-xs font-mono text-[#c0c8cb]">senecurare.app/ronda-matutina</span>
                   </div>
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#75daa8]/15 text-[#75daa8] text-xs font-semibold">
                     <ShieldCheck className="size-3.5" />
@@ -439,22 +439,22 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 5. COMPARATIVO: SEM O SENECARE VS. COM O SENECARE */}
+        {/* 5. COMPARATIVO: SEM O SENECURARE VS. COM O SENECURARE */}
         <section className="w-full py-16 lg:py-24 px-6 lg:px-12 bg-[#111d21]/60 border-y border-[#2b373b]/40">
           <div className="max-w-7xl mx-auto">
             <div className="text-center max-w-2xl mx-auto mb-12">
               <span className="text-xs font-bold uppercase text-[#9acee1] tracking-widest">Impacto Operacional</span>
               <h2 className="text-2xl sm:text-4xl font-extrabold text-[#d8e5ea] mt-2">
-                Sem o Senecare vs. Com o Senecare
+                Sem o Senecurare vs. Com o Senecurare
               </h2>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Sem o Senecare */}
+              {/* Sem o Senecurare */}
               <div className="rounded-2xl bg-[#81251a]/20 border border-[#ffb4a8]/30 p-8 shadow-lg">
                 <div className="flex items-center gap-3 mb-6">
                   <AlertTriangle className="size-6 text-[#ffb4a8]" />
-                  <h3 className="text-lg font-bold text-[#ffb4a8]">Sem o Senecare: Papel & Planilhas</h3>
+                  <h3 className="text-lg font-bold text-[#ffb4a8]">Sem o Senecurare: Papel & Planilhas</h3>
                 </div>
                 <ul className="space-y-4 text-sm text-[#c0c8cb]">
                   <li className="flex items-start gap-3">
@@ -472,11 +472,11 @@ export default function LandingPage() {
                 </ul>
               </div>
 
-              {/* Com o Senecare */}
+              {/* Com o Senecurare */}
               <div className="rounded-2xl bg-[#008056]/20 border border-[#75daa8]/30 p-8 shadow-xl">
                 <div className="flex items-center gap-3 mb-6">
                   <CheckCircle2 className="size-6 text-[#75daa8]" />
-                  <h3 className="text-lg font-bold text-[#75daa8]">Com o Senecare: 100% Digital & Auditado</h3>
+                  <h3 className="text-lg font-bold text-[#75daa8]">Com o Senecurare: 100% Digital & Auditado</h3>
                 </div>
                 <ul className="space-y-4 text-sm text-[#d8e5ea]">
                   <li className="flex items-start gap-3">
@@ -517,7 +517,7 @@ export default function LandingPage() {
                     ))}
                   </div>
                   <p className="text-sm text-[#d8e5ea] leading-relaxed mb-6 italic">
-                    “Passamos por duas vistorias da Vigilância Sanitária sem nenhuma ressalva. O prontuário e os POPs digitais do Senecare nos deram total segurança.”
+                    “Passamos por duas vistorias da Vigilância Sanitária sem nenhuma ressalva. O prontuário e os POPs digitais do Senecurare nos deram total segurança.”
                   </p>
                 </div>
                 <div>
