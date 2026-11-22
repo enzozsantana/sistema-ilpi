@@ -1,1193 +1,928 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {
   ShieldCheck,
-  Pill,
-  Stethoscope,
-  Activity,
   CheckCircle2,
   Users,
-  ChevronRight,
   ArrowRight,
-  HelpCircle,
-  FileText,
   Video,
   Lock,
-  Sparkles,
   Clock,
   Award,
   AlertTriangle,
-  Check,
   Star,
-  Quote,
-  HeartHandshake,
-  HeartPulse,
-  CheckCheck,
   FileCheck2,
-  Zap,
   Scale,
-  BadgeCheck,
-  ArrowUpRight,
-  UserCheck,
+  QrCode,
+  ScanLine,
+  Gavel,
+  X,
+  ChevronDown,
+  TrendingDown,
 } from 'lucide-react'
 import { SenecurareLogo } from '../components/SenecurareLogo'
 import { ThemeToggle } from '../components/ThemeToggle'
-import { Button } from '../components/ui/button'
-import { Badge } from '../components/ui/badge'
-import { Card, CardContent } from '../components/ui/card'
-import { PLANOS } from '../lib/plans'
+import { toast } from 'sonner'
 
 export default function LandingPage() {
-  const navigate = useNavigate()
   const [faturamentoAnual, setFaturamentoAnual] = useState(false)
   const [faqAberto, setFaqAberto] = useState<number | null>(null)
-  const [mockupAbaAtiva, setMockupAbaAtiva] = useState<'ronda' | 'prontuario' | 'dossie'>('ronda')
-  const [medicamento2Checado, setMedicamento2Checado] = useState(false)
+  const [isSimulated, setIsSimulated] = useState(false)
+  const [mockupHover, setMockupHover] = useState(false)
 
   const toggleFaq = (idx: number) => {
     setFaqAberto(faqAberto === idx ? null : idx)
   }
 
-  const planosLista = [
-    PLANOS.compacto,
-    PLANOS.clinico,
-    PLANOS.avancado,
-    PLANOS.enterprise,
-  ]
-
-  const orgaosReguladores = [
-    { sigla: 'ANVISA', norma: 'RDC 502/2021', desc: 'Regulamento Técnico de ILPIs', icone: ShieldCheck },
-    { sigla: 'ANVISA', norma: 'RDC 611/2022', desc: 'Boas Práticas de Saúde', icone: Award },
-    { sigla: 'COREN', norma: 'Resoluções Cofen', desc: 'SAE & Auditoria de Enfermagem', icone: FileCheck2 },
-    { sigla: 'CFM', norma: 'Prescrição Oficial', desc: 'Portal CFM & Memed Web', icone: Stethoscope },
-    { sigla: 'LGPD', norma: 'Lei 13.709/18', desc: 'Prontuário com Criptografia', icone: Lock },
-    { sigla: 'ICP-BRASIL', norma: 'Certificação Digital', desc: 'Assinaturas Válidas em Direito', icone: Scale },
-  ]
-
-  const depoimentos = [
-    {
-      nome: 'Helena Prado',
-      cargo: 'Enfermeira RT (Responsável Técnica)',
-      instituicao: 'Residencial Geriátrico Solar da Colina (42 residentes)',
-      texto:
-        'Nossa última inspeção da Vigilância Sanitária em 2026 levou menos de 20 minutos. Quando abrimos o painel de POPs e o prontuário no Senecurare, a fiscal elogiou a organização e fomos homologados sem nenhuma notificação.',
-      estrelas: 5,
-    },
-    {
-      nome: 'Dr. Roberto Faria',
-      cargo: 'Médico Geriatra & Diretor Clínico',
-      instituicao: 'Complexo de Cuidados Vida Plena (60 leitos)',
-      texto:
-        'A ronda de beira-leito com dupla checagem eliminou completamente as falhas de troca de medicação. Além disso, as teleconsultas com a prescrição digital oficial nos dão segurança jurídica total no atendimento dos idosos.',
-      estrelas: 5,
-    },
-    {
-      nome: 'Renata Silveira',
-      cargo: 'Sócia e Gestora Administrativa',
-      instituicao: 'Lar & Conforto Senior (28 residentes)',
-      texto:
-        'O fato de não cobrar por cuidador foi o divisor de águas. Conseguimos colocar tablets em cada ala e toda a equipe registra na hora do banho, alimentação e troca de curativos sem custos extras no orçamento.',
-      estrelas: 5,
-    },
-  ]
-
-  const faqs = [
-    {
-      pergunta: 'O sistema atende integralmente à RDC 502/2021 da ANVISA?',
-      resposta:
-        'Sim! O Senecurare foi construído especificamente para ILPIs com base nas exigências da ANVISA (RDC 502/2021 e RDC 611) e resoluções do COREN. O sistema gera automaticamente os POPs sanitários, fichas de acolhimento, prontuário individualizado e controle de estoque de medicamentos exigidos pela vigilância sanitária.',
-    },
-    {
-      pergunta: 'Preciso pagar mais conforme cadastro novos cuidadores ou enfermeiros?',
-      resposta:
-        'Não! Em todos os planos Senecurare o número de usuários profissionais é 100% ILIMITADO. Você pode cadastrar todos os cuidadores de plantão, enfermeiros, médicos e profissionais multidisciplinares sem pagar nenhum centavo a mais por login.',
-    },
-    {
-      pergunta: 'Como funciona a prescrição digital nas teleconsultas?',
-      resposta:
-        'O médico especialista atende o idoso por vídeo e conecta-se diretamente ao portal de prescrição oficial que já utiliza (Portal CFM com CRM, Memed Web, Receita Digital ou Nexodata) para assinar com certificado ICP-Brasil (A3, em nuvem ou Bird ID). A receita gerada é aceita em 100% das farmácias do Brasil e fica salva no prontuário do residente.',
-    },
-    {
-      pergunta: 'Posso testar o sistema antes de contratar?',
-      resposta:
-        'Com certeza! Nossa plataforma disponibiliza um ambiente completo de demonstração imediata com dados geriátricos reais já pré-configurados. Você pode testar agora mesmo sem precisar cadastrar cartão de crédito.',
-    },
-    {
-      pergunta: 'Como é feita a implantação e treinamento da equipe?',
-      resposta:
-        'A plataforma é intuitiva e projetada para ser simples até para cuidadores que não têm facilidade com tecnologia. Oferecemos um módulo completo de Treinamentos e Educação Permanente no sistema, além de suporte dedicado para migração das fichas dos idosos.',
-    },
-  ]
+  const handleSimularRonda = () => {
+    setIsSimulated((prev) => {
+      const next = !prev
+      if (next) {
+        toast.success('Ronda beira-leito checada via QR Code! Taxa de adesão elevada para 100%.')
+      } else {
+        toast.info('Simulação reiniciada para estado inicial da ronda.')
+      }
+      return next
+    })
+  }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-emerald-500/20 antialiased overflow-x-hidden">
-      {/* 1. TOP ANNOUNCEMENT BANNER */}
-      <div className="relative bg-gradient-to-r from-emerald-950 via-teal-900 to-slate-950 text-white text-xs py-2.5 px-4 text-center font-medium border-b border-emerald-500/20 shadow-xs z-50">
-        <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 flex-wrap">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-[10px] uppercase tracking-wider border border-emerald-400/30">
-            <Sparkles className="size-3 text-amber-300 animate-pulse" />
-            Conformidade RDC 502/611 ANVISA
-          </span>
-          <span className="text-slate-200">
-            Proteja sua ILPI contra autuações e glosas sanitárias com prontuário 100% auditável.
-          </span>
-          <a
-            href="#planos"
-            className="inline-flex items-center gap-1 font-bold text-amber-300 hover:text-white underline underline-offset-2 transition-colors ml-1"
-          >
-            <span>Ver Planos & Preços</span>
-            <ArrowRight className="size-3" />
-          </a>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#091519] text-[#d8e5ea] font-sans antialiased overflow-x-hidden selection:bg-[#75daa8]/20 selection:text-[#75daa8]">
+      {/* 1. STICKY HEADER */}
+      <header className="fixed top-0 w-full z-50 bg-[#091519]/80 backdrop-blur-xl border-b border-[#2b373b]/40 shadow-[0_1px_8px_rgba(0,0,0,0.3)]">
+        <div className="h-16 max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between gap-4">
+          <Link to="/" className="flex items-center gap-2.5 shrink-0 hover:opacity-95 transition-opacity">
+            <SenecurareLogo variant="horizontal" size="sm" showTagline />
+          </Link>
 
-      {/* 2. STICKY NAVBAR */}
-      <header className="sticky top-0 z-40 w-full backdrop-blur-xl bg-background/85 border-b border-border/50 transition-all duration-200 shadow-2xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link to="/" className="flex items-center hover:opacity-95 transition-opacity">
-              <SenecurareLogo variant="horizontal" size="sm" showTagline />
-            </Link>
+          <nav className="hidden lg:flex items-center gap-6">
+            <a href="#recursos" className="text-sm font-medium text-[#c0c8cb] hover:text-[#d8e5ea] transition-colors px-2 py-1">
+              Recursos
+            </a>
+            <a href="#conformidade" className="text-sm font-medium text-[#c0c8cb] hover:text-[#d8e5ea] transition-colors px-2 py-1">
+              Conformidade
+            </a>
+            <a href="#depoimentos" className="text-sm font-medium text-[#c0c8cb] hover:text-[#d8e5ea] transition-colors px-2 py-1">
+              Depoimentos
+            </a>
+            <a href="#planos" className="text-sm font-medium text-[#c0c8cb] hover:text-[#d8e5ea] transition-colors px-2 py-1">
+              Planos
+            </a>
+            <a href="#faq" className="text-sm font-medium text-[#c0c8cb] hover:text-[#d8e5ea] transition-colors px-2 py-1">
+              FAQ
+            </a>
+          </nav>
 
-            <nav className="hidden lg:flex items-center gap-7 text-xs font-semibold text-muted-foreground">
-              <a href="#recursos" className="hover:text-foreground transition-colors">
-                Recursos
-              </a>
-              <a href="#conformidade" className="hover:text-foreground transition-colors">
-                Conformidade Sanitária
-              </a>
-              <a href="#depoimentos" className="hover:text-foreground transition-colors">
-                Depoimentos
-              </a>
-              <a href="#planos" className="hover:text-foreground transition-colors">
-                Planos & Preços
-              </a>
-              <a href="#faq" className="hover:text-foreground transition-colors">
-                Dúvidas
-              </a>
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <ThemeToggle />
-            <Button
-              variant="ghost"
-              size="sm"
-              asChild
-              className="rounded-xl font-semibold text-xs h-9 text-muted-foreground hover:text-foreground hover:bg-muted/60"
+            <Link
+              to="/login"
+              className="hidden sm:inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium text-[#c0c8cb] hover:bg-[#202c30] hover:text-[#d8e5ea] transition-all"
             >
-              <Link to="/login">Entrar</Link>
-            </Button>
-            <Button
-              size="sm"
-              asChild
-              className="relative overflow-hidden rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-9 px-4 shadow-sm shadow-emerald-600/20 gap-1.5 transition-all hover:shadow-md hover:shadow-emerald-600/30 active:scale-95"
+              Acessar Sistema
+            </Link>
+            <Link
+              to="/login"
+              className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-[#75daa8] text-[#003823] font-semibold text-sm shadow-[0_0_20px_rgba(117,218,168,0.25)] hover:bg-[#92f7c3] transition-all active:scale-95"
             >
-              <a href="#planos">
-                <span>Começar Agora</span>
-                <ArrowRight className="size-3.5" />
-              </a>
-            </Button>
+              Acessar Demonstração Pronta
+            </Link>
           </div>
         </div>
       </header>
 
-      {/* 3. HERO SECTION COM DASHBOARD MOCKUP REALISTA */}
-      <section className="relative pt-12 pb-20 lg:pt-20 lg:pb-32 overflow-hidden bg-gradient-to-b from-emerald-500/[0.04] via-background to-background">
-        {/* Ambient Glows */}
-        <div className="absolute top-12 left-1/2 -translate-x-1/2 size-[650px] rounded-full bg-gradient-to-tr from-emerald-500/15 via-teal-500/10 to-transparent blur-3xl pointer-events-none -z-10" />
-        <div className="absolute top-48 -right-40 size-[450px] rounded-full bg-teal-500/10 blur-3xl pointer-events-none -z-10" />
+      <main className="w-full pt-16 bg-[#091519]">
+        {/* 2. HERO SECTION COM MOCKUP 3D INTERATIVO */}
+        <section className="relative w-full py-16 lg:py-24 px-6 lg:px-12 overflow-hidden">
+          {/* Ambient Glows */}
+          <div className="absolute -top-24 left-1/4 w-[520px] h-[520px] rounded-full bg-[#0f4c5c]/30 blur-3xl pointer-events-none" />
+          <div className="absolute top-32 right-1/4 w-[420px] h-[420px] rounded-full bg-[#75daa8]/10 blur-3xl pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-8">
-          {/* Badge de Autoridade com Pulsar Suave */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/25 shadow-2xs backdrop-blur-sm animate-pulse-subtle">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-            </span>
-            <ShieldCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Software Especialista para ILPIs & Residências Geriátricas</span>
-          </div>
+          <div className="relative max-w-7xl mx-auto flex flex-col items-center text-center">
+            {/* Pill de Autoridade Sanitária */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#202c30]/90 backdrop-blur-xl border border-[#40484b]/60 shadow-md mb-6">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#75daa8] opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#75daa8]" />
+              </span>
+              <span className="text-xs font-semibold text-[#75daa8]">
+                Versão 4.0 • Software Especialista para ILPIs & Residências Geriátricas • Conformidade RDC 502/611 ANVISA
+              </span>
+            </div>
 
-          {/* Headline Principal de Alta Conversão */}
-          <div className="max-w-4xl mx-auto space-y-4">
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-extrabold tracking-tight text-foreground leading-[1.12]">
+            {/* H1 Principal */}
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-[#d8e5ea] max-w-4xl tracking-tight mb-4 leading-[1.15]">
               Elimine erros de medicação e blinde sua ILPI contra{' '}
-              <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 bg-clip-text text-transparent italic">
+              <span className="bg-gradient-to-r from-[#9acee1] via-[#75daa8] to-[#b6ebfe] bg-clip-text text-transparent">
                 fiscalizações sanitárias.
               </span>
             </h1>
-            <p className="text-base sm:text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
-              Prontuário multidisciplinar unificado, ronda de enfermagem à beira-leito com dupla checagem,
-              POPs automatizados da RDC 502 da ANVISA e telemedicina de retaguarda.
-            </p>
-          </div>
 
-          {/* CTAs de Destaque com Efeito Shimmer */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
-            <Button
-              size="lg"
-              asChild
-              className="relative overflow-hidden w-full sm:w-auto h-12 px-8 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25 text-sm gap-2 transition-all hover:-translate-y-0.5 hover:shadow-emerald-600/35"
-            >
-              <a href="#planos">
+            {/* Subtítulo */}
+            <p className="text-base sm:text-lg text-[#c0c8cb] max-w-2xl mb-8 leading-relaxed">
+              Prontuário multidisciplinar unificado, rondas de enfermagem beira-leito com dupla checagem e POPs automatizados da ANVISA em uma plataforma de governança clínica de alta precisão.
+            </p>
+
+            {/* Ações Hero */}
+            <div className="flex flex-wrap items-center justify-center gap-4 mb-14">
+              <a
+                href="#planos"
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg bg-gradient-to-r from-[#75daa8] to-[#9acee1] text-[#003823] font-bold text-sm shadow-[0_0_28px_rgba(117,218,168,0.3)] hover:scale-[1.02] transition-all duration-200"
+              >
                 <span>Ver Planos & Preços</span>
                 <ArrowRight className="size-4" />
               </a>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              asChild
-              className="w-full sm:w-auto h-12 px-8 rounded-xl font-bold border-border/80 hover:bg-muted text-sm gap-2 shadow-2xs transition-all hover:-translate-y-0.5"
-            >
-              <Link to="/login">
-                <Sparkles className="size-4 text-amber-500" />
-                <span>Acessar Demonstração Pronta</span>
-              </Link>
-            </Button>
-          </div>
 
-          {/* Micro-prova social */}
-          <div className="pt-2 flex items-center justify-center gap-6 text-xs text-muted-foreground flex-wrap">
-            <span className="flex items-center gap-1.5 font-medium">
-              <CheckCircle2 className="size-3.5 text-emerald-600" />
-              Sem cartão de crédito para testar
-            </span>
-            <span className="flex items-center gap-1.5 font-medium">
-              <CheckCircle2 className="size-3.5 text-emerald-600" />
-              Usuários profissionais ilimitados
-            </span>
-            <span className="flex items-center gap-1.5 font-medium">
-              <CheckCircle2 className="size-3.5 text-emerald-600" />
-              Implantação em até 48 horas
-            </span>
-          </div>
-
-          {/* 4. DASHBOARD INTERATIVO / VITRINE DO PRODUTO (MOCKUP REALISTA) */}
-          <div className="pt-8 max-w-5xl mx-auto relative">
-            {/* Chips Flutuantes Animados */}
-            <div className="hidden sm:flex absolute -top-5 -left-6 z-30 p-2.5 px-3.5 rounded-2xl bg-card/95 border border-emerald-500/35 backdrop-blur-md shadow-lg shadow-emerald-500/10 items-center gap-2.5 animate-float-gentle ring-1 ring-emerald-500/20">
-              <div className="size-8 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                <ShieldCheck className="size-4.5" />
-              </div>
-              <div className="text-left">
-                <span className="text-[11px] font-bold text-foreground block">RDC 502 ANVISA</span>
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                  <CheckCheck className="size-3" />
-                  100% Homologado
-                </span>
-              </div>
-            </div>
-
-            <div className="hidden sm:flex absolute -bottom-5 -right-6 z-30 p-2.5 px-3.5 rounded-2xl bg-card/95 border border-teal-500/35 backdrop-blur-md shadow-lg shadow-teal-500/10 items-center gap-2.5 animate-float-delayed ring-1 ring-teal-500/20">
-              <div className="size-8 rounded-xl bg-gradient-to-br from-teal-500/20 to-emerald-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
-                <Pill className="size-4.5" />
-              </div>
-              <div className="text-left">
-                <span className="text-[11px] font-bold text-foreground block">Dupla Checagem</span>
-                <span className="text-[10px] text-teal-600 dark:text-teal-400 font-bold flex items-center gap-1">
-                  <Zap className="size-3 text-amber-500" />
-                  0 Erros de Dosagem
-                </span>
-              </div>
-            </div>
-
-            <div className="hidden lg:flex absolute top-10 -right-8 z-30 p-2.5 px-3.5 rounded-2xl bg-card/95 border border-purple-500/35 backdrop-blur-md shadow-lg shadow-purple-500/10 items-center gap-2.5 animate-float-gentle ring-1 ring-purple-500/20">
-              <div className="size-8 rounded-xl bg-gradient-to-br from-purple-500/20 to-indigo-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-                <Users className="size-4.5" />
-              </div>
-              <div className="text-left">
-                <span className="text-[11px] font-bold text-foreground block">Equipe & Cuidadores</span>
-                <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold">100% Ilimitados</span>
-              </div>
-            </div>
-
-            {/* Janela de Aplicação Estilo macOS */}
-            <div className="rounded-3xl border border-border/80 bg-card/90 shadow-2xl backdrop-blur-md overflow-hidden text-left ring-1 ring-border/50">
-              {/* Barra de Título da Janela */}
-              <div className="px-5 py-3.5 bg-muted/40 border-b border-border/60 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="size-3 rounded-full bg-rose-500/80" />
-                  <div className="size-3 rounded-full bg-amber-500/80" />
-                  <div className="size-3 rounded-full bg-emerald-500/80" />
-                  <span className="text-xs font-semibold text-muted-foreground ml-3 hidden sm:inline">
-                    Senecurare · Painel de Plantão & Governança ILPI
-                  </span>
-                </div>
-
-                {/* Abas Interativas de Demonstração */}
-                <div className="flex items-center gap-1.5 p-1 bg-muted/70 rounded-xl border border-border/50 text-[11px] font-semibold">
-                  <button
-                    type="button"
-                    onClick={() => setMockupAbaAtiva('ronda')}
-                    className={`px-3 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                      mockupAbaAtiva === 'ronda'
-                        ? 'bg-card text-foreground shadow-2xs font-bold ring-1 ring-emerald-500/30'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <Pill className="size-3 text-emerald-600" />
-                    <span>Ronda (Beira-Leito)</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMockupAbaAtiva('prontuario')}
-                    className={`px-3 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                      mockupAbaAtiva === 'prontuario'
-                        ? 'bg-card text-foreground shadow-2xs font-bold ring-1 ring-emerald-500/30'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <HeartPulse className="size-3 text-rose-500" />
-                    <span>Prontuário & Sinais</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMockupAbaAtiva('dossie')}
-                    className={`px-3 py-1 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                      mockupAbaAtiva === 'dossie'
-                        ? 'bg-card text-foreground shadow-2xs font-bold ring-1 ring-emerald-500/30'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    <FileCheck2 className="size-3 text-teal-600" />
-                    <span>Auditoria RDC 502</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Conteúdo da Janela Simulada */}
-              <div className="p-5 sm:p-7 space-y-4 bg-gradient-to-b from-card to-muted/20 min-h-[300px]">
-                {mockupAbaAtiva === 'ronda' && (
-                  <div className="space-y-3.5">
-                    <div className="flex items-center justify-between pb-2 border-b border-border/40 text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                        </span>
-                        <span className="font-bold text-foreground">Ronda de Medicação Ativa · Turno Matutino (08:00)</span>
-                      </div>
-                      <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 gap-1 font-bold">
-                        <CheckCheck className="size-3 text-emerald-600" />
-                        100% à Beira-Leito
-                      </Badge>
-                    </div>
-
-                    {/* Residente 1 */}
-                    <div className="p-3.5 rounded-2xl bg-background border border-border/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs hover:border-emerald-500/40 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="size-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 text-emerald-700 dark:text-emerald-400 font-bold flex items-center justify-center shrink-0 text-xs">
-                          IG
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-xs text-foreground">Dona Irene Guimarães</span>
-                            <span className="text-[10px] text-muted-foreground">82 anos · Leito 102</span>
-                          </div>
-                          <span className="text-[11px] text-muted-foreground block">
-                            💊 Losartana Potássica 50mg + Metformina 850mg (Oral)
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white text-[10px] font-bold shadow-2xs gap-1">
-                          <Check className="size-3" />
-                          Administrado (08:02)
-                        </Badge>
-                        <span className="text-[10px] text-muted-foreground">Dupla checagem: Enf. RT Helena</span>
-                      </div>
-                    </div>
-
-                    {/* Residente 2 (Simulação Interativa) */}
-                    <div className="p-3.5 rounded-2xl bg-background border border-border/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs hover:border-teal-500/40 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="size-10 rounded-xl bg-gradient-to-br from-teal-500/20 to-emerald-500/20 text-teal-700 dark:text-teal-400 font-bold flex items-center justify-center shrink-0 text-xs">
-                          AP
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-xs text-foreground">Sr. Antônio Prado</span>
-                            <span className="text-[10px] text-muted-foreground">78 anos · Leito 104</span>
-                          </div>
-                          <span className="text-[11px] text-muted-foreground block">
-                            💉 Insulina NPH 14 UI (Subcutânea) · Glicemia Pré: 142 mg/dL
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Botão de Checagem Interativo */}
-                      <div>
-                        {medicamento2Checado ? (
-                          <div className="flex items-center gap-2 animate-fadeIn">
-                            <Badge className="bg-emerald-600 text-white text-[10px] font-bold shadow-xs gap-1">
-                              <CheckCheck className="size-3 text-emerald-200" />
-                              ✓ Aplicado no Leito
-                            </Badge>
-                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                              <Sparkles className="size-3" />
-                              Estoque baixado aut.
-                            </span>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => setMedicamento2Checado(true)}
-                            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold shadow-xs flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
-                          >
-                            <Check className="size-3.5" />
-                            <span>Simular Checagem no Leito</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {mockupAbaAtiva === 'prontuario' && (
-                  <div className="space-y-3.5">
-                    <div className="flex items-center justify-between pb-2 border-b border-border/40 text-xs">
-                      <div className="flex items-center gap-2">
-                        <HeartPulse className="size-4 text-rose-500" />
-                        <span className="font-bold text-foreground">Curva de Sinais Vitais & Escalas Geriátricas</span>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground font-mono">Última aferição há 12 min</span>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                      <div className="p-3 rounded-xl bg-background border border-border/60 space-y-1 hover:border-emerald-500/40 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-muted-foreground block">Pressão Arterial</span>
-                          <Activity className="size-3 text-emerald-600" />
-                        </div>
-                        <span className="text-base font-extrabold text-foreground font-mono">120/80</span>
-                        <span className="text-[9px] text-emerald-600 font-semibold block">Normotenso</span>
-                      </div>
-                      <div className="p-3 rounded-xl bg-background border border-border/60 space-y-1 hover:border-emerald-500/40 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-muted-foreground block">Glicemia Capilar</span>
-                          <Zap className="size-3 text-amber-500" />
-                        </div>
-                        <span className="text-base font-extrabold text-foreground font-mono">118 mg/dL</span>
-                        <span className="text-[9px] text-emerald-600 font-semibold block">Pós-prandial ok</span>
-                      </div>
-                      <div className="p-3 rounded-xl bg-background border border-border/60 space-y-1 hover:border-emerald-500/40 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-muted-foreground block">Escala Braden (LPP)</span>
-                          <ShieldCheck className="size-3 text-emerald-600" />
-                        </div>
-                        <span className="text-base font-extrabold text-emerald-600 font-mono">19 pts</span>
-                        <span className="text-[9px] text-emerald-600 font-semibold block">Sem risco de lesão</span>
-                      </div>
-                      <div className="p-3 rounded-xl bg-background border border-border/60 space-y-1 hover:border-amber-500/40 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-muted-foreground block">Escala Morse (Queda)</span>
-                          <AlertTriangle className="size-3 text-amber-600" />
-                        </div>
-                        <span className="text-base font-extrabold text-amber-600 font-mono">25 pts</span>
-                        <span className="text-[9px] text-amber-600 font-semibold block">Risco baixo (monitorar)</span>
-                      </div>
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-950 dark:text-emerald-200 flex items-center gap-2">
-                      <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
-                      <span>Evoluções da Enfermagem, Fisioterapia e Nutrição consolidadas em linha do tempo cronológica.</span>
-                    </div>
-                  </div>
-                )}
-
-                {mockupAbaAtiva === 'dossie' && (
-                  <div className="space-y-3.5">
-                    <div className="flex items-center justify-between pb-2 border-b border-border/40 text-xs">
-                      <div className="flex items-center gap-2">
-                        <FileCheck2 className="size-4 text-teal-600" />
-                        <span className="font-bold text-foreground">Dossiê Sanitário da ILPI para Fiscalização</span>
-                      </div>
-                      <Badge className="bg-teal-600 hover:bg-teal-600 text-white text-[10px] font-bold gap-1">
-                        <CheckCheck className="size-3" />
-                        Pronto para Download
-                      </Badge>
-                    </div>
-
-                    <div className="p-4 rounded-xl bg-background border border-border/70 space-y-2 text-xs hover:border-emerald-500/40 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-foreground flex items-center gap-1.5">
-                          <FileText className="size-3.5 text-emerald-600" />
-                          Caderno de POPs RDC 502 Art. 38 (12 procedimentos)
-                        </span>
-                        <Badge variant="outline" className="text-emerald-600 font-bold text-[10px] bg-emerald-500/10 border-emerald-500/20">
-                          Vigente
-                        </Badge>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground">
-                        Controle de infecção, banho no leito, dispensação de medicamentos, contenção protetora e parada cardiorrespiratória.
-                      </p>
-                    </div>
-
-                    <div className="p-4 rounded-xl bg-background border border-border/70 space-y-2 text-xs hover:border-emerald-500/40 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-foreground flex items-center gap-1.5">
-                          <ShieldCheck className="size-3.5 text-teal-600" />
-                          Livro de Ocorrências & Passagem de Plantão Auditada
-                        </span>
-                        <Badge variant="outline" className="text-emerald-600 font-bold text-[10px] bg-emerald-500/10 border-emerald-500/20">
-                          100% Assinado
-                        </Badge>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground">
-                        Histórico imutável de intercorrências com assinatura eletrônica e carimbo de tempo da equipe técnica.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. TRUST BAR / BARRA DE CONFORMIDADE REGULATÓRIA COM ÍCONES ESPECÍFICOS */}
-      <section className="py-10 bg-muted/40 border-y border-border/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-xs font-bold uppercase tracking-wider text-muted-foreground mb-6 flex items-center justify-center gap-2">
-            <Sparkles className="size-3.5 text-emerald-600" />
-            <span>Projetado de acordo com as exigências dos órgãos de saúde e fiscalização</span>
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 items-center">
-            {orgaosReguladores.map((org, idx) => {
-              const Icon = org.icone
-              return (
-                <div
-                  key={idx}
-                  className="p-3.5 rounded-2xl bg-card border border-border/60 text-center space-y-1.5 shadow-2xs hover:border-emerald-500/40 hover:-translate-y-0.5 transition-all duration-200 group"
-                >
-                  <div className="size-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 mx-auto flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Icon className="size-4" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 block">
-                      {org.sigla}
-                    </span>
-                    <span className="text-xs font-bold text-foreground block">{org.norma}</span>
-                    <span className="text-[10px] text-muted-foreground block truncate">{org.desc}</span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* 6. BENTO GRID DE RECURSOS DA PLATAFORMA */}
-      <section id="recursos" className="py-24 bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-          <div className="text-center max-w-3xl mx-auto space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-              <Zap className="size-3.5 text-amber-500" />
-              <span>Funcionalidades Desenhadas para a Rotina Geriátrica</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight font-heading">
-              Tudo o que sua ILPI precisa em uma única plataforma
-            </h2>
-            <p className="text-base text-muted-foreground">
-              Abandone pranchetas de papel, planilhas desorganizadas e o medo de fiscalizações da vigilância sanitária.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Card 1 (Destaque Principal - Span 2) */}
-            <Card className="md:col-span-2 border border-border/70 shadow-sm hover:shadow-xl transition-all duration-300 rounded-3xl overflow-hidden bg-gradient-to-br from-card via-card to-emerald-500/[0.04] group hover:-translate-y-1">
-              <CardContent className="p-8 space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="size-14 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 ring-4 ring-emerald-500/10 group-hover:scale-110 group-hover:rotate-1 transition-all duration-300">
-                    <Pill className="size-7" />
-                  </div>
-                  <Badge variant="outline" className="text-xs font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 gap-1">
-                    <CheckCheck className="size-3 text-emerald-600" />
-                    Segurança Máxima
-                  </Badge>
-                </div>
-                <div className="space-y-2 max-w-xl">
-                  <h3 className="text-2xl font-bold font-heading text-foreground">
-                    Ronda de Medicação Inteligente com Beira-Leito
-                  </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Dupla checagem eletrônica, alertas sonoros e visuais de atraso, baixa imediata no estoque da farmácia e controle de justificativa clínica em caso de recusa.
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
-                  <div className="p-3.5 rounded-2xl bg-muted/40 border border-border/50 group-hover:border-emerald-500/30 transition-colors">
-                    <div className="flex items-center gap-1.5 font-bold text-foreground mb-0.5">
-                      <Zap className="size-3.5 text-amber-500" />
-                      0 Trocas
-                    </div>
-                    <span className="text-muted-foreground text-[11px]">Identificação individual no leito</span>
-                  </div>
-                  <div className="p-3.5 rounded-2xl bg-muted/40 border border-border/50 group-hover:border-emerald-500/30 transition-colors">
-                    <div className="flex items-center gap-1.5 font-bold text-foreground mb-0.5">
-                      <Clock className="size-3.5 text-emerald-600" />
-                      Baixa em Tempo Real
-                    </div>
-                    <span className="text-muted-foreground text-[11px]">Almoxarifado e farmácia</span>
-                  </div>
-                  <div className="p-3.5 rounded-2xl bg-muted/40 border border-border/50 group-hover:border-emerald-500/30 transition-colors">
-                    <div className="flex items-center gap-1.5 font-bold text-foreground mb-0.5">
-                      <ShieldCheck className="size-3.5 text-teal-600" />
-                      Alertas de Interação
-                    </div>
-                    <span className="text-muted-foreground text-[11px]">Avisos de risco polifarmácia</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Card 2: Blindagem Sanitária */}
-            <Card className="border border-border/70 shadow-sm hover:shadow-xl transition-all duration-300 rounded-3xl overflow-hidden bg-card group hover:-translate-y-1">
-              <CardContent className="p-8 space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="size-14 rounded-2xl bg-gradient-to-br from-teal-500/20 to-emerald-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0 ring-4 ring-teal-500/10 group-hover:scale-110 group-hover:rotate-1 transition-all duration-300">
-                    <ShieldCheck className="size-7" />
-                  </div>
-                  <Badge variant="outline" className="text-xs font-bold gap-1">
-                    <Award className="size-3 text-teal-600" />
-                    Conformidade Legal
-                  </Badge>
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold font-heading text-foreground">
-                    Blindagem Sanitária RDC 502 & COREN
-                  </h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Procedimentos Operacionais Padrão (POPs) nativos, dossiê fiscalizatório em 1 clique e histórico auditável com assinatura eletrônica.
-                  </p>
-                </div>
-                <div className="p-3.5 rounded-2xl bg-teal-500/10 border border-teal-500/20 text-[11px] text-teal-950 dark:text-teal-200 flex items-center gap-2">
-                  <FileCheck2 className="size-4 text-teal-600 shrink-0" />
-                  <span>Caderno de POPs pronto para inspeção do COREN e Vigilância Sanitária Municipal.</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Card 3: Telemedicina & Especialistas */}
-            <Card className="border border-border/70 shadow-sm hover:shadow-xl transition-all duration-300 rounded-3xl overflow-hidden bg-card group hover:-translate-y-1">
-              <CardContent className="p-8 space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="size-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-teal-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 ring-4 ring-blue-500/10 group-hover:scale-110 group-hover:rotate-1 transition-all duration-300">
-                    <Stethoscope className="size-7" />
-                  </div>
-                  <Badge variant="outline" className="text-xs font-bold gap-1">
-                    <Video className="size-3 text-blue-600" />
-                    Retaguarda Médica
-                  </Badge>
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold font-heading text-foreground">
-                    Telemedicina & Prescrição ICP-Brasil
-                  </h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Consultas virtuais com especialistas e emissão de receitas aceitas em 100% das farmácias pelo CFM, Memed, Receita Digital e Nexodata.
-                  </p>
-                </div>
-                <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-[11px] text-blue-950 dark:text-blue-200 flex items-center gap-2">
-                  <CheckCircle2 className="size-4 text-blue-600 shrink-0" />
-                  <span>Geriatras, estomaterapeutas e nutricionistas conectados na rotina do residente.</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Card 4: Escalas Geriátricas Automáticas */}
-            <Card className="border border-border/70 shadow-sm hover:shadow-xl transition-all duration-300 rounded-3xl overflow-hidden bg-card group hover:-translate-y-1">
-              <CardContent className="p-8 space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="size-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-rose-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 ring-4 ring-amber-500/10 group-hover:scale-110 group-hover:rotate-1 transition-all duration-300">
-                    <HeartPulse className="size-7" />
-                  </div>
-                  <Badge variant="outline" className="text-xs font-bold gap-1">
-                    <Activity className="size-3 text-amber-600" />
-                    Geriatria Avançada
-                  </Badge>
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold font-heading text-foreground">
-                    Escalas Geriátricas Automáticas
-                  </h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Cálculo e pontuação imediata de Katz (AVDs), Lawton, Braden (risco de LPP), Morse (risco de quedas) e MEEM integrados ao plano de cuidado.
-                  </p>
-                </div>
-                <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-950 dark:text-amber-200 flex items-center gap-2">
-                  <CheckCircle2 className="size-4 text-amber-600 shrink-0" />
-                  <span>Sem necessidade de cálculos manuais ou perda de tempo com planilhas.</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Card 5: Usuários Ilimitados */}
-            <Card className="border border-border/70 shadow-sm hover:shadow-xl transition-all duration-300 rounded-3xl overflow-hidden bg-card group hover:-translate-y-1">
-              <CardContent className="p-8 space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="size-14 rounded-2xl bg-gradient-to-br from-purple-500/20 to-indigo-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 ring-4 ring-purple-500/10 group-hover:scale-110 group-hover:rotate-1 transition-all duration-300">
-                    <HeartHandshake className="size-7" />
-                  </div>
-                  <Badge variant="outline" className="text-xs font-bold gap-1">
-                    <Users className="size-3 text-purple-600" />
-                    Sem Custo Oculto
-                  </Badge>
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-bold font-heading text-foreground">
-                    Usuários e Cuidadores Ilimitados
-                  </h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Sem taxas escondidas por login de cuidador, enfermeiro ou médico. Toda a sua equipe conectada sem estourar o orçamento.
-                  </p>
-                </div>
-                <div className="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/20 text-[11px] text-purple-950 dark:text-purple-200 flex items-center gap-2">
-                  <UserCheck className="size-4 text-purple-600 shrink-0" />
-                  <span>Cadastre todos os plantonistas sem cobranças extras por usuário.</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* 7. SEÇÃO DE CONFORMIDADE E COMPARATIVO ANVISA / COREN */}
-      <section id="conformidade" className="py-24 bg-muted/30 border-y border-border/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                <ShieldCheck className="size-3.5 text-emerald-600" />
-                <span>Auditoria Sanitária Sem Estresse</span>
-              </div>
-
-              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight font-heading leading-tight">
-                Receba os fiscais do COREN e da Vigilância Sanitária com total tranquilidade.
-              </h2>
-
-              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                As ILPIs sofrem com exigências sanitárias rigorosas e multas pesadas. O Senecurare foi construído de acordo com os termos exatos dos manuais de fiscalização:
-              </p>
-
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="size-7 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                    <CheckCircle2 className="size-4" />
-                  </div>
-                  <div className="text-xs">
-                    <strong className="text-foreground block text-sm">POPs e Protocolos Art. 38 RDC 502:</strong>
-                    <span className="text-muted-foreground leading-relaxed">
-                      Procedimentos Operacionais Padrão estruturados e atualizados para banho, curativos, contenção mecânica e higienização.
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="size-7 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                    <CheckCircle2 className="size-4" />
-                  </div>
-                  <div className="text-xs">
-                    <strong className="text-foreground block text-sm">Rastreabilidade Total de Medicamentos:</strong>
-                    <span className="text-muted-foreground leading-relaxed">
-                      Controle de lote, validade, horários de administração e justificativa imediata em caso de recusa pelo residente.
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="size-7 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                    <CheckCircle2 className="size-4" />
-                  </div>
-                  <div className="text-xs">
-                    <strong className="text-foreground block text-sm">Dossiê Fiscalizatório em PDF com 1 Clique:</strong>
-                    <span className="text-muted-foreground leading-relaxed">
-                      Gere a pasta sanitária completa solicitada pelo fiscal com histórico dos residentes e escala técnica do responsável.
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <Button asChild className="rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-11 px-6 gap-2 shadow-md hover:shadow-emerald-600/30 transition-all hover:-translate-y-0.5">
-                  <a href="#planos">
-                    <span>Proteger Minha ILPI Agora</span>
-                    <ArrowRight className="size-3.5" />
-                  </a>
-                </Button>
-              </div>
-            </div>
-
-            {/* Comparativo Papel vs Senecurare com Ícones Estilizados */}
-            <div className="space-y-4">
-              <div className="p-6 rounded-3xl bg-rose-500/[0.06] border border-rose-500/20 space-y-3.5 shadow-2xs">
-                <div className="flex items-center gap-2 text-rose-600 font-bold text-xs uppercase tracking-wider">
-                  <div className="p-1.5 rounded-lg bg-rose-500/10">
-                    <AlertTriangle className="size-4 shrink-0 text-rose-600" />
-                  </div>
-                  <span>Sem o Senecurare (Papel e Planilhas)</span>
-                </div>
-                <ul className="space-y-2.5 text-xs text-muted-foreground">
-                  <li className="flex items-center gap-2.5">
-                    <span className="size-4 rounded-full bg-rose-500/15 text-rose-600 flex items-center justify-center text-[10px] font-black shrink-0">✕</span>
-                    Letras ilegíveis em prontuários de papel
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <span className="size-4 rounded-full bg-rose-500/15 text-rose-600 flex items-center justify-center text-[10px] font-black shrink-0">✕</span>
-                    Risco de multas de até R$ 50.000,00 da Vigilância
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <span className="size-4 rounded-full bg-rose-500/15 text-rose-600 flex items-center justify-center text-[10px] font-black shrink-0">✕</span>
-                    Falta de controle de validade e descarte de fármacos
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <span className="size-4 rounded-full bg-rose-500/15 text-rose-600 flex items-center justify-center text-[10px] font-black shrink-0">✕</span>
-                    Horas perdidas na passagem de plantão
-                  </li>
-                </ul>
-              </div>
-
-              <div className="p-6 rounded-3xl bg-emerald-500/[0.08] border border-emerald-500/30 space-y-3.5 shadow-lg shadow-emerald-500/5">
-                <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs uppercase tracking-wider">
-                  <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-600">
-                    <ShieldCheck className="size-4 shrink-0" />
-                  </div>
-                  <span>Com o Senecurare (100% Digital & Auditado)</span>
-                </div>
-                <ul className="space-y-2.5 text-xs text-foreground font-medium">
-                  <li className="flex items-center gap-2.5">
-                    <div className="size-4 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center text-[10px] shrink-0">
-                      <Check className="size-3 stroke-[3]" />
-                    </div>
-                    <span>Prontuário eletrônico unificado e legível</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <div className="size-4 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center text-[10px] shrink-0">
-                      <Check className="size-3 stroke-[3]" />
-                    </div>
-                    <span>POPs Art. 38 homologados e atualizados</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <div className="size-4 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center text-[10px] shrink-0">
-                      <Check className="size-3 stroke-[3]" />
-                    </div>
-                    <span>Checagem à beira-leito com rastreabilidade total</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <div className="size-4 rounded-full bg-emerald-500/20 text-emerald-600 flex items-center justify-center text-[10px] shrink-0">
-                      <Check className="size-3 stroke-[3]" />
-                    </div>
-                    <span>Passagem de plantão digital com 1 clique</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 8. DEPOIMENTOS E PROVA SOCIAL */}
-      <section id="depoimentos" className="py-24 bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-          <div className="text-center max-w-3xl mx-auto space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-              <Star className="size-3.5 fill-amber-400 text-amber-400" />
-              <span>Aprovado por Quem Cuida na Prática</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight font-heading">
-              O que dizem os Responsáveis Técnicos e Gestores
-            </h2>
-            <p className="text-base text-muted-foreground">
-              Instituições que transformaram sua rotina e conquistaram tranquilidade na fiscalização.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {depoimentos.map((dep, idx) => (
-              <Card
-                key={idx}
-                className="border border-border/70 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 rounded-3xl bg-card p-7 flex flex-col justify-between group"
-              >
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-amber-400">
-                      {[...Array(dep.estrelas)].map((_, i) => (
-                        <Star key={i} className="size-4 fill-amber-400" />
-                      ))}
-                    </div>
-                    <Quote className="size-6 text-muted-foreground/30 group-hover:text-emerald-600/40 transition-colors" />
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed italic">
-                    "{dep.texto}"
-                  </p>
-                </div>
-                <div className="pt-6 border-t border-border/40 mt-6 space-y-1">
-                  <strong className="text-sm font-bold text-foreground block">{dep.nome}</strong>
-                  <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold block flex items-center gap-1">
-                    <BadgeCheck className="size-3.5" />
-                    {dep.cargo}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground block">{dep.instituicao}</span>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 9. SEÇÃO DE PLANOS E PREÇOS */}
-      <section id="planos" className="py-24 bg-muted/20 border-t border-border/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
-          <div className="text-center max-w-3xl mx-auto space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-              <Sparkles className="size-3.5" />
-              <span>Transparência Total</span>
-            </div>
-
-            <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight font-heading">
-              Planos Transparentes para Cada Fase da sua ILPI
-            </h2>
-
-            <p className="text-sm sm:text-base text-muted-foreground">
-              Sem cobrança por usuário ou cuidador. Você só investe com base na capacidade de residentes acolhidos.
-            </p>
-
-            {/* Alternador Mensal / Anual */}
-            <div className="pt-3 flex items-center justify-center gap-3 text-xs font-semibold">
-              <span className={!faturamentoAnual ? 'text-foreground font-bold' : 'text-muted-foreground'}>
-                Faturamento Mensal
-              </span>
               <button
                 type="button"
-                onClick={() => setFaturamentoAnual(!faturamentoAnual)}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  faturamentoAnual ? 'bg-emerald-600' : 'bg-muted-foreground/30'
-                }`}
-                role="switch"
-                aria-checked={faturamentoAnual}
+                onClick={handleSimularRonda}
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg bg-[#202c30]/90 backdrop-blur-xl border border-[#40484b]/60 text-[#d8e5ea] font-semibold text-sm shadow-md hover:bg-[#2f3b40] hover:border-[#75daa8]/40 transition-all duration-200 active:scale-95"
               >
-                <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                    faturamentoAnual ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
+                <ScanLine className="size-4 text-[#75daa8]" />
+                <span>{isSimulated ? 'Reiniciar Simulação' : 'Simular Ronda Digital'}</span>
               </button>
-              <div className="flex items-center gap-1.5">
-                <span className={faturamentoAnual ? 'text-foreground font-bold' : 'text-muted-foreground'}>
-                  Faturamento Anual
-                </span>
-                <Badge variant="outline" className="text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30">
-                  15% OFF
-                </Badge>
+            </div>
+
+            {/* 3D Mockup Container */}
+            <div className="relative w-full max-w-5xl mx-auto" style={{ perspective: '1200px' }}>
+              <div
+                onMouseEnter={() => setMockupHover(true)}
+                onMouseLeave={() => setMockupHover(false)}
+                className="relative w-full rounded-2xl bg-[#152126]/95 backdrop-blur-2xl p-6 lg:p-8 shadow-2xl border border-[#2b373b]/80 transition-transform duration-500 ease-out"
+                style={{
+                  transform: mockupHover ? 'rotateX(0deg)' : 'rotateX(6deg)',
+                }}
+              >
+                {/* Header da Janela macOS */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-6 border-b border-[#2b373b]/60 mb-6">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-[#ffb4a8]" />
+                    <div className="w-3 h-3 rounded-full bg-[#9acee1]" />
+                    <div className="w-3 h-3 rounded-full bg-[#75daa8]" />
+                    <span className="ml-2 text-xs font-mono text-[#c0c8cb]">senecare.app/ronda-matutina</span>
+                  </div>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#75daa8]/15 text-[#75daa8] text-xs font-semibold">
+                    <ShieldCheck className="size-3.5" />
+                    <span>Ronda de Medicação Ativa — Turno Matutino (08:00)</span>
+                  </div>
+                </div>
+
+                {/* Grid Interno do Mockup */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 text-left">
+                  {/* Pacientes */}
+                  <div className="lg:col-span-8 flex flex-col gap-3">
+                    {/* Paciente 1: Administrado */}
+                    <div className="rounded-xl bg-[#111d21] p-4 sm:p-5 border border-[#2b373b]/50 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div className="w-11 h-11 rounded-full bg-[#75daa8]/20 flex items-center justify-center shrink-0">
+                          <CheckCircle2 className="size-5 text-[#75daa8]" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-[#d8e5ea] truncate">Dona Irene Guimarães • Leito 104-A</p>
+                          <p className="text-xs text-[#c0c8cb] truncate">Losartana 50mg + Metformina 850mg • Dupla checagem QR</p>
+                        </div>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#75daa8]/15 text-[#75daa8] text-xs font-semibold shrink-0">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#75daa8]" />
+                        Administrado 08:02
+                      </span>
+                    </div>
+
+                    {/* Paciente 2: Interativo */}
+                    <div
+                      className={`rounded-xl p-4 sm:p-5 border shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all duration-300 ${
+                        isSimulated
+                          ? 'bg-[#111d21] border-[#75daa8]/40'
+                          : 'bg-[#202c30] border-[#ffb4a8]/30'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div
+                          className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-colors ${
+                            isSimulated ? 'bg-[#75daa8]/20' : 'bg-[#ffb4a8]/20'
+                          }`}
+                        >
+                          {isSimulated ? (
+                            <CheckCircle2 className="size-5 text-[#75daa8] animate-bounce" />
+                          ) : (
+                            <Clock className="size-5 text-[#ffb4a8]" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-[#d8e5ea] truncate">Sr. Antônio Prado • Leito 202-B</p>
+                          <p className="text-xs text-[#c0c8cb] truncate">
+                            {isSimulated
+                              ? 'Insulina NPH 14 UI + AAS 100mg • Checagem biométrica validada'
+                              : 'Insulina NPH 14 UI + AAS 100mg • Aguardando leitura'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {isSimulated ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#75daa8]/15 text-[#75daa8] text-xs font-semibold shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#75daa8]" />
+                          Administrado Agora
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ffb4a8]/15 text-[#ffb4a8] text-xs font-semibold shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#ffb4a8] animate-pulse" />
+                          Aguardando Checagem
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Card Lateral de Métricas */}
+                  <div className="lg:col-span-4 rounded-xl bg-[#111d21] p-5 border border-[#2b373b]/50 shadow-md flex flex-col justify-between">
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-[#c0c8cb]">Adesão do Turno</span>
+                      <p className="text-3xl font-extrabold text-[#d8e5ea] mt-1 transition-all duration-300">
+                        {isSimulated ? '100%' : '94.2%'}
+                      </p>
+                    </div>
+
+                    <div className="my-3">
+                      <svg className="w-full h-14 text-[#75daa8]" fill="none" viewBox="0 0 200 60">
+                        <path
+                          d="M0 48 Q 30 42, 60 35 T 120 22 T 180 10 L 200 6"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeWidth="3"
+                        />
+                        <path
+                          d="M0 48 Q 30 42, 60 35 T 120 22 T 180 10 L 200 6 L 200 60 L 0 60 Z"
+                          fill="currentColor"
+                          fillOpacity="0.15"
+                        />
+                      </svg>
+                    </div>
+
+                    <span className="text-xs font-medium text-[#75daa8] flex items-center gap-1">
+                      <ShieldCheck className="size-3.5" />
+                      0 atrasos críticos nas últimas 24h
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Badges Flutuantes em 3D */}
+              <div className="hidden md:flex absolute -top-5 -left-6 rounded-xl bg-[#2b373b]/95 backdrop-blur-xl px-4 py-3 shadow-xl border border-[#40484b]/70 items-center gap-2.5 animate-float-gentle">
+                <ShieldCheck className="size-5 text-[#75daa8]" />
+                <div className="text-left">
+                  <p className="text-[11px] font-medium text-[#c0c8cb]">Risco Sanitário</p>
+                  <p className="text-sm font-bold text-[#75daa8]">0%</p>
+                </div>
+              </div>
+
+              <div className="hidden md:flex absolute -bottom-6 left-12 rounded-xl bg-[#2b373b]/95 backdrop-blur-xl px-4 py-3 shadow-xl border border-[#40484b]/70 items-center gap-2.5 animate-float-delayed">
+                <TrendingDown className="size-5 text-[#9acee1]" />
+                <div className="text-left">
+                  <p className="text-[11px] font-medium text-[#c0c8cb]">Redução de Glosas</p>
+                  <p className="text-sm font-bold text-[#d8e5ea]">98.4%</p>
+                </div>
+              </div>
+
+              <div className="hidden md:flex absolute -bottom-5 -right-5 rounded-xl bg-[#2b373b]/95 backdrop-blur-xl px-4 py-3 shadow-xl border border-[#40484b]/70 items-center gap-2.5 animate-float-gentle">
+                <Users className="size-5 text-[#75daa8]" />
+                <div className="text-left">
+                  <p className="text-[11px] font-medium text-[#c0c8cb]">Residentes Monitorados</p>
+                  <p className="text-sm font-bold text-[#d8e5ea]">34 Ativos</p>
+                </div>
               </div>
             </div>
           </div>
+        </section>
 
-          {/* Grid dos 4 Planos */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch pt-4">
-            {planosLista.map((plano) => {
-              const preco = faturamentoAnual ? plano.precoAnualMensal : plano.precoMensal
-              const isDestaque = plano.id === 'clinico'
-
-              return (
-                <div
-                  key={plano.id}
-                  className={`relative rounded-3xl flex flex-col justify-between border pt-8 pb-6 px-6 transition-all duration-300 ${
-                    isDestaque
-                      ? 'border-emerald-600 bg-card shadow-xl shadow-emerald-600/10 ring-2 ring-emerald-600 hover:-translate-y-1.5'
-                      : 'border-border/70 bg-card/70 hover:bg-card shadow-xs hover:shadow-lg hover:-translate-y-1'
-                  }`}
-                >
-                  {isDestaque && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap">
-                      <span className="px-3.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-600 text-white shadow-md border border-emerald-400/40 inline-flex items-center gap-1">
-                        <Sparkles className="size-3" />
-                        Mais Escolhido pelas ILPIs
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="space-y-4 flex-1 flex flex-col">
-                    <div>
-                      <h3 className="text-base font-bold text-foreground font-heading">{plano.nome}</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5 min-h-[34px] leading-snug">{plano.subtitulo}</p>
-                    </div>
-
-                    <div className="pt-2 pb-1 border-b border-border/50">
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-xs text-muted-foreground font-medium">R$</span>
-                        <span className="text-3xl sm:text-4xl font-extrabold text-foreground font-heading">
-                          {preco.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
-                        <span className="text-xs text-muted-foreground">/mês</span>
-                      </div>
-                      <span className="text-[11px] text-muted-foreground block mt-1">
-                        {faturamentoAnual
-                          ? `Faturado anualmente (R$ ${(preco * 12).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/ano)`
-                          : 'Cobrança mensal sem carência'}
-                      </span>
-                    </div>
-
-                    <div className="text-xs space-y-1.5 py-1">
-                      <div className="flex items-center gap-1.5 font-bold text-foreground">
-                        <Users className="size-3.5 text-emerald-600" />
-                        <span>
-                          {plano.limiteResidentes >= 999
-                            ? 'Residentes Ilimitados'
-                            : `Até ${plano.limiteResidentes} residentes`}
-                        </span>
-                      </div>
-                      <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
-                        <CheckCircle2 className="size-3" />
-                        <span>Usuários e cuidadores ilimitados</span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 pt-2 border-t border-border/40 text-xs flex-1">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                        Recursos inclusos:
-                      </span>
-                      <ul className="space-y-1.5">
-                        {plano.recursos.slice(0, 5).map((rec, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-muted-foreground text-[11px]">
-                            <CheckCircle2 className="size-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                            <span>{rec}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="pt-6 mt-auto">
-                    <Button
-                      onClick={() => navigate(`/planos?highlight=${plano.id}`)}
-                      className={`w-full h-11 rounded-xl font-bold text-xs transition-all active:scale-95 ${
-                        isDestaque
-                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-emerald-600/30'
-                          : 'bg-muted hover:bg-muted/80 text-foreground border border-border/70'
-                      }`}
-                    >
-                      {isDestaque ? 'Assinar Plano Clínico' : `Escolher ${plano.nome}`}
-                    </Button>
-                  </div>
-                </div>
-              )
-            })}
+        {/* 3. BARRA DE CONFORMIDADE REGULATÓRIA NATIVA */}
+        <section id="conformidade" className="w-full py-10 bg-[#051014]/90 border-y border-[#2b373b]/40 overflow-hidden">
+          <div className="max-w-7xl mx-auto px-6 lg:px-12 mb-4 text-center">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-[#c0c8cb]">
+              Conformidade Regulatória Nativa
+            </span>
           </div>
-
-          <div className="text-center text-xs text-muted-foreground pt-4">
-            Dúvidas sobre qual plano escolher ou precisa de suporte para migração de dados?{' '}
-            <Link to="/planos" className="font-semibold text-emerald-600 hover:underline inline-flex items-center gap-1">
-              <span>Consulte nossa tabela comparativa detalhada</span>
-              <ArrowUpRight className="size-3" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* 10. FAQ ACCORDION */}
-      <section id="faq" className="py-24 bg-background border-t border-border/60">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          <div className="text-center space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-              <HelpCircle className="size-3.5" />
-              <span>Tire Suas Dúvidas</span>
+          <div className="flex items-center gap-4 overflow-x-auto px-6 lg:px-12 justify-start lg:justify-center no-scrollbar">
+            <div className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#152126] border border-[#2b373b]/80 shadow-sm">
+              <ShieldCheck className="size-4 text-[#75daa8]" />
+              <span className="text-sm font-semibold text-[#d8e5ea]">ANVISA RDC 502/2021</span>
             </div>
-            <h2 className="text-3xl font-extrabold tracking-tight font-heading">
-              Perguntas Frequentes de Gestores de ILPI
-            </h2>
+            <div className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#152126] border border-[#2b373b]/80 shadow-sm">
+              <Award className="size-4 text-[#9acee1]" />
+              <span className="text-sm font-semibold text-[#d8e5ea]">ANVISA RDC 611/2022</span>
+            </div>
+            <div className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#152126] border border-[#2b373b]/80 shadow-sm">
+              <FileCheck2 className="size-4 text-[#75daa8]" />
+              <span className="text-sm font-semibold text-[#d8e5ea]">Resoluções COFEN/COREN</span>
+            </div>
+            <div className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#152126] border border-[#2b373b]/80 shadow-sm">
+              <Video className="size-4 text-[#9acee1]" />
+              <span className="text-sm font-semibold text-[#d8e5ea]">CFM Telemedicina 2.314</span>
+            </div>
+            <div className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#152126] border border-[#2b373b]/80 shadow-sm">
+              <Lock className="size-4 text-[#75daa8]" />
+              <span className="text-sm font-semibold text-[#d8e5ea]">Lei 13.709/18 LGPD</span>
+            </div>
+            <div className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#152126] border border-[#2b373b]/80 shadow-sm">
+              <Scale className="size-4 text-[#9acee1]" />
+              <span className="text-sm font-semibold text-[#d8e5ea]">ICP-Brasil</span>
+            </div>
           </div>
+        </section>
 
-          <div className="space-y-3">
-            {faqs.map((faq, idx) => (
-              <div
-                key={idx}
-                className="rounded-2xl border border-border/70 bg-card overflow-hidden transition-colors shadow-2xs hover:border-emerald-500/30"
-              >
+        {/* 4. RECURSOS - BENTO GRID ARQUITETURA CLÍNICA */}
+        <section className="w-full py-20 lg:py-28 px-6 lg:px-12" id="recursos">
+          <div className="max-w-7xl mx-auto">
+            <div className="max-w-3xl mb-12">
+              <span className="text-xs font-bold uppercase text-[#75daa8] tracking-widest">Arquitetura Clínica</span>
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#d8e5ea] mt-2">
+                Tudo o que sua ILPI precisa em uma única plataforma
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+              {/* Card 1: Ronda Inteligente (col 7) */}
+              <div className="md:col-span-7 rounded-2xl bg-[#152126] border border-[#2b373b]/60 p-7 shadow-lg hover:border-[#75daa8]/40 transition-colors flex flex-col justify-between">
+                <div>
+                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#75daa8]/15 text-[#75daa8] text-xs font-semibold mb-4">
+                    Segurança Máxima
+                  </span>
+                  <h3 className="text-xl font-bold text-[#d8e5ea] mb-2">
+                    Ronda de Medicação Inteligente com Beira-Leito
+                  </h3>
+                  <p className="text-sm text-[#c0c8cb] leading-relaxed">
+                    Aprazamento automático, leitura de pulseira via QR Code e dupla checagem em tempo real para zerar erros de dosagem e horário.
+                  </p>
+                </div>
+                <div className="mt-6 rounded-xl bg-[#111d21] p-4 flex items-center justify-between border border-[#2b373b]/40">
+                  <span className="text-xs font-medium text-[#d8e5ea]">99,8% de precisão na administração</span>
+                  <QrCode className="size-5 text-[#75daa8]" />
+                </div>
+              </div>
+
+              {/* Card 2: Blindagem Sanitária (col 5) */}
+              <div className="md:col-span-5 rounded-2xl bg-[#152126] border border-[#2b373b]/60 p-7 shadow-lg hover:border-[#9acee1]/40 transition-colors flex flex-col justify-between">
+                <div>
+                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#9acee1]/15 text-[#9acee1] text-xs font-semibold mb-4">
+                    Conformidade Legal
+                  </span>
+                  <h3 className="text-xl font-bold text-[#d8e5ea] mb-2">
+                    Blindagem Sanitária RDC 502 & COREN
+                  </h3>
+                  <p className="text-sm text-[#c0c8cb] leading-relaxed">
+                    POPs digitais auditáveis, controle de temperatura de geladeira e registros de enfermagem prontos para fiscalização em 1 clique.
+                  </p>
+                </div>
+                <div className="mt-6 flex items-center gap-2 text-[#9acee1] text-xs font-medium">
+                  <Gavel className="size-4" />
+                  <span>Relatórios prontos para Vigilância Sanitária</span>
+                </div>
+              </div>
+
+              {/* Card 3: Telemedicina & ICP-Brasil (col 4) */}
+              <div className="md:col-span-4 rounded-2xl bg-[#152126] border border-[#2b373b]/60 p-7 shadow-lg hover:border-[#9acee1]/40 transition-colors">
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#9acee1]/15 text-[#9acee1] text-xs font-semibold mb-4">
+                  Retaguarda Médica
+                </span>
+                <h3 className="text-xl font-bold text-[#d8e5ea] mb-2">
+                  Telemedicina & Prescrição ICP-Brasil
+                </h3>
+                <p className="text-sm text-[#c0c8cb] leading-relaxed">
+                  Teleconsultas integradas ao prontuário com assinatura digital ICP-Brasil e envio direto para a farmácia.
+                </p>
+              </div>
+
+              {/* Card 4: Escalas Geriátricas Automáticas (col 8) */}
+              <div className="md:col-span-8 rounded-2xl bg-[#152126] border border-[#2b373b]/60 p-7 shadow-lg hover:border-[#75daa8]/40 transition-colors">
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#75daa8]/15 text-[#75daa8] text-xs font-semibold mb-4">
+                  Geriatria Avançada
+                </span>
+                <h3 className="text-xl font-bold text-[#d8e5ea] mb-2">
+                  Escalas Geriátricas Automáticas
+                </h3>
+                <p className="text-sm text-[#c0c8cb] leading-relaxed mb-4">
+                  Cálculo automático e histórico evolutivo das principais escalas clínicas para avaliação funcional e risco de quedas.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-3 py-1 rounded-full bg-[#202c30] text-xs font-semibold text-[#d8e5ea] border border-[#40484b]/40">Katz</span>
+                  <span className="px-3 py-1 rounded-full bg-[#202c30] text-xs font-semibold text-[#d8e5ea] border border-[#40484b]/40">Lawton</span>
+                  <span className="px-3 py-1 rounded-full bg-[#202c30] text-xs font-semibold text-[#d8e5ea] border border-[#40484b]/40">Braden</span>
+                  <span className="px-3 py-1 rounded-full bg-[#202c30] text-xs font-semibold text-[#d8e5ea] border border-[#40484b]/40">Morse</span>
+                  <span className="px-3 py-1 rounded-full bg-[#202c30] text-xs font-semibold text-[#d8e5ea] border border-[#40484b]/40">MEEM</span>
+                </div>
+              </div>
+
+              {/* Card 5: Usuários Ilimitados (col 6) */}
+              <div className="md:col-span-6 rounded-2xl bg-[#152126] border border-[#2b373b]/60 p-7 shadow-lg hover:border-[#75daa8]/40 transition-colors">
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#75daa8]/15 text-[#75daa8] text-xs font-semibold mb-4">
+                  Sem Custo Oculto
+                </span>
+                <h3 className="text-xl font-bold text-[#d8e5ea] mb-2">
+                  Usuários e Cuidadores Ilimitados
+                </h3>
+                <p className="text-sm text-[#c0c8cb] leading-relaxed">
+                  Cadastre toda a equipe de enfermagem, cuidadores, médicos, nutricionistas e fisioterapeutas sem pagar por licença adicional.
+                </p>
+              </div>
+
+              {/* Card 6: Prontuário Multidisciplinar (col 6) */}
+              <div className="md:col-span-6 rounded-2xl bg-[#152126] border border-[#2b373b]/60 p-7 shadow-lg hover:border-[#9acee1]/40 transition-colors">
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#9acee1]/15 text-[#9acee1] text-xs font-semibold mb-4">
+                  Em 1 Clique
+                </span>
+                <h3 className="text-xl font-bold text-[#d8e5ea] mb-2">
+                  Prontuário Multidisciplinar Integrado
+                </h3>
+                <p className="text-sm text-[#c0c8cb] leading-relaxed">
+                  Evoluções de enfermagem, nutrição, fisioterapia e psicologia centralizadas em linha do tempo única com busca instantânea.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 5. COMPARATIVO: SEM O SENECARE VS. COM O SENECARE */}
+        <section className="w-full py-16 lg:py-24 px-6 lg:px-12 bg-[#111d21]/60 border-y border-[#2b373b]/40">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center max-w-2xl mx-auto mb-12">
+              <span className="text-xs font-bold uppercase text-[#9acee1] tracking-widest">Impacto Operacional</span>
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#d8e5ea] mt-2">
+                Sem o Senecare vs. Com o Senecare
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Sem o Senecare */}
+              <div className="rounded-2xl bg-[#81251a]/20 border border-[#ffb4a8]/30 p-8 shadow-lg">
+                <div className="flex items-center gap-3 mb-6">
+                  <AlertTriangle className="size-6 text-[#ffb4a8]" />
+                  <h3 className="text-lg font-bold text-[#ffb4a8]">Sem o Senecare: Papel & Planilhas</h3>
+                </div>
+                <ul className="space-y-4 text-sm text-[#c0c8cb]">
+                  <li className="flex items-start gap-3">
+                    <X className="size-5 text-[#ffb4a8] shrink-0 mt-0.5" />
+                    <span>Risco constante de multas e interdições por falhas em POPs da RDC 502.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <X className="size-5 text-[#ffb4a8] shrink-0 mt-0.5" />
+                    <span>Letras ilegíveis em prescrições e extravio de fichas de evolução.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <X className="size-5 text-[#ffb4a8] shrink-0 mt-0.5" />
+                    <span>Falta de rastreabilidade de quem administrou cada medicamento.</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Com o Senecare */}
+              <div className="rounded-2xl bg-[#008056]/20 border border-[#75daa8]/30 p-8 shadow-xl">
+                <div className="flex items-center gap-3 mb-6">
+                  <CheckCircle2 className="size-6 text-[#75daa8]" />
+                  <h3 className="text-lg font-bold text-[#75daa8]">Com o Senecare: 100% Digital & Auditado</h3>
+                </div>
+                <ul className="space-y-4 text-sm text-[#d8e5ea]">
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="size-5 text-[#75daa8] shrink-0 mt-0.5" />
+                    <span>Prontuário unificado com assinatura digital e trilha de auditoria completa.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="size-5 text-[#75daa8] shrink-0 mt-0.5" />
+                    <span>POPs do Art. 38 automatizados e prontos para apresentação imediata.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle2 className="size-5 text-[#75daa8] shrink-0 mt-0.5" />
+                    <span>Checagem beira-leito via QR Code com alertas de interação e atraso.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 6. DEPOIMENTOS: QUEM USA APROVA */}
+        <section className="w-full py-20 lg:py-24 px-6 lg:px-12" id="depoimentos">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center max-w-2xl mx-auto mb-12">
+              <span className="text-xs font-bold uppercase text-[#75daa8] tracking-widest">Quem Usa Aprova</span>
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#d8e5ea] mt-2">
+                Confiança de quem lidera o cuidado geriátrico
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Depoimento 1 */}
+              <div className="rounded-2xl bg-[#152126] border border-[#2b373b]/60 p-7 shadow-lg flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-1 text-[#75daa8] mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="size-4 fill-[#75daa8]" />
+                    ))}
+                  </div>
+                  <p className="text-sm text-[#d8e5ea] leading-relaxed mb-6 italic">
+                    “Passamos por duas vistorias da Vigilância Sanitária sem nenhuma ressalva. O prontuário e os POPs digitais do Senecare nos deram total segurança.”
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-[#d8e5ea]">Helena Prado</p>
+                  <p className="text-xs text-[#c0c8cb]">Responsável Técnica • Residencial Vila Serena</p>
+                </div>
+              </div>
+
+              {/* Depoimento 2 */}
+              <div className="rounded-2xl bg-[#152126] border border-[#2b373b]/60 p-7 shadow-lg flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-1 text-[#75daa8] mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="size-4 fill-[#75daa8]" />
+                    ))}
+                  </div>
+                  <p className="text-sm text-[#d8e5ea] leading-relaxed mb-6 italic">
+                    “A prescrição com ICP-Brasil e as escalas geriátricas automáticas reduziram em 70% o tempo burocrático da minha equipe médica.”
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-[#d8e5ea]">Dr. Roberto Faria</p>
+                  <p className="text-xs text-[#c0c8cb]">Diretor Clínico • Instituto Longevidade</p>
+                </div>
+              </div>
+
+              {/* Depoimento 3 */}
+              <div className="rounded-2xl bg-[#152126] border border-[#2b373b]/60 p-7 shadow-lg flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-1 text-[#75daa8] mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="size-4 fill-[#75daa8]" />
+                    ))}
+                  </div>
+                  <p className="text-sm text-[#d8e5ea] leading-relaxed mb-6 italic">
+                    “A ronda de medicação com QR Code eliminou esquecimentos na troca de plantão. Hoje temos visibilidade total de cada residente.”
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-[#d8e5ea]">Renata Silveira</p>
+                  <p className="text-xs text-[#c0c8cb]">Coord. de Enfermagem • Casa de Repouso Aurora</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 7. PLANOS & PREÇOS (INVESTIMENTO TRANSPARENTE) */}
+        <section className="w-full py-20 lg:py-28 px-6 lg:px-12 bg-[#111d21]/70 border-t border-[#2b373b]/40" id="planos">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center max-w-2xl mx-auto mb-10">
+              <span className="text-xs font-bold uppercase text-[#75daa8] tracking-widest">Investimento Transparente</span>
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#d8e5ea] mt-2 mb-6">
+                Planos sob medida para sua ILPI
+              </h2>
+
+              {/* Switch Mensal / Anual */}
+              <div className="inline-flex items-center p-1 rounded-full bg-[#202c30] border border-[#40484b]/60 shadow-md">
                 <button
                   type="button"
-                  onClick={() => toggleFaq(idx)}
-                  className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 font-semibold text-sm hover:bg-muted/30 transition-colors cursor-pointer"
+                  role="switch"
+                  aria-checked={faturamentoAnual}
+                  onClick={() => setFaturamentoAnual(!faturamentoAnual)}
+                  className={`px-5 py-2 rounded-full text-xs font-bold transition-all ${
+                    !faturamentoAnual
+                      ? 'bg-[#75daa8] text-[#003823]'
+                      : 'text-[#c0c8cb] hover:text-[#d8e5ea]'
+                  }`}
                 >
-                  <span>{faq.pergunta}</span>
-                  <ChevronRight
-                    className={`size-4 text-muted-foreground shrink-0 transition-transform duration-200 ${
-                      faqAberto === idx ? 'rotate-90' : ''
+                  Mensal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFaturamentoAnual(true)}
+                  className={`px-5 py-2 rounded-full text-xs font-bold transition-all ${
+                    faturamentoAnual
+                      ? 'bg-[#75daa8] text-[#003823]'
+                      : 'text-[#c0c8cb] hover:text-[#d8e5ea]'
+                  }`}
+                >
+                  Anual (Economize 15%)
+                </button>
+              </div>
+            </div>
+
+            {/* 4 Cards de Planos */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
+              {/* Plano Compacto */}
+              <div className="rounded-2xl bg-[#152126] border border-[#2b373b]/60 p-6 shadow-lg flex flex-col justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-[#d8e5ea]">Plano Compacto</h3>
+                  <p className="text-xs text-[#c0c8cb] mt-1">Até 20 residentes</p>
+
+                  <div className="my-6 flex items-baseline">
+                    <span className="text-sm font-semibold text-[#c0c8cb] mr-1">R$</span>
+                    <span className="text-3xl font-extrabold text-[#d8e5ea]">
+                      {faturamentoAnual ? '382,50' : '450,00'}
+                    </span>
+                    <span className="text-xs text-[#c0c8cb] ml-1">/mês</span>
+                  </div>
+
+                  <ul className="space-y-2.5 text-xs text-[#c0c8cb] mb-6">
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#75daa8]" />
+                      Prontuário eletrônico completo
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#75daa8]" />
+                      Ronda de medicação digital
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#75daa8]" />
+                      Usuários e cuidadores ilimitados
+                    </li>
+                  </ul>
+                </div>
+
+                <Link
+                  to="/login"
+                  className="w-full inline-flex items-center justify-center py-2.5 rounded-lg bg-[#202c30] text-[#d8e5ea] font-semibold text-xs hover:bg-[#2f3b40] transition-colors border border-[#40484b]/50"
+                >
+                  Começar Agora
+                </Link>
+              </div>
+
+              {/* Clínico & Compliance (Destaque) */}
+              <div className="rounded-2xl bg-[#0f4c5c]/40 border-2 border-[#75daa8] p-6 shadow-2xl flex flex-col justify-between relative">
+                <div>
+                  <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#75daa8] text-[#003823] text-[10px] font-extrabold uppercase tracking-wider mb-2">
+                    Mais Escolhido
+                  </span>
+                  <h3 className="text-lg font-bold text-[#d8e5ea]">Clínico & Compliance</h3>
+                  <p className="text-xs text-[#9acee1] mt-1">Até 50 residentes</p>
+
+                  <div className="my-6 flex items-baseline">
+                    <span className="text-sm font-semibold text-[#9acee1] mr-1">R$</span>
+                    <span className="text-3xl font-extrabold text-[#d8e5ea]">
+                      {faturamentoAnual ? '756,50' : '890,00'}
+                    </span>
+                    <span className="text-xs text-[#9acee1] ml-1">/mês</span>
+                  </div>
+
+                  <ul className="space-y-2.5 text-xs text-[#d8e5ea] mb-6">
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#75daa8]" />
+                      Tudo do Plano Compacto
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#75daa8]" />
+                      POPs ANVISA RDC 502/2021
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#75daa8]" />
+                      Escalas geriátricas automáticas
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#75daa8]" />
+                      Checagem beira-leito QR Code
+                    </li>
+                  </ul>
+                </div>
+
+                <Link
+                  to="/login"
+                  className="w-full inline-flex items-center justify-center py-2.5 rounded-lg bg-[#75daa8] text-[#003823] font-bold text-xs shadow-[0_0_20px_rgba(117,218,168,0.3)] hover:bg-[#92f7c3] transition-all"
+                >
+                  Escolher Plano
+                </Link>
+              </div>
+
+              {/* Plano Avançado */}
+              <div className="rounded-2xl bg-[#152126] border border-[#2b373b]/60 p-6 shadow-lg flex flex-col justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-[#d8e5ea]">Plano Avançado</h3>
+                  <p className="text-xs text-[#c0c8cb] mt-1">Até 100 residentes</p>
+
+                  <div className="my-6 flex items-baseline">
+                    <span className="text-sm font-semibold text-[#c0c8cb] mr-1">R$</span>
+                    <span className="text-3xl font-extrabold text-[#d8e5ea]">
+                      {faturamentoAnual ? '1.181,50' : '1.390,00'}
+                    </span>
+                    <span className="text-xs text-[#c0c8cb] ml-1">/mês</span>
+                  </div>
+
+                  <ul className="space-y-2.5 text-xs text-[#c0c8cb] mb-6">
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#75daa8]" />
+                      Tudo do Clínico & Compliance
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#75daa8]" />
+                      Telemedicina + ICP-Brasil
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#75daa8]" />
+                      Gestão de estoque farmacêutico
+                    </li>
+                  </ul>
+                </div>
+
+                <Link
+                  to="/login"
+                  className="w-full inline-flex items-center justify-center py-2.5 rounded-lg bg-[#202c30] text-[#d8e5ea] font-semibold text-xs hover:bg-[#2f3b40] transition-colors border border-[#40484b]/50"
+                >
+                  Começar Agora
+                </Link>
+              </div>
+
+              {/* Redes & Enterprise */}
+              <div className="rounded-2xl bg-[#152126] border border-[#2b373b]/60 p-6 shadow-lg flex flex-col justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-[#d8e5ea]">Redes & Enterprise</h3>
+                  <p className="text-xs text-[#c0c8cb] mt-1">Múltiplas unidades</p>
+
+                  <div className="my-6 flex items-baseline">
+                    <span className="text-sm font-semibold text-[#c0c8cb] mr-1">R$</span>
+                    <span className="text-3xl font-extrabold text-[#d8e5ea]">
+                      {faturamentoAnual ? '1.691,50' : '1.990,00'}
+                    </span>
+                    <span className="text-xs text-[#c0c8cb] ml-1">/mês</span>
+                  </div>
+
+                  <ul className="space-y-2.5 text-xs text-[#c0c8cb] mb-6">
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#75daa8]" />
+                      Painel consolidado multi-ILPI
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#75daa8]" />
+                      API dedicada & BI executivo
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#75daa8]" />
+                      Gerente de conta clínico 24/7
+                    </li>
+                  </ul>
+                </div>
+
+                <Link
+                  to="/login"
+                  className="w-full inline-flex items-center justify-center py-2.5 rounded-lg bg-[#202c30] text-[#d8e5ea] font-semibold text-xs hover:bg-[#2f3b40] transition-colors border border-[#40484b]/50"
+                >
+                  Falar com Consultor
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 8. FAQ INTERATIVO */}
+        <section className="w-full py-20 lg:py-24 px-6 lg:px-12" id="faq">
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-12">
+              <span className="text-xs font-bold uppercase text-[#9acee1] tracking-widest">Dúvidas Frequentes</span>
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#d8e5ea] mt-2">
+                Perguntas sobre implantação e conformidade
+              </h2>
+            </div>
+
+            <div className="space-y-3">
+              {/* FAQ 1 */}
+              <div className="rounded-2xl bg-[#152126] border border-[#2b373b]/60 p-6 shadow-md">
+                <button
+                  type="button"
+                  onClick={() => toggleFaq(0)}
+                  className="w-full flex items-center justify-between text-left gap-4"
+                >
+                  <span className="text-base font-semibold text-[#d8e5ea]">
+                    O sistema atende integralmente à RDC 502/2021 da ANVISA?
+                  </span>
+                  <ChevronDown
+                    className={`size-5 text-[#75daa8] shrink-0 transition-transform duration-200 ${
+                      faqAberto === 0 ? 'rotate-180' : ''
                     }`}
                   />
                 </button>
-                {faqAberto === idx && (
-                  <div className="px-5 pb-5 text-xs text-muted-foreground leading-relaxed border-t border-border/40 pt-3 bg-muted/10 animate-fadeIn">
-                    {faq.resposta}
+                {faqAberto === 0 && (
+                  <div className="pt-4 text-sm text-[#c0c8cb] leading-relaxed border-t border-[#2b373b]/50 mt-4">
+                    Sim! O Senecurare foi construído especificamente para ILPIs com base nas exigências da ANVISA (RDC 502/2021 e RDC 611) e resoluções do COREN. Todos os módulos de prontuário, aprazamento, plano de atenção integral à saúde e POPs seguem rigorosamente as fiscalizações sanitárias.
                   </div>
                 )}
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* 11. BOTTOM CTA HERO */}
-      <section className="py-20 bg-gradient-to-br from-emerald-950 via-teal-950 to-slate-950 text-white relative overflow-hidden">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 relative z-10">
-          <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-400/30 text-xs px-3.5 py-1 gap-1.5 font-bold">
-            <Zap className="size-3.5 text-amber-300" />
-            Comece em Menos de 5 Minutos
-          </Badge>
-          <h2 className="text-3xl sm:text-5xl font-serif font-extrabold tracking-tight">
-            Pronto para profissionalizar sua ILPI e eliminar riscos sanitários?
-          </h2>
-          <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto">
-            Junte-se às instituições que operam com segurança jurídica, prontuário multidisciplinar unificado e zero glosas na vigilância.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-4">
-            <Button
-              size="lg"
-              asChild
-              className="w-full sm:w-auto h-12 px-8 rounded-xl font-bold bg-white text-emerald-950 hover:bg-slate-100 shadow-xl text-sm transition-all hover:scale-105 active:scale-95"
-            >
-              <a href="#planos">Escolher um Plano</a>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              asChild
-              className="w-full sm:w-auto h-12 px-8 rounded-xl font-bold border-white/30 text-white hover:bg-white/10 text-sm transition-all hover:scale-105 active:scale-95"
-            >
-              <Link to="/login">Testar com Dados de Demonstração</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+              {/* FAQ 2 */}
+              <div className="rounded-2xl bg-[#152126] border border-[#2b373b]/60 p-6 shadow-md">
+                <button
+                  type="button"
+                  onClick={() => toggleFaq(1)}
+                  className="w-full flex items-center justify-between text-left gap-4"
+                >
+                  <span className="text-base font-semibold text-[#d8e5ea]">
+                    Quanto tempo leva para implantar o sistema na minha ILPI?
+                  </span>
+                  <ChevronDown
+                    className={`size-5 text-[#75daa8] shrink-0 transition-transform duration-200 ${
+                      faqAberto === 1 ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+                {faqAberto === 1 && (
+                  <div className="pt-4 text-sm text-[#c0c8cb] leading-relaxed border-t border-[#2b373b]/50 mt-4">
+                    A implantação guiada leva em média 48 horas, incluindo importação de residentes, configuração de prescrições e treinamento online da equipe de enfermagem.
+                  </div>
+                )}
+              </div>
 
-      {/* 12. FOOTER */}
-      <footer className="border-t border-border/60 bg-card text-xs text-muted-foreground py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <SenecurareLogo variant="horizontal" size="sm" showTagline />
-            <div className="flex flex-wrap items-center justify-center gap-6">
-              <a href="#recursos" className="hover:text-foreground transition-colors">
-                Recursos
-              </a>
-              <a href="#conformidade" className="hover:text-foreground transition-colors">
-                Conformidade RDC 502
-              </a>
-              <a href="#depoimentos" className="hover:text-foreground transition-colors">
-                Depoimentos
-              </a>
-              <a href="#planos" className="hover:text-foreground transition-colors">
-                Planos & Preços
-              </a>
-              <Link to="/login" className="font-semibold text-emerald-600 hover:underline">
-                Acessar Sistema
-              </Link>
+              {/* FAQ 3 */}
+              <div className="rounded-2xl bg-[#152126] border border-[#2b373b]/60 p-6 shadow-md">
+                <button
+                  type="button"
+                  onClick={() => toggleFaq(2)}
+                  className="w-full flex items-center justify-between text-left gap-4"
+                >
+                  <span className="text-base font-semibold text-[#d8e5ea]">
+                    Há cobrança por número de cuidadores ou enfermeiros cadastrados?
+                  </span>
+                  <ChevronDown
+                    className={`size-5 text-[#75daa8] shrink-0 transition-transform duration-200 ${
+                      faqAberto === 2 ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+                {faqAberto === 2 && (
+                  <div className="pt-4 text-sm text-[#c0c8cb] leading-relaxed border-t border-[#2b373b]/50 mt-4">
+                    Não. Todos os planos incluem usuários e cuidadores ilimitados sem qualquer custo oculto por licença.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 9. BANNER FINAL DE CONVERSÃO */}
+        <section className="w-full py-16 lg:py-24 px-6 lg:px-12">
+          <div className="relative max-w-6xl mx-auto rounded-3xl bg-gradient-to-br from-[#0f4c5c] via-[#202c30] to-[#008056]/40 p-10 lg:p-16 text-center shadow-2xl border border-[#75daa8]/30 overflow-hidden">
+            <div className="relative z-10 max-w-3xl mx-auto">
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-[#d8e5ea] mb-4">
+                Pronto para profissionalizar sua ILPI e eliminar riscos sanitários?
+              </h2>
+              <p className="text-base sm:text-lg text-[#c0c8cb] mb-8 leading-relaxed">
+                Junte-se às residências geriátricas que elevaram o padrão assistencial com governança clínica em tempo real.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                <a
+                  href="#planos"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg bg-[#75daa8] text-[#003823] font-bold text-sm shadow-[0_0_24px_rgba(117,218,168,0.35)] hover:bg-[#92f7c3] transition-all"
+                >
+                  <span>Escolher um Plano</span>
+                </a>
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg bg-[#152126]/90 border border-[#40484b]/60 text-[#d8e5ea] font-semibold text-sm hover:bg-[#202c30] transition-all"
+                >
+                  <span>Agendar Demonstração Gratuita</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* 10. FOOTER COMPLETO */}
+      <footer className="w-full bg-[#051014] border-t border-[#2b373b]/40 py-12">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-8 border-b border-[#2b373b]/40">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <SenecurareLogo variant="horizontal" size="sm" showTagline />
+              </div>
+              <p className="text-xs text-[#c0c8cb] leading-relaxed">
+                Plataforma de governança clínica e gestão operacional para ILPIs e residências geriátricas com foco em segurança assistencial e conformidade regulatória.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#d8e5ea] mb-3">Soluções & Recursos</h3>
+              <ul className="space-y-2 text-xs text-[#c0c8cb]">
+                <li><a href="#recursos" className="hover:text-[#d8e5ea] transition-colors">Prontuário Geriátrico</a></li>
+                <li><a href="#recursos" className="hover:text-[#d8e5ea] transition-colors">Aprazamento e Medicação</a></li>
+                <li><a href="#planos" className="hover:text-[#d8e5ea] transition-colors">Planos Institucionais</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#d8e5ea] mb-3">Conformidade & Normas</h3>
+              <ul className="space-y-2 text-xs text-[#c0c8cb]">
+                <li><a href="#conformidade" className="hover:text-[#d8e5ea] transition-colors">RDC 502/2021 ANVISA</a></li>
+                <li><a href="#conformidade" className="hover:text-[#d8e5ea] transition-colors">LGPD na Saúde</a></li>
+                <li><a href="#faq" className="hover:text-[#d8e5ea] transition-colors">Auditoria e Rastreabilidade</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#d8e5ea] mb-3">Contato & Plantão</h3>
+              <ul className="space-y-2 text-xs text-[#c0c8cb]">
+                <li><Link to="/login" className="hover:text-[#d8e5ea] transition-colors">Agendar Demonstração</Link></li>
+                <li><Link to="/login" className="hover:text-[#d8e5ea] transition-colors">Portal do Cliente</Link></li>
+                <li><span className="text-[#75daa8]">Suporte Clínico 24/7</span></li>
+              </ul>
             </div>
           </div>
 
-          <div className="border-t border-border/40 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
-            <span>© 2026 Senecurare Healthcare. Todos os direitos reservados.</span>
-            <span>Prontuário Multidisciplinar · Conformidade ANVISA RDC 502/2021 & COREN</span>
+          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#c0c8cb]">
+            <span>© 2026 Senecurare Tecnologia em Saúde LTDA. Todos os direitos reservados.</span>
+            <span>Sistema ILPI & Residências Geriátricas</span>
           </div>
         </div>
       </footer>
