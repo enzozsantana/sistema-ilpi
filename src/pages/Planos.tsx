@@ -15,6 +15,7 @@ import {
   Filter,
   Zap,
   Copy,
+  RotateCcw,
   ClipboardList,
   GraduationCap,
   Building2,
@@ -31,8 +32,14 @@ import {
 import {
   PLANOS,
   obterPlanoAtivo,
-  definirPlanoAtivo,
   isPlanoVitalicio,
+  obterAssinatura,
+  criarOuRenovarAssinatura,
+  cancelarAssinatura,
+  reativarAssinatura,
+  simularAvancoCicloMensal,
+  processarCobrancaRecorrente,
+  type AssinaturaILPI,
 } from '../lib/plans'
 import type { PlanoId, PlanoConfig } from '../lib/plans'
 
@@ -172,6 +179,7 @@ export const Planos: React.FC = () => {
 
   const [anual, setAnual] = useState(false)
   const [planoAtual, setPlanoAtual] = useState<PlanoId>(() => obterPlanoAtivo())
+  const [assinatura, setAssinatura] = useState<AssinaturaILPI | null>(() => obterAssinatura())
   const [planoSelecionadoModal, setPlanoSelecionadoModal] = useState<PlanoConfig | null>(null)
   const [metodoPagamento, setMetodoPagamento] = useState<'pix' | 'cartao'>('pix')
   const [processando, setProcessando] = useState(false)
@@ -220,11 +228,15 @@ export const Planos: React.FC = () => {
   useEffect(() => {
     const handlePlanoChange = () => {
       setPlanoAtual(obterPlanoAtivo())
+      setAssinatura(obterAssinatura())
     }
+    processarCobrancaRecorrente()
     window.addEventListener('senecurare_plano_alterado', handlePlanoChange)
+    window.addEventListener('senecurare_assinatura_alterada', handlePlanoChange)
     window.addEventListener('storage', handlePlanoChange)
     return () => {
       window.removeEventListener('senecurare_plano_alterado', handlePlanoChange)
+      window.removeEventListener('senecurare_assinatura_alterada', handlePlanoChange)
       window.removeEventListener('storage', handlePlanoChange)
     }
   }, [])
@@ -309,11 +321,49 @@ export const Planos: React.FC = () => {
     if (!planoSelecionadoModal) return
     setProcessando(true)
     setTimeout(() => {
-      definirPlanoAtivo(planoSelecionadoModal.id)
+      const nova = criarOuRenovarAssinatura(
+        planoSelecionadoModal.id,
+        metodoPagamento,
+        anual ? 'anual' : 'mensal',
+        {
+          numero: numeroCartao,
+          titular: nomeCartao,
+          validade: validadeCartao,
+        }
+      )
+      setAssinatura(nova)
       setPlanoAtual(planoSelecionadoModal.id)
       setProcessando(false)
       setSucessoModal(true)
+      toast.success(
+        `Assinatura do ${planoSelecionadoModal.nome} ativada! Cobrança mensal recorrente configurada.`
+      )
     }, 900)
+  }
+
+  const handleSimularRenovacao = () => {
+    const res = simularAvancoCicloMensal()
+    if (res) {
+      setAssinatura(obterAssinatura())
+      toast.success(
+        `Renovação mensal processada! Nova data de faturamento: ${new Date(res.novaData).toLocaleDateString('pt-BR')}`
+      )
+    }
+  }
+
+  const handleAlternarCancelamento = () => {
+    if (!assinatura) return
+    if (assinatura.status === 'cancelado') {
+      reativarAssinatura()
+      setAssinatura(obterAssinatura())
+      toast.success('Assinatura reativada com sucesso! Débito mensal continuará normalmente.')
+    } else {
+      cancelarAssinatura()
+      setAssinatura(obterAssinatura())
+      toast.info(
+        `Assinatura cancelada. O acesso permanecerá liberado até ${new Date(assinatura.proximaCobranca).toLocaleDateString('pt-BR')}.`
+      )
+    }
   }
 
   const planosLista: PlanoConfig[] = [
@@ -388,6 +438,111 @@ export const Planos: React.FC = () => {
             <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/20 px-3 py-1.5 rounded-xl border border-emerald-500/30 whitespace-nowrap">
               ✓ Vitalício Ativo
             </span>
+          </div>
+        )}
+
+        {/* Painel de Assinatura Recorrente */}
+        {assinatura && (
+          <div className="p-5 rounded-2xl bg-card border border-emerald-500/30 shadow-sm text-left space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`p-2.5 rounded-xl ${
+                    assinatura.status === 'ativo'
+                      ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                      : 'bg-rose-500/15 text-rose-600'
+                  }`}
+                >
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-foreground">
+                      Assinatura Recorrente: {PLANOS[assinatura.planoId]?.nome || assinatura.planoId}
+                    </h3>
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border ${
+                        assinatura.status === 'ativo'
+                          ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+                          : assinatura.status === 'cancelado'
+                          ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                          : 'bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-500/30'
+                      }`}
+                    >
+                      {assinatura.status === 'ativo'
+                        ? 'Ativa (Mensal)'
+                        : assinatura.status === 'cancelado'
+                        ? 'Cancelamento Agendado'
+                        : 'Vencida / Suspensa'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {assinatura.metodo === 'cartao'
+                      ? `Débito automático mensal no cartão final ${assinatura.cartao?.ultimosDigitos || '••••'}`
+                      : `Faturamento mensal via PIX (Favorecido: CODAGEM · CNPJ: 63.283.783/0001-88)`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleSimularRenovacao}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors flex items-center gap-1.5"
+                  title="Simula o avanço para o próximo mês e debita a mensalidade no cartão/pix"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Simular Renovação Recorrente</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleAlternarCancelamento}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                    assinatura.status === 'cancelado'
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                      : 'border border-rose-300 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30'
+                  }`}
+                >
+                  {assinatura.status === 'cancelado' ? 'Reativar Assinatura' : 'Cancelar Assinatura'}
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-border/50 text-xs">
+              <div>
+                <span className="text-muted-foreground block text-[10px] uppercase font-bold">
+                  Valor Recorrente
+                </span>
+                <span className="font-bold text-foreground font-mono">
+                  R$ {assinatura.valorMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}/mês
+                </span>
+              </div>
+              <div>
+                <span className="text-muted-foreground block text-[10px] uppercase font-bold">
+                  Próxima Cobrança
+                </span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                  {new Date(assinatura.proximaCobranca).toLocaleDateString('pt-BR')}
+                </span>
+              </div>
+              <div>
+                <span className="text-muted-foreground block text-[10px] uppercase font-bold">
+                  Último Pagamento
+                </span>
+                <span className="font-semibold text-foreground">
+                  {new Date(assinatura.ultimoPagamentoEm).toLocaleDateString('pt-BR')}
+                </span>
+              </div>
+              <div>
+                <span className="text-muted-foreground block text-[10px] uppercase font-bold">
+                  Histórico de Mensalidades
+                </span>
+                <span className="font-semibold text-foreground">
+                  {assinatura.cobrancas.length} faturas quitadas
+                </span>
+              </div>
+            </div>
           </div>
         )}
       </div>

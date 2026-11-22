@@ -178,8 +178,41 @@ export const RECURSO_NOMES: Record<FeatureKey, string> = {
 }
 
 export const STORAGE_KEY_PLANO = 'senecurare_plano_ativo'
+export const STORAGE_KEY_ASSINATURA = 'senecurare_assinatura'
 export const STORAGE_KEY_VITALICIO = 'senecurare_plano_vitalicio'
 export const STORAGE_KEY_VITALICIO_MOTIVO = 'senecurare_plano_vitalicio_motivo'
+
+export type StatusAssinatura = 'ativo' | 'inativo' | 'vencido' | 'cancelado' | 'vitalicio'
+
+export interface CobrancaRecorrente {
+  id: string
+  data: string // ISO string
+  valor: number
+  metodo: 'pix' | 'cartao'
+  status: 'pago' | 'pendente' | 'vencido' | 'falha'
+  descricao: string
+  comprovante?: string
+  pixCopiaECola?: string
+}
+
+export interface AssinaturaILPI {
+  id: string
+  planoId: PlanoId
+  status: StatusAssinatura
+  ciclo: 'mensal' | 'anual'
+  valorMensal: number
+  metodo: 'pix' | 'cartao'
+  dataInicio: string // ISO
+  proximaCobranca: string // ISO
+  ultimoPagamentoEm: string // ISO
+  canceladoEm?: string | null
+  cartao?: {
+    ultimosDigitos: string
+    titular: string
+    validade: string
+  }
+  cobrancas: CobrancaRecorrente[]
+}
 
 export const EMAILS_DEMO_HOMOLOGADOS = [
   's1@ilpi.demo',
@@ -207,16 +240,15 @@ export function isEmailDemo(email?: string | null): boolean {
  * Retorna true se a instituição possui licença vitalícia ativa
  */
 export function isPlanoVitalicio(): boolean {
-  if (typeof window === 'undefined') return true
+  if (typeof window === 'undefined') return false
   try {
     const salvo = localStorage.getItem(STORAGE_KEY_VITALICIO)
     if (salvo !== null) {
       return salvo === 'true'
     }
-    // Por padrão no ambiente de demonstração, o plano vitalício fica ATIVO
-    return true
+    return false
   } catch {
-    return true
+    return false
   }
 }
 
@@ -256,22 +288,276 @@ export function desativarPlanoVitalicio(): void {
 }
 
 /**
+ * Obtém a assinatura recorrente atual
+ */
+export function obterAssinatura(): AssinaturaILPI | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_ASSINATURA)
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Salva a assinatura e notifica os ouvintes da aplicação
+ */
+export function salvarAssinatura(assinatura: AssinaturaILPI): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(STORAGE_KEY_ASSINATURA, JSON.stringify(assinatura))
+    if (assinatura.status === 'ativo' || assinatura.status === 'vitalicio') {
+      localStorage.setItem(STORAGE_KEY_PLANO, assinatura.planoId)
+    }
+    window.dispatchEvent(new CustomEvent('senecurare_assinatura_alterada', { detail: assinatura }))
+    window.dispatchEvent(new CustomEvent('senecurare_plano_alterado', { detail: assinatura.planoId }))
+  } catch (err) {
+    console.error('Erro ao salvar assinatura:', err)
+  }
+}
+
+/**
+ * Verifica se a assinatura atual é válida e está com pagamentos regulares
+ */
+export function isAssinaturaValida(): boolean {
+  if (isPlanoVitalicio()) return true
+
+  const assinatura = obterAssinatura()
+  if (!assinatura) {
+    // Se não há assinatura estruturada registrada, verifica se há plano salvo diretamente
+    const salvo = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY_PLANO) : null
+    return Boolean(salvo && PLANOS[salvo as PlanoId])
+  }
+
+  if (assinatura.status === 'inativo' || assinatura.status === 'vencido') {
+    return false
+  }
+
+  if (assinatura.status === 'cancelado') {
+    return new Date() <= new Date(assinatura.proximaCobranca)
+  }
+
+  return assinatura.status === 'ativo'
+}
+
+/**
+ * Cria ou renova a assinatura recorrente
+ */
+export function criarOuRenovarAssinatura(
+  planoId: PlanoId,
+  metodo: 'pix' | 'cartao',
+  ciclo: 'mensal' | 'anual' = 'mensal',
+  dadosCartao?: { numero?: string; titular?: string; validade?: string }
+): AssinaturaILPI {
+  const agora = new Date()
+  const plano = PLANOS[planoId]
+  const valor = ciclo === 'anual' ? plano.precoAnualMensal : plano.precoMensal
+
+  const proxima = new Date(agora)
+  if (ciclo === 'anual') {
+    proxima.setFullYear(proxima.getFullYear() + 1)
+  } else {
+    proxima.setDate(proxima.getDate() + 30)
+  }
+
+  const cobrancaInicial: CobrancaRecorrente = {
+    id: `cob_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+    data: agora.toISOString(),
+    valor,
+    metodo,
+    status: 'pago',
+    descricao: `Assinatura ${plano.nome} (${ciclo === 'anual' ? 'Compromisso Anual' : 'Cobrança Mensal'}) - 1ª Mensalidade`,
+    comprovante: `COMP-${metodo === 'pix' ? 'PIX' : 'CARD'}-${Date.now().toString(36).toUpperCase()}`,
+  }
+
+  const novaAssinatura: AssinaturaILPI = {
+    id: `sub_${Date.now()}`,
+    planoId,
+    status: 'ativo',
+    ciclo,
+    valorMensal: valor,
+    metodo,
+    dataInicio: agora.toISOString(),
+    proximaCobranca: proxima.toISOString(),
+    ultimoPagamentoEm: agora.toISOString(),
+    cartao:
+      metodo === 'cartao' && dadosCartao
+        ? {
+            ultimosDigitos: (dadosCartao.numero || '').replace(/\D/g, '').slice(-4) || '4242',
+            titular: dadosCartao.titular || 'CLIENTE ILPI',
+            validade: dadosCartao.validade || '12/28',
+          }
+        : undefined,
+    cobrancas: [cobrancaInicial],
+  }
+
+  salvarAssinatura(novaAssinatura)
+  definirPlanoAtivo(planoId)
+  return novaAssinatura
+}
+
+/**
+ * Processador de cobranças recorrentes automáticas
+ */
+export function processarCobrancaRecorrente(): {
+  executou: boolean
+  status: StatusAssinatura
+  mensagem: string
+} {
+  if (isPlanoVitalicio()) {
+    return { executou: false, status: 'vitalicio', mensagem: 'Licença vitalícia ativa' }
+  }
+
+  const assinatura = obterAssinatura()
+  if (!assinatura) {
+    return { executou: false, status: 'inativo', mensagem: 'Nenhuma assinatura registrada' }
+  }
+
+  const agora = new Date()
+  const dataProxima = new Date(assinatura.proximaCobranca)
+
+  // Assinatura cancelada
+  if (assinatura.status === 'cancelado') {
+    if (agora > dataProxima) {
+      assinatura.status = 'inativo'
+      salvarAssinatura(assinatura)
+      return { executou: true, status: 'inativo', mensagem: 'Período pago expirado. Acesso aos recursos suspensos.' }
+    }
+    return { executou: false, status: 'cancelado', mensagem: 'Assinatura cancelada, acesso válido até o fim do ciclo pago.' }
+  }
+
+  // Ainda não atingiu a data de cobrança
+  if (agora < dataProxima) {
+    return { executou: false, status: assinatura.status, mensagem: 'Cobrança mensal em dia.' }
+  }
+
+  // A data de cobrança chegou!
+  if (assinatura.metodo === 'cartao') {
+    // Débito automático mensal no cartão de crédito
+    const plano = PLANOS[assinatura.planoId]
+    const valor = assinatura.ciclo === 'anual' ? plano.precoAnualMensal : plano.precoMensal
+    const novaProxima = new Date(agora)
+    novaProxima.setDate(novaProxima.getDate() + 30)
+
+    const novaCobranca: CobrancaRecorrente = {
+      id: `cob_rec_${Date.now()}`,
+      data: agora.toISOString(),
+      valor,
+      metodo: 'cartao',
+      status: 'pago',
+      descricao: `Débito Automático Mensal - ${plano.nome} (Cartão final ${assinatura.cartao?.ultimosDigitos || '••••'})`,
+      comprovante: `AUTODEP-${Date.now().toString(36).toUpperCase()}`,
+    }
+
+    assinatura.proximaCobranca = novaProxima.toISOString()
+    assinatura.ultimoPagamentoEm = agora.toISOString()
+    assinatura.status = 'ativo'
+    assinatura.cobrancas.unshift(novaCobranca)
+    salvarAssinatura(assinatura)
+
+    return {
+      executou: true,
+      status: 'ativo',
+      mensagem: `Débito automático mensal de R$ ${valor.toFixed(2)} processado no cartão.`,
+    }
+  }
+
+  // Método PIX: verificar tolerância de 3 dias
+  const diasAtraso = Math.floor((agora.getTime() - dataProxima.getTime()) / (1000 * 60 * 60 * 24))
+  if (diasAtraso > 3) {
+    assinatura.status = 'vencido'
+    salvarAssinatura(assinatura)
+    return {
+      executou: true,
+      status: 'vencido',
+      mensagem: 'Fatura mensal de PIX vencida. Acesso às funcionalidades suspenso.',
+    }
+  }
+
+  return {
+    executou: false,
+    status: assinatura.status,
+    mensagem: 'Fatura de renovação mensal via PIX aguardando quitação.',
+  }
+}
+
+/**
+ * Cancela a assinatura recorrente
+ */
+export function cancelarAssinatura(): void {
+  const assinatura = obterAssinatura()
+  if (!assinatura) return
+  assinatura.status = 'cancelado'
+  assinatura.canceladoEm = new Date().toISOString()
+  salvarAssinatura(assinatura)
+}
+
+/**
+ * Reativa a assinatura
+ */
+export function reativarAssinatura(): void {
+  const assinatura = obterAssinatura()
+  if (!assinatura) return
+  assinatura.status = 'ativo'
+  assinatura.canceladoEm = null
+  salvarAssinatura(assinatura)
+}
+
+/**
+ * Simula o avanço do ciclo mensal para fins de testes e homologação
+ */
+export function simularAvancoCicloMensal(): { cobranca: CobrancaRecorrente; novaData: string } | null {
+  const assinatura = obterAssinatura()
+  if (!assinatura) return null
+
+  const agora = new Date()
+  const plano = PLANOS[assinatura.planoId]
+  const valor = assinatura.ciclo === 'anual' ? plano.precoAnualMensal : plano.precoMensal
+  const novaProxima = new Date(agora)
+  novaProxima.setDate(novaProxima.getDate() + 30)
+
+  const novaCobranca: CobrancaRecorrente = {
+    id: `cob_sim_${Date.now()}`,
+    data: agora.toISOString(),
+    valor,
+    metodo: assinatura.metodo,
+    status: 'pago',
+    descricao: `Cobrança Recorrente Mensal - ${plano.nome}`,
+    comprovante: `SIM-${Date.now().toString(36).toUpperCase()}`,
+  }
+
+  assinatura.proximaCobranca = novaProxima.toISOString()
+  assinatura.ultimoPagamentoEm = agora.toISOString()
+  assinatura.status = 'ativo'
+  assinatura.cobrancas.unshift(novaCobranca)
+  salvarAssinatura(assinatura)
+
+  return { cobranca: novaCobranca, novaData: novaProxima.toISOString() }
+}
+
+/**
  * Retorna o plano atualmente ativo da instituição
  */
 export function obterPlanoAtivo(): PlanoId {
-  if (typeof window === 'undefined') return 'enterprise'
+  if (typeof window === 'undefined') return 'clinico'
   try {
+    const assinatura = obterAssinatura()
+    if (assinatura && (assinatura.status === 'ativo' || assinatura.status === 'vitalicio')) {
+      return assinatura.planoId
+    }
+
     const salvo = localStorage.getItem(STORAGE_KEY_PLANO) as PlanoId | null
     if (salvo && PLANOS[salvo]) return salvo
 
-    // Se a licença vitalícia estiver ativa ou padrão de demo
     if (isPlanoVitalicio()) {
       return 'enterprise'
     }
 
     return 'clinico'
   } catch {
-    return 'enterprise'
+    return 'clinico'
   }
 }
 
@@ -282,6 +568,11 @@ export function definirPlanoAtivo(plano: PlanoId): void {
   if (typeof window === 'undefined') return
   try {
     localStorage.setItem(STORAGE_KEY_PLANO, plano)
+    const assinatura = obterAssinatura()
+    if (assinatura) {
+      assinatura.planoId = plano
+      salvarAssinatura(assinatura)
+    }
     window.dispatchEvent(new CustomEvent('senecurare_plano_alterado', { detail: plano }))
   } catch (err) {
     console.error('Erro ao salvar plano:', err)
@@ -292,13 +583,25 @@ export function definirPlanoAtivo(plano: PlanoId): void {
  * Verifica se um recurso está liberado no plano
  */
 export function isFeatureDisponivel(feature: FeatureKey, planoAtual?: PlanoId): boolean {
-  // Contas com plano vitalício têm 100% dos recursos liberados
-  if (!planoAtual && isPlanoVitalicio()) {
-    const planoEfetivo = obterPlanoAtivo()
-    if (planoEfetivo === 'enterprise') return true
+  // Se passou planoAtual explicitamente (usado em verificações parametrizadas):
+  if (planoAtual) {
+    const nivelAtual = PLANO_HIERARQUIA[planoAtual] || 1
+    const planoMinimo = RECURSO_PLANO_MINIMO[feature]
+    const nivelMinimo = PLANO_HIERARQUIA[planoMinimo] || 1
+    return nivelAtual >= nivelMinimo
   }
 
-  const plano = planoAtual || obterPlanoAtivo()
+  // Contas com plano vitalício têm 100% dos recursos liberados
+  if (isPlanoVitalicio()) {
+    return true
+  }
+
+  // Sem assinatura ativa válida (ex: suspensa, vencida ou inativa) -> SEM ACESSO!
+  if (!isAssinaturaValida()) {
+    return false
+  }
+
+  const plano = obterPlanoAtivo()
   const nivelAtual = PLANO_HIERARQUIA[plano] || 1
   const planoMinimo = RECURSO_PLANO_MINIMO[feature]
   const nivelMinimo = PLANO_HIERARQUIA[planoMinimo] || 1

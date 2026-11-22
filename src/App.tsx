@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { IlpiDataProvider } from './contexts/IlpiDataContext'
@@ -10,6 +10,7 @@ import { SenecurareLogo } from './components/SenecurareLogo'
 import { ThemeToggle } from './components/ThemeToggle'
 import { Button } from './components/ui/button'
 import { Toaster } from './components/ui/sonner'
+import { processarCobrancaRecorrente } from './lib/plans'
 // Code-Splitting com React.lazy para redução drástica do bundle inicial
 const LandingPage = lazy(() => import('./pages/LandingPage'))
 const Login = lazy(() => import('./pages/Login'))
@@ -45,6 +46,10 @@ function PageFallback() {
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { session, loading, profissional } = useAuth()
+
+  useEffect(() => {
+    processarCobrancaRecorrente()
+  }, [])
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background space-y-3">

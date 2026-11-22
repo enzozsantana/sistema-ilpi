@@ -14,6 +14,8 @@ import {
   obterPlanoMinimoFeature,
   obterPlanoAtivo,
   definirPlanoAtivo,
+  isAssinaturaValida,
+  processarCobrancaRecorrente,
   RECURSO_NOMES,
   PLANOS,
 } from '../lib/plans'
@@ -36,20 +38,27 @@ export const PlanGate: React.FC<PlanGateProps> = ({
   compacto = false,
 }) => {
   const [planoAtual, setPlanoAtual] = useState<PlanoId>(() => obterPlanoAtivo())
+  const [assinaturaValida, setAssinaturaValida] = useState<boolean>(() => isAssinaturaValida())
 
   useEffect(() => {
+    // Processa débitos recorrentes pendentes caso a data tenha chegado
+    processarCobrancaRecorrente()
+
     const handlePlanoChange = () => {
       setPlanoAtual(obterPlanoAtivo())
+      setAssinaturaValida(isAssinaturaValida())
     }
     window.addEventListener('senecurare_plano_alterado', handlePlanoChange)
+    window.addEventListener('senecurare_assinatura_alterada', handlePlanoChange)
     window.addEventListener('storage', handlePlanoChange)
     return () => {
       window.removeEventListener('senecurare_plano_alterado', handlePlanoChange)
+      window.removeEventListener('senecurare_assinatura_alterada', handlePlanoChange)
       window.removeEventListener('storage', handlePlanoChange)
     }
   }, [])
 
-  const liberado = isFeatureDisponivel(feature, planoAtual)
+  const liberado = assinaturaValida && isFeatureDisponivel(feature, planoAtual)
 
   if (liberado) {
     return <>{children}</>

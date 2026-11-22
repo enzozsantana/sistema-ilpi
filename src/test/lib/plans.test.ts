@@ -10,6 +10,13 @@ import {
   desativarPlanoVitalicio,
   isEmailDemo,
   verificarEAtivarDemoVitalicio,
+  obterAssinatura,
+  salvarAssinatura,
+  criarOuRenovarAssinatura,
+  processarCobrancaRecorrente,
+  cancelarAssinatura,
+  isAssinaturaValida,
+  simularAvancoCicloMensal,
 } from '../../lib/plans'
 
 describe('Módulo de Planos & Feature Gating (plans.ts)', () => {
@@ -110,5 +117,64 @@ describe('Módulo de Planos & Feature Gating (plans.ts)', () => {
     expect(isFeatureDisponivel('estoque')).toBe(true)
     expect(isFeatureDisponivel('pops')).toBe(true)
     expect(verificarLimiteResidentes(500).atingiu).toBe(false)
+  })
+
+  it('deve gerenciar cobranças recorrentes mensais e bloquear acesso se a assinatura estiver inativa ou vencida', () => {
+    desativarPlanoVitalicio()
+
+    // 1. Criação de Assinatura Mensal no Cartão
+    const sub = criarOuRenovarAssinatura('clinico', 'cartao', 'mensal', {
+      numero: '5555444433332222',
+      titular: 'DR GERALDO ILPI',
+      validade: '08/30',
+    })
+    expect(sub.planoId).toBe('clinico')
+    expect(sub.status).toBe('ativo')
+    expect(sub.cobrancas.length).toBe(1)
+    expect(sub.cobrancas[0].status).toBe('pago')
+    expect(sub.cartao?.ultimosDigitos).toBe('2222')
+    expect(isAssinaturaValida()).toBe(true)
+
+    // Com plano clínico ativo, estoque está liberado, mas teleconsulta é bloqueada
+    expect(isFeatureDisponivel('estoque')).toBe(true)
+    expect(isFeatureDisponivel('pops')).toBe(true)
+    expect(isFeatureDisponivel('teleconsulta')).toBe(false)
+
+    // 2. Simula renovação automática do ciclo mensal (após 30 dias)
+    const renovacao = simularAvancoCicloMensal()
+    expect(renovacao).not.toBeNull()
+    expect(renovacao?.cobranca.status).toBe('pago')
+    const subAtualizada = obterAssinatura()
+    expect(subAtualizada?.cobrancas.length).toBe(2)
+
+    // 3. Simula vencimento / inadimplência: status 'vencido' -> BLOQUEIA ACESSO
+    if (subAtualizada) {
+      subAtualizada.status = 'vencido'
+      salvarAssinatura(subAtualizada)
+    }
+    expect(isAssinaturaValida()).toBe(false)
+    // Sem assinatura válida, todas as features restritas ficam bloqueadas!
+    expect(isFeatureDisponivel('estoque')).toBe(false)
+    expect(isFeatureDisponivel('pops')).toBe(false)
+    expect(isFeatureDisponivel('treinamentos')).toBe(false)
+    expect(isFeatureDisponivel('teleconsulta')).toBe(false)
+
+    // 4. Cancelamento da assinatura
+    cancelarAssinatura()
+    const subCancelada = obterAssinatura()
+    expect(subCancelada?.status).toBe('cancelado')
+
+    // Executa processador de cobrança recorrente
+    const proc = processarCobrancaRecorrente()
+    expect(proc).toBeDefined()
+
+    // 5. Reativação com upgrade para Avançado
+    const subUpgrade = criarOuRenovarAssinatura('avancado', 'pix', 'mensal')
+    expect(subUpgrade.planoId).toBe('avancado')
+    expect(subUpgrade.status).toBe('ativo')
+    expect(isAssinaturaValida()).toBe(true)
+    expect(isFeatureDisponivel('estoque')).toBe(true)
+    expect(isFeatureDisponivel('treinamentos')).toBe(true)
+    expect(isFeatureDisponivel('teleconsulta')).toBe(true)
   })
 })

@@ -21,6 +21,7 @@ import { Checkbox } from '../../components/ui/checkbox'
 import { Switch } from '../../components/ui/switch'
 import { SearchableSelect } from '../../components/ui/select'
 import { StatusBadge, Allergy, Avatar } from '../../components/Ui'
+import { PlanGate } from '../../components/PlanGate'
 import {
   Dialog,
   DialogContent,
@@ -5505,7 +5506,11 @@ export function renderTab(tab: AbaResidente, ctx: Ctx) {
     case 'arquivos':
       return <TabArquivos {...ctx} />
     case 'estoque':
-      return <TabEstoque {...ctx} />
+      return (
+        <PlanGate feature="estoque" compacto>
+          <TabEstoque {...ctx} />
+        </PlanGate>
+      )
     case 'tudo':
       return <TabTudo {...ctx} />
     default:
