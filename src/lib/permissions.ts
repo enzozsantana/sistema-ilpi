@@ -38,6 +38,7 @@ export const CAN: Record<AcaoPermissao, Categoria[]> = {
 
 /** Acesso às views principais (NAV_ACESSO). */
 export const NAV_ACESSO: Record<NavView, '*' | Categoria[]> = {
+  agenda: '*',
   equipe: [...NURSE, 'cuid', 'gestao'],
   estoque: ['rt'],
   gestao: ['rt', 'enf', 'gestao'],

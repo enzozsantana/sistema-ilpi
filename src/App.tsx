@@ -22,6 +22,7 @@ const Rotinas = lazy(() => import('./pages/Rotinas'))
 const Equipe = lazy(() => import('./pages/Equipe'))
 const Gestao = lazy(() => import('./pages/Gestao'))
 const Teleconsulta = lazy(() => import('./pages/Teleconsulta'))
+const AgendaTeleconsulta = lazy(() => import('./pages/AgendaTeleconsulta'))
 const Treinamentos = lazy(() => import('./pages/Treinamentos'))
 const Perfil = lazy(() => import('./pages/Perfil'))
 const Planos = lazy(() => import('./pages/Planos'))
@@ -156,6 +157,18 @@ function AuthedRoutes() {
                 <Teleconsulta />
               </GuardView>
             }
+          />
+          <Route
+            path="agenda"
+            element={
+              <GuardView view="agenda">
+                <AgendaTeleconsulta />
+              </GuardView>
+            }
+          />
+          <Route
+            path="agenda-teleconsulta"
+            element={<Navigate to="/agenda" replace />}
           />
           <Route
             path="treinamentos"

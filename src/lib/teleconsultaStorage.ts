@@ -1,4 +1,11 @@
-import type { ConsultaVirtual, ProfissionalVirtual } from '../types/teleconsulta'
+import type {
+  BloqueioAgenda,
+  ConfiguracaoAgendaProfissional,
+  ConsultaVirtual,
+  DisponibilidadeSemanal,
+  ProfissionalVirtual,
+  SlotHorarioAgenda,
+} from '../types/teleconsulta'
 import { VALORES_PADRAO_CONSULTA } from '../types/teleconsulta'
 
 export const PROFISSIONAIS_VIRTUAIS: ProfissionalVirtual[] = [
@@ -255,5 +262,385 @@ export function marcarEvolucaoConsulta(id: string): void {
     }
   } catch (e) {
     console.error('Erro ao marcar evolução:', e)
+  }
+}
+
+// -------------------------------------------------------------
+// GESTÃO DE AGENDA, DISPONIBILIDADE E BLOQUEIOS DE TELECONSULTA
+// -------------------------------------------------------------
+
+const AGENDA_CONFIG_PREFIX = 'senecurare_agenda_config_'
+const AGENDA_BLOQUEIOS_KEY = 'senecurare_agenda_bloqueios'
+
+export const DIAS_SEMANA_NOMES = [
+  'Domingo',
+  'Segunda-feira',
+  'Terça-feira',
+  'Quarta-feira',
+  'Quinta-feira',
+  'Sexta-feira',
+  'Sábado',
+]
+
+/**
+ * Cria a configuração inicial de disponibilidade semanal de um profissional
+ */
+export function gerarConfiguracaoAgendaPadrao(prof: ProfissionalVirtual): ConfiguracaoAgendaProfissional {
+  const diasAtendimento = new Set(prof.diasAtendimento || [1, 2, 3, 4, 5])
+  const diasSemana: DisponibilidadeSemanal[] = [0, 1, 2, 3, 4, 5, 6].map((dia) => {
+    const ativo = diasAtendimento.has(dia)
+    return {
+      diaSemana: dia,
+      ativo,
+      inicio: '08:00',
+      fim: '18:00',
+      intervaloInicio: '12:00',
+      intervaloFim: '13:00',
+      horarios: ativo ? [...(prof.horariosPadrao || ['08:30', '10:00', '14:00', '15:30', '17:00'])] : [],
+    }
+  })
+
+  return {
+    profissionalId: prof.id,
+    duracaoSlotMin: prof.duracaoMin || 45,
+    intervaloEntreSlotsMin: 15,
+    diasSemana,
+    bloqueios: [],
+    limiteDiario: 10,
+    aceitaEncaixe: true,
+  }
+}
+
+/**
+ * Obtém a configuração de agenda do profissional
+ */
+export function obterConfiguracaoAgenda(profissionalId: string): ConfiguracaoAgendaProfissional {
+  const profs = obterProfissionaisVirtuais()
+  const prof = profs.find((p) => p.id === profissionalId) || profs[0]
+
+  if (typeof window === 'undefined') {
+    return gerarConfiguracaoAgendaPadrao(prof)
+  }
+
+  try {
+    const raw = localStorage.getItem(`${AGENDA_CONFIG_PREFIX}${profissionalId}`)
+    if (raw) {
+      const parsed = JSON.parse(raw) as ConfiguracaoAgendaProfissional
+      // mescla com bloqueios globais
+      const bloqueios = obterBloqueiosAgenda(profissionalId)
+      return { ...parsed, bloqueios }
+    }
+  } catch (e) {
+    console.error('Erro ao ler configuração de agenda:', e)
+  }
+
+  const def = gerarConfiguracaoAgendaPadrao(prof)
+  def.bloqueios = obterBloqueiosAgenda(profissionalId)
+  return def
+}
+
+/**
+ * Salva a configuração de agenda do profissional
+ */
+export function salvarConfiguracaoAgenda(config: ConfiguracaoAgendaProfissional): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(`${AGENDA_CONFIG_PREFIX}${config.profissionalId}`, JSON.stringify(config))
+
+    // Atualiza também os dias e horários no cadastro do profissional virtual
+    const profs = obterProfissionaisVirtuais()
+    const prof = profs.find((p) => p.id === config.profissionalId)
+    if (prof) {
+      prof.diasAtendimento = config.diasSemana.filter((d) => d.ativo).map((d) => d.diaSemana)
+      // coleta horários padronizados dos dias ativos
+      const horariosGerais = config.diasSemana.find((d) => d.ativo && d.horarios && d.horarios.length > 0)
+      if (horariosGerais?.horarios) {
+        prof.horariosPadrao = [...horariosGerais.horarios]
+      }
+      prof.duracaoMin = config.duracaoSlotMin
+      salvarProfissionalVirtual(prof)
+    }
+  } catch (e) {
+    console.error('Erro ao salvar configuração de agenda:', e)
+  }
+}
+
+/**
+ * Lista todos os bloqueios de agenda do profissional
+ */
+export function obterBloqueiosAgenda(profissionalId?: string): BloqueioAgenda[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(AGENDA_BLOQUEIOS_KEY)
+    if (!raw) return []
+    const todos = JSON.parse(raw) as BloqueioAgenda[]
+    if (profissionalId) {
+      return todos.filter((b) => b.profissionalId === profissionalId)
+    }
+    return todos
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Adiciona um bloqueio de agenda (férias, atestado, feriado, reunião)
+ */
+export function adicionarBloqueioAgenda(
+  bloqueio: Omit<BloqueioAgenda, 'id' | 'criadoEm'>,
+): BloqueioAgenda {
+  const novo: BloqueioAgenda = {
+    ...bloqueio,
+    id: `blq_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    criadoEm: new Date().toISOString(),
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      const lista = obterBloqueiosAgenda()
+      lista.push(novo)
+      localStorage.setItem(AGENDA_BLOQUEIOS_KEY, JSON.stringify(lista))
+    } catch (e) {
+      console.error('Erro ao salvar bloqueio:', e)
+    }
+  }
+
+  return novo
+}
+
+/**
+ * Remove um bloqueio de agenda por ID
+ */
+export function removerBloqueioAgenda(bloqueioId: string): void {
+  if (typeof window === 'undefined') return
+  try {
+    const lista = obterBloqueiosAgenda()
+    const filtrados = lista.filter((b) => b.id !== bloqueioId)
+    localStorage.setItem(AGENDA_BLOQUEIOS_KEY, JSON.stringify(filtrados))
+  } catch (e) {
+    console.error('Erro ao remover bloqueio:', e)
+  }
+}
+
+/**
+ * Gera a grade de horários/slots para um profissional em um dia específico,
+ * marcando se está vago, bloqueado ou ocupado por teleconsulta.
+ */
+export function obterSlotsDia(
+  profissionalId: string,
+  dataIso: string, // YYYY-MM-DD
+  consultasParam?: ConsultaVirtual[],
+): SlotHorarioAgenda[] {
+  const config = obterConfiguracaoAgenda(profissionalId)
+  const bloqueios = obterBloqueiosAgenda(profissionalId).filter((b) => b.data === dataIso)
+  const consultas = (consultasParam || obterConsultasVirtuais()).filter(
+    (c) =>
+      c.profissionalId === profissionalId &&
+      c.data === dataIso &&
+      c.status !== 'cancelada',
+  )
+
+  // Determina dia da semana a partir da data (evitando problema de timezone)
+  const [ano, mes, dia] = dataIso.split('-').map(Number)
+  const dataObj = new Date(ano, mes - 1, dia)
+  const diaSemana = dataObj.getDay()
+
+  const regraDia = config.diasSemana.find((d) => d.diaSemana === diaSemana)
+
+  // Se o profissional não atende normalmente neste dia da semana
+  if (!regraDia || !regraDia.ativo) {
+    // Se houver consultas marcadas para o dia (ex: plantão ou encaixe), exibe-as
+    if (consultas.length > 0) {
+      return consultas
+        .map((c) => ({
+          horario: c.horario,
+          disponivel: false,
+          consulta: c,
+        }))
+        .sort((a, b) => a.horario.localeCompare(b.horario))
+    }
+    return []
+  }
+
+  // Monta lista de horários base
+  let horariosBase = regraDia.horarios && regraDia.horarios.length > 0
+    ? [...regraDia.horarios]
+    : []
+
+  if (horariosBase.length === 0) {
+    // Gera horários baseados no início, fim e duração
+    const inicioStr = regraDia.inicio || '08:00'
+    const fimStr = regraDia.fim || '18:00'
+    const [hIni, mIni] = inicioStr.split(':').map(Number)
+    const [hFim, mFim] = fimStr.split(':').map(Number)
+
+    let minutoAtual = hIni * 60 + mIni
+    const minutoLimite = hFim * 60 + mFim
+    const passo = (config.duracaoSlotMin || 45) + (config.intervaloEntreSlotsMin || 15)
+
+    while (minutoAtual + (config.duracaoSlotMin || 45) <= minutoLimite) {
+      const h = Math.floor(minutoAtual / 60)
+      const m = minutoAtual % 60
+      const hStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+
+      // Ignora se cair dentro do intervalo de almoço
+      if (regraDia.intervaloInicio && regraDia.intervaloFim) {
+        const [hIntIni, mIntIni] = regraDia.intervaloInicio.split(':').map(Number)
+        const [hIntFim, mIntFim] = regraDia.intervaloFim.split(':').map(Number)
+        const minIntIni = hIntIni * 60 + mIntIni
+        const minIntFim = hIntFim * 60 + mIntFim
+        if (minutoAtual >= minIntIni && minutoAtual < minIntFim) {
+          minutoAtual += passo
+          continue
+        }
+      }
+
+      horariosBase.push(hStr)
+      minutoAtual += passo
+    }
+  }
+
+  // Inclui horários de consultas existentes que possam ter sido encaixes
+  consultas.forEach((c) => {
+    if (!horariosBase.includes(c.horario)) {
+      horariosBase.push(c.horario)
+    }
+  })
+
+  // Ordena horários cronologicamente
+  horariosBase.sort((a, b) => a.localeCompare(b))
+
+  // Verifica se o dia inteiro está bloqueado
+  const bloqueioDiaInteiro = bloqueios.find((b) => b.diaInteiro || (!b.horarioInicio && !b.horarioFim))
+
+  return horariosBase.map((horario) => {
+    // 1. Verifica se há consulta marcada
+    const consulta = consultas.find((c) => c.horario === horario)
+    if (consulta) {
+      return {
+        horario,
+        disponivel: false,
+        consulta,
+      }
+    }
+
+    // 2. Verifica se o dia inteiro está bloqueado
+    if (bloqueioDiaInteiro) {
+      return {
+        horario,
+        disponivel: false,
+        bloqueado: true,
+        motivoBloqueio: bloqueioDiaInteiro.motivo || 'Data bloqueada pelo profissional',
+      }
+    }
+
+    // 3. Verifica bloqueio parcial de horário
+    const bloqueioHorario = bloqueios.find((b) => {
+      if (!b.horarioInicio || !b.horarioFim) return false
+      return horario >= b.horarioInicio && horario < b.horarioFim
+    })
+
+    if (bloqueioHorario) {
+      return {
+        horario,
+        disponivel: false,
+        bloqueado: true,
+        motivoBloqueio: bloqueioHorario.motivo || 'Horário bloqueado',
+      }
+    }
+
+    return {
+      horario,
+      disponivel: true,
+    }
+  })
+}
+
+/**
+ * Reagenda uma teleconsulta existente para nova data e horário
+ */
+export function reagendarConsulta(
+  consultaId: string,
+  novaData: string,
+  novoHorario: string,
+): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    const lista = obterConsultasVirtuais()
+    const idx = lista.findIndex((c) => c.id === consultaId)
+    if (idx === -1) return false
+
+    const consulta = lista[idx]
+    const historico = consulta.historicoReagendamentos || []
+    historico.push({
+      dataAnterior: consulta.data,
+      horarioAnterior: consulta.horario,
+      dataAlteracao: new Date().toISOString(),
+    })
+
+    lista[idx] = {
+      ...consulta,
+      data: novaData,
+      horario: novoHorario,
+      status: 'confirmada',
+      reagendadaDe: `${consulta.data} às ${consulta.horario}`,
+      historicoReagendamentos: historico,
+    }
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(lista))
+    return true
+  } catch (e) {
+    console.error('Erro ao reagendar teleconsulta:', e)
+    return false
+  }
+}
+
+/**
+ * Cancela uma teleconsulta com justificativa clínica/operacional registrada
+ */
+export function cancelarConsultaComJustificativa(
+  consultaId: string,
+  motivoCancelamento: string,
+): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    const lista = obterConsultasVirtuais()
+    const idx = lista.findIndex((c) => c.id === consultaId)
+    if (idx === -1) return false
+
+    lista[idx] = {
+      ...lista[idx],
+      status: 'cancelada',
+      motivoCancelamento: motivoCancelamento.trim(),
+    }
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(lista))
+    return true
+  } catch (e) {
+    console.error('Erro ao cancelar teleconsulta:', e)
+    return false
+  }
+}
+
+/**
+ * Salva anotações pré-consulta ou orientações adicionais
+ */
+export function salvarNotasConsulta(consultaId: string, notas: string): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    const lista = obterConsultasVirtuais()
+    const idx = lista.findIndex((c) => c.id === consultaId)
+    if (idx === -1) return false
+
+    lista[idx] = {
+      ...lista[idx],
+      notasPreConsulta: notas.trim(),
+    }
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(lista))
+    return true
+  } catch (e) {
+    console.error('Erro ao salvar notas de teleconsulta:', e)
+    return false
   }
 }

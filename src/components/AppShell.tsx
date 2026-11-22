@@ -3,7 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { navVisivel } from '../lib/permissions'
 import { useAuth } from '../contexts/AuthContext'
 import { useIlpiData } from '../contexts/IlpiDataContext'
-import { obterProfissionaisVirtuais } from '../lib/teleconsultaStorage'
+import { obterProfissionaisVirtuais, obterConsultasVirtuais } from '../lib/teleconsultaStorage'
 import { CURSOS_PADRAO_ILPI, TreinamentosService } from '../lib/treinamentos/treinamentosService'
 import { obterPlanoAtivo, PLANOS, isPlanoVitalicio } from '../lib/plans'
 import type { PlanoId } from '../lib/plans'
@@ -20,6 +20,7 @@ import {
   Activity,
   BarChart3,
   CalendarCheck2,
+  CalendarDays,
   Download,
   GraduationCap,
   Menu,
@@ -49,6 +50,7 @@ function tituloRota(pathname: string) {
   if (pathname.startsWith('/equipe')) return 'Quadro de Equipe'
   if (pathname.startsWith('/gestao')) return 'Gestão & Conformidade'
   if (pathname.startsWith('/teleconsulta')) return 'Teleconsulta & Especialistas Virtuais'
+  if (pathname.startsWith('/agenda')) return 'Agenda de Teleconsultas & Especialistas'
   if (pathname.startsWith('/treinamentos')) return 'Treinamentos & Educação Permanente (RDC 502)'
   if (pathname.startsWith('/planos')) return 'Planos & Assinatura'
   if (pathname.startsWith('/perfil')) return 'Meu Perfil'
@@ -56,6 +58,7 @@ function tituloRota(pathname: string) {
 }
 
 const LABELS: Record<NavView, string> = {
+  agenda: 'Agenda Virtual',
   equipe: 'Equipe',
   estoque: 'Estoque',
   gestao: 'Gestão',
@@ -67,6 +70,7 @@ const LABELS: Record<NavView, string> = {
 }
 
 const PATHS: Record<NavView, string> = {
+  agenda: '/agenda',
   equipe: '/equipe',
   estoque: '/estoque',
   gestao: '/gestao',
@@ -84,6 +88,7 @@ const ORDEM_NAV: NavView[] = [
   'estoque',
   'rotinas',
   'teleconsulta',
+  'agenda',
   'treinamentos',
   'equipe',
   'gestao',
@@ -105,6 +110,8 @@ function getNavIcon(view: NavView | 'perfil') {
       return BarChart3
     case 'teleconsulta':
       return Video
+    case 'agenda':
+      return CalendarDays
     case 'treinamentos':
       return GraduationCap
     default:
@@ -195,6 +202,14 @@ export function AppShell() {
         return (documentos ?? []).length || 6
       case 'teleconsulta':
         return teleconsultaCount
+      case 'agenda': {
+        try {
+          const hojeIso = new Date().toISOString().split('T')[0]
+          return obterConsultasVirtuais().filter((c) => c.data === hojeIso && c.status !== 'cancelada').length
+        } catch {
+          return 0
+        }
+      }
       case 'treinamentos':
         return treinamentosCount
       case 'plantao':

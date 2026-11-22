@@ -119,6 +119,14 @@ export interface ConsultaVirtual {
   codigoSala: string
   status: StatusConsulta
   motivo?: string
+  motivoCancelamento?: string
+  notasPreConsulta?: string
+  reagendadaDe?: string
+  historicoReagendamentos?: Array<{
+    dataAnterior: string
+    horarioAnterior: string
+    dataAlteracao: string
+  }>
   evolucaoRealizada?: boolean
   receitaEmitida?: boolean
   criadoEm: string
@@ -127,3 +135,44 @@ export interface ConsultaVirtual {
   solicitanteFuncao?: string
   responsavelFinanceiroResidente?: string
 }
+
+export interface BloqueioAgenda {
+  id: string
+  profissionalId: string
+  data: string // YYYY-MM-DD
+  horarioInicio?: string // HH:MM
+  horarioFim?: string // HH:MM
+  diaInteiro?: boolean
+  motivo: string
+  criadoEm: string
+}
+
+export interface DisponibilidadeSemanal {
+  diaSemana: number // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
+  ativo: boolean
+  inicio: string // "08:00"
+  fim: string // "18:00"
+  intervaloInicio?: string // "12:00"
+  intervaloFim?: string // "13:00"
+  horarios?: string[]
+}
+
+export interface ConfiguracaoAgendaProfissional {
+  profissionalId: string
+  duracaoSlotMin: number
+  intervaloEntreSlotsMin: number
+  diasSemana: DisponibilidadeSemanal[]
+  bloqueios: BloqueioAgenda[]
+  limiteDiario?: number
+  aceitaEncaixe?: boolean
+}
+
+export interface SlotHorarioAgenda {
+  horario: string
+  disponivel: boolean
+  consulta?: ConsultaVirtual
+  bloqueado?: boolean
+  motivoBloqueio?: string
+}
+
+export type VisualizacaoAgenda = 'dia' | 'semana' | 'mes' | 'lista'

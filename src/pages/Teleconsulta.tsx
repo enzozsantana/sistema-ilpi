@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useIlpiData } from '../contexts/IlpiDataContext'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -594,6 +595,19 @@ export default function Teleconsulta() {
 
         {/* Ações e Seletor de Abas */}
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          {/* Botão para o Novo Módulo de Agenda de Teleconsultas */}
+          <Button
+            size="sm"
+            variant="outline"
+            asChild
+            className="rounded-xl text-xs gap-1.5 border-primary/40 text-primary hover:bg-primary/10"
+          >
+            <Link to="/agenda">
+              <Calendar className="size-3.5" />
+              <span>Agenda de Atendimentos</span>
+            </Link>
+          </Button>
+
           {/* Botão Cadastrar como Especialista Independente - apenas visível para visitantes ou equipe interna */}
           {!ehEspecialistaExterno && (
             <Button
@@ -1007,23 +1021,42 @@ export default function Teleconsulta() {
 
                     {/* Selecionar Horário Disponível */}
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold">Horários Disponíveis da Especialista *</Label>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-semibold">Horários Disponíveis da Especialista *</Label>
+                        <Link
+                          to="/agenda"
+                          className="text-[11px] text-primary hover:underline font-medium"
+                        >
+                          Ver Grade na Agenda →
+                        </Link>
+                      </div>
                       <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                        {profSelecionado.horariosPadrao.map((hor) => (
-                          <button
-                            key={hor}
-                            type="button"
-                            onClick={() => setHorarioSelecionado(hor)}
-                            className={cn(
-                              'py-2 rounded-xl text-xs font-bold transition-all border text-center',
-                              horarioSelecionado === hor
-                                ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
-                                : 'bg-card text-foreground border-border/80 hover:bg-muted/30'
-                            )}
-                          >
-                            {hor}
-                          </button>
-                        ))}
+                        {profSelecionado.horariosPadrao.map((hor) => {
+                          const ocupado = consultas.some(
+                            (c) =>
+                              c.profissionalId === profSelecionado.id &&
+                              c.data === diaSelecionado &&
+                              c.horario === hor &&
+                              c.status !== 'cancelada'
+                          )
+                          return (
+                            <button
+                              key={hor}
+                              type="button"
+                              disabled={ocupado}
+                              onClick={() => setHorarioSelecionado(hor)}
+                              className={cn(
+                                'py-2 rounded-xl text-xs font-bold transition-all border text-center',
+                                ocupado && 'opacity-40 cursor-not-allowed bg-muted/60 line-through',
+                                horarioSelecionado === hor && !ocupado
+                                  ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
+                                  : 'bg-card text-foreground border-border/80 hover:bg-muted/30'
+                              )}
+                            >
+                              {hor}
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
 

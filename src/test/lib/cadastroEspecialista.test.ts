@@ -11,11 +11,12 @@ describe('Isolamento de Acesso e Cadastro de Especialistas Independentes', () =>
     localStorage.clear()
   })
 
-  it('especialista independente (tele_especialista) tem acesso estritamente ao módulo de teleconsulta', () => {
+  it('especialista independente (tele_especialista) tem acesso estritamente aos módulos de teleconsulta e agenda', () => {
     const abasVisiveis = navVisivel('tele_especialista')
-    expect(abasVisiveis).toEqual(['teleconsulta'])
+    expect(abasVisiveis).toEqual(['agenda', 'teleconsulta'])
 
     expect(canNav('tele_especialista', 'teleconsulta')).toBe(true)
+    expect(canNav('tele_especialista', 'agenda')).toBe(true)
     expect(canNav('tele_especialista', 'plantao')).toBe(false)
     expect(canNav('tele_especialista', 'residentes')).toBe(false)
     expect(canNav('tele_especialista', 'estoque')).toBe(false)
