@@ -98,8 +98,22 @@ export interface CadastroEspecialistaInput {
   foto?: string
 }
 
-export type StatusConsulta = 'agendada' | 'confirmada' | 'em_andamento' | 'concluida' | 'cancelada'
+export type StatusConsulta =
+  | 'pendente_pagamento'
+  | 'agendada'
+  | 'confirmada'
+  | 'em_andamento'
+  | 'concluida'
+  | 'cancelada'
 export type MetodoPagamento = 'pix' | 'cartao'
+
+export interface ResponsavelFinanceiroFamiliar {
+  nome: string
+  cpf?: string
+  email?: string
+  telefone?: string
+  parentesco?: string
+}
 
 export interface ConsultaVirtual {
   id: string
@@ -121,6 +135,9 @@ export interface ConsultaVirtual {
   motivo?: string
   motivoCancelamento?: string
   notasPreConsulta?: string
+  origemSolicitacao?: 'ilpi_direto' | 'familiar_portal' | 'equipe_indicacao'
+  responsavelFinanceiroFamiliar?: ResponsavelFinanceiroFamiliar
+  linkPagamentoFamiliar?: string
   reagendadaDe?: string
   historicoReagendamentos?: Array<{
     dataAnterior: string

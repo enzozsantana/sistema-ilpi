@@ -644,3 +644,75 @@ export function salvarNotasConsulta(consultaId: string, notas: string): boolean 
     return false
   }
 }
+
+/**
+ * Obtém uma teleconsulta por seu ID
+ */
+export function obterConsultaPorId(id: string): ConsultaVirtual | null {
+  const lista = obterConsultasVirtuais()
+  return lista.find((c) => c.id === id) || null
+}
+
+/**
+ * Gera a URL completa para o autoagendamento de teleconsulta por parte do responsável financeiro
+ */
+export function gerarLinkAutoagendamentoFamiliar(residenteId?: string): string {
+  const base = typeof window !== 'undefined' ? window.location.origin : 'https://senecurare.com.br'
+  if (residenteId) {
+    return `${base}/agendar-familiar/${residenteId}`
+  }
+  return `${base}/agendar-familiar`
+}
+
+/**
+ * Gera a URL direta para o responsável financeiro quitar uma teleconsulta pré-agendada
+ */
+export function gerarLinkPagamentoConsulta(consultaId: string): string {
+  const base = typeof window !== 'undefined' ? window.location.origin : 'https://senecurare.com.br'
+  return `${base}/pagar-teleconsulta/${consultaId}`
+}
+
+/**
+ * Confirma o pagamento efetuado pelo responsável financeiro (Familiar ou Curador)
+ * e atualiza o status para 'confirmada'.
+ */
+export function confirmarPagamentoFamiliar(
+  consultaId: string,
+  dados: {
+    pagadorNome: string
+    pagadorCpf?: string
+    pagadorEmail?: string
+    pagadorTelefone?: string
+    parentesco?: string
+    metodoPagamento: ConsultaVirtual['metodoPagamento']
+  },
+): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    const lista = obterConsultasVirtuais()
+    const idx = lista.findIndex((c) => c.id === consultaId)
+    if (idx === -1) return false
+
+    const consulta = lista[idx]
+    lista[idx] = {
+      ...consulta,
+      pago: true,
+      status: 'confirmada',
+      metodoPagamento: dados.metodoPagamento,
+      responsavelFinanceiroFamiliar: {
+        nome: dados.pagadorNome,
+        cpf: dados.pagadorCpf,
+        email: dados.pagadorEmail,
+        telefone: dados.pagadorTelefone,
+        parentesco: dados.parentesco,
+      },
+      responsavelFinanceiroResidente: dados.pagadorNome,
+    }
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(lista))
+    return true
+  } catch (e) {
+    console.error('Erro ao confirmar pagamento familiar:', e)
+    return false
+  }
+}

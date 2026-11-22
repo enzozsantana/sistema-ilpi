@@ -23,6 +23,7 @@ const Equipe = lazy(() => import('./pages/Equipe'))
 const Gestao = lazy(() => import('./pages/Gestao'))
 const Teleconsulta = lazy(() => import('./pages/Teleconsulta'))
 const AgendaTeleconsulta = lazy(() => import('./pages/AgendaTeleconsulta'))
+const AgendarFamiliar = lazy(() => import('./pages/AgendarFamiliar'))
 const Treinamentos = lazy(() => import('./pages/Treinamentos'))
 const Perfil = lazy(() => import('./pages/Perfil'))
 const Planos = lazy(() => import('./pages/Planos'))
@@ -256,6 +257,8 @@ export default function App() {
             <Route path="/landing" element={<LandingPage />} />
             <Route path="/planos" element={<PlanosRoute />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/agendar-familiar/:residenteId?" element={<AgendarFamiliar />} />
+            <Route path="/pagar-teleconsulta/:consultaId" element={<AgendarFamiliar />} />
             <Route
               path="/*"
               element={

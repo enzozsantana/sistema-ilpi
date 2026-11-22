@@ -529,6 +529,20 @@ export default function Teleconsulta() {
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank')
   }
 
+  function enviarCobrancaWhatsApp(c: ConsultaVirtual) {
+    const base = typeof window !== 'undefined' ? window.location.origin : 'https://senecurare.com.br'
+    const linkPagamento = `${base}/pagar-teleconsulta/${c.id}`
+    const texto = `Olá! A teleconsulta com ${c.profissionalNome} (${c.especialidade}) para o acolhido ${c.residenteNome} está agendada para ${c.data} às ${c.horario}.\n\nPara confirmar e liberar o atendimento, por gentileza realize o pagamento no link seguro abaixo:\n${linkPagamento}\n\n(Aceita PIX e Cartão de Crédito com recibo imediato)`
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, '_blank')
+  }
+
+  function copiarLinkAutoagendamentoFamiliar() {
+    const base = typeof window !== 'undefined' ? window.location.origin : 'https://senecurare.com.br'
+    const link = `${base}/agendar-familiar`
+    navigator.clipboard.writeText(link)
+    toast.success('Link do Portal de Autoagendamento Familiar copiado! Envie aos parentes e responsáveis.')
+  }
+
   async function handleSalvarEvolucaoConsulta() {
     if (!textoEvolucao.trim()) {
       toast.error('Escreva a conduta ou anotação da consulta.')
@@ -606,6 +620,18 @@ export default function Teleconsulta() {
               <Calendar className="size-3.5" />
               <span>Agenda de Atendimentos</span>
             </Link>
+          </Button>
+
+          {/* Botão para Copiar Link de Autoagendamento do Familiar */}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={copiarLinkAutoagendamentoFamiliar}
+            className="rounded-xl text-xs gap-1.5 border-emerald-600/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+            title="Copiar link público para enviar aos familiares no WhatsApp"
+          >
+            <Share2 className="size-3.5 text-emerald-600" />
+            <span>Portal do Familiar</span>
           </Button>
 
           {/* Botão Cadastrar como Especialista Independente - apenas visível para visitantes ou equipe interna */}
@@ -926,6 +952,17 @@ export default function Teleconsulta() {
                   >
                     <Share2 className="size-3.5 text-emerald-600" />
                     <span className="hidden sm:inline">WhatsApp</span>
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => enviarCobrancaWhatsApp(c)}
+                    className="gap-1.5 text-xs rounded-xl border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
+                    title="Enviar link de cobrança / fatura no WhatsApp do responsável financeiro"
+                  >
+                    <CreditCard className="size-3.5 text-amber-600" />
+                    <span className="hidden sm:inline">Cobrar Familiar</span>
                   </Button>
 
                   <Button
