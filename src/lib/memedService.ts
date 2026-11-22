@@ -64,14 +64,16 @@ export function salvarConfigMemed(config: Partial<MemedConfig>): void {
 }
 
 export function prepararDadosPacienteMemed(residente: Residente) {
+  const cpfRaw = (residente as any).cpf
+  const contatoRaw = (residente as any).contato
   return {
     nome: residente.nome,
-    cpf: residente.cpf ? residente.cpf.replace(/\D/g, '') : '',
+    cpf: cpfRaw ? String(cpfRaw).replace(/\D/g, '') : '',
     data_nascimento: residente.nasc || '',
-    telefone: residente.contato || '',
+    telefone: contatoRaw ? String(contatoRaw) : '',
     alergias: residente.alergias || '',
     quarto: residente.quarto || '',
-    convenio: residente.convenio || 'Particular',
+    convenio: (residente as any).convenio || 'Particular',
   }
 }
 

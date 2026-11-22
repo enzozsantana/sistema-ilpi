@@ -196,7 +196,7 @@ export function registrarDispensacaoFarmacia(
     const resultado = buscarPedidoPorCodigoOuId(codigoOuId)
     if (!resultado) return false
 
-    const { pedido, residenteId } = resultado
+    const { pedido } = resultado
     const pedidoAtualizado: PedidoMedicoData = {
       ...pedido,
       dispensacao: {

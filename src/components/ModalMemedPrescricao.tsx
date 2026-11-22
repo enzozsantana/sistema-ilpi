@@ -18,7 +18,6 @@ import {
   ShieldCheck,
   FileCheck2,
   Settings,
-  Pill,
   Trash2,
   Clock,
   QrCode,

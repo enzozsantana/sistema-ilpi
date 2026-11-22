@@ -18,7 +18,6 @@ import {
   Smartphone,
   ExternalLink,
   Copy,
-  QrCode,
   Share2,
   Loader2,
   FileCheck2,
@@ -156,7 +155,8 @@ export function ModalAssinarReceitaDigital({
   function handleEnviarWhatsApp() {
     if (!pedidoSalvo) return
     const texto = gerarMensagemWhatsAppFarmacia(residente, pedidoSalvo, linkValidacao)
-    const tel = residente.contato ? residente.contato.replace(/\D/g, '') : ''
+    const contato = (residente as any).contato
+    const tel = contato ? String(contato).replace(/\D/g, '') : ''
     const url = tel
       ? `https://api.whatsapp.com/send?phone=55${tel}&text=${encodeURIComponent(texto)}`
       : `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`

@@ -42,17 +42,17 @@ describe('Página de Vendas de Planos (Planos.tsx)', () => {
       </MemoryRouter>
     )
 
-    // Mensal: Compacto é 450, Clínico é 890
-    expect(screen.getByText('450')).toBeInTheDocument()
-    expect(screen.getByText('890')).toBeInTheDocument()
+    // Mensal: Compacto é 450,00, Clínico é 890,00
+    expect(screen.getByText('450,00')).toBeInTheDocument()
+    expect(screen.getByText('890,00')).toBeInTheDocument()
 
     // Clica no switch de Anual
     const toggle = screen.getByRole('switch')
     fireEvent.click(toggle)
 
-    // Anual com desconto: Compacto é 383 (arredondado pt-BR) ou 382,5, Clínico é 756.5 -> 757
-    expect(screen.getByText('383')).toBeInTheDocument()
-    expect(screen.getByText('757')).toBeInTheDocument()
+    // Anual com desconto: Compacto é 382,50, Clínico é 756,50
+    expect(screen.getByText('382,50')).toBeInTheDocument()
+    expect(screen.getByText('756,50')).toBeInTheDocument()
   })
 
   it('deve abrir o modal de checkout ao clicar para assinar um plano', () => {

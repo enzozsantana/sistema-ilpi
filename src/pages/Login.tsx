@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, Link } from 'react-router-dom'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { useAuth } from '../contexts/AuthContext'
 import { verificarEAtivarDemoVitalicio } from '../lib/plans'
@@ -11,7 +11,9 @@ import { Alert, AlertDescription } from '../components/ui/alert'
 import { SenecurareLogo } from '../components/SenecurareLogo'
 import {
   AlertCircle,
+  ArrowRight,
   CheckCircle2,
+  CreditCard,
   Eye,
   EyeOff,
   Heart,
@@ -113,6 +115,24 @@ export default function Login() {
                 <span className="text-muted-foreground">Enfermagem, nutrição, fisio e cuidadores em sintonia</span>
               </div>
             </div>
+
+            {/* CTA de Planos & Mensalidade (Padrão SaaS) */}
+            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-sm space-y-1.5">
+              <span className="text-xs font-bold text-emerald-950 dark:text-emerald-200 flex items-center gap-1.5">
+                <CreditCard className="size-3.5 text-emerald-600" />
+                Planos sem cobrança por cuidador
+              </span>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Toda a sua equipe conectada sem custo extra por usuário a partir de R$ 450,00/mês.
+              </p>
+              <Link
+                to="/planos"
+                className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline pt-0.5"
+              >
+                <span>Conhecer todos os planos e recursos</span>
+                <ArrowRight className="size-3" />
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -131,12 +151,40 @@ export default function Login() {
           <div className="lg:hidden">
             <SenecurareLogo variant="horizontal" size="sm" />
           </div>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-4">
+            <Link
+              to="/planos"
+              className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1"
+            >
+              <span>Conhecer Planos</span>
+              <ArrowRight className="size-3.5" />
+            </Link>
             <ThemeToggle />
           </div>
         </div>
 
-        <div className="w-full max-w-md mx-auto my-auto py-8">
+        <div className="w-full max-w-md mx-auto my-auto py-8 space-y-3">
+          {/* Banner Call-To-Action no Topo do Login (Padrão SaaS) */}
+          <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-transparent border border-emerald-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs shadow-2xs">
+            <div className="space-y-0.5">
+              <span className="font-bold text-foreground flex items-center gap-1.5">
+                <ShieldCheck className="size-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                Sua ILPI ainda não tem o Senecurare?
+              </span>
+              <span className="text-muted-foreground text-[11px] block">
+                Planos a partir de R$ 450,00/mês com usuários ilimitados.
+              </span>
+            </div>
+            <Button
+              variant="default"
+              size="sm"
+              asChild
+              className="rounded-xl text-xs font-bold shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs h-7 px-3"
+            >
+              <Link to="/planos">Ver Planos</Link>
+            </Button>
+          </div>
+
           <Card className="border border-border/70 shadow-lg rounded-2xl">
             <CardHeader className="space-y-1.5 pb-5">
               <CardTitle className="text-2xl font-bold tracking-tight font-heading">
@@ -317,8 +365,22 @@ export default function Login() {
           </Card>
         </div>
 
-        <div className="text-center text-xs text-muted-foreground py-2">
-          Suporte e plantão de enfermagem · Senecurare
+        <div className="text-center text-xs text-muted-foreground py-3 space-y-2">
+          <div className="flex flex-wrap items-center justify-center gap-4 text-[11px]">
+            <Link to="/landing" className="hover:text-foreground hover:underline">
+              ← Página Inicial
+            </Link>
+            <span>•</span>
+            <Link
+              to="/planos"
+              className="hover:text-foreground hover:underline font-semibold text-emerald-700 dark:text-emerald-400"
+            >
+              Planos & Assinaturas
+            </Link>
+          </div>
+          <p className="text-[10px] text-muted-foreground/80">
+            Suporte e plantão de enfermagem · Senecurare Healthcare
+          </p>
         </div>
       </div>
 

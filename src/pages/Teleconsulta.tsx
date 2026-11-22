@@ -33,7 +33,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../components/ui/dialog'
-import { ModalPedidoMedico } from '../components/ModalPedidoMedico'
 import { ModalMemedPrescricao } from '../components/ModalMemedPrescricao'
 import { ModalConectarMercadoPago } from '../components/ModalConectarMercadoPago'
 import { ModalCadastroEspecialista } from '../components/ModalCadastroEspecialista'
@@ -63,7 +62,6 @@ import {
   Monitor,
   MonitorOff,
   PhoneOff,
-  Pill,
   QrCode,
   Search,
   Share2,

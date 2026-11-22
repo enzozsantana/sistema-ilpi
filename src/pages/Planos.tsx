@@ -185,8 +185,8 @@ export const Planos: React.FC = () => {
             >
               {/* Badge Mais Vendido */}
               {plano.destaque && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500 text-white shadow-md">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500 text-white shadow-md border border-emerald-400/30">
                     <Sparkles className="w-3.5 h-3.5" />
                     Mais Escolhido pelas ILPIs
                   </span>
@@ -218,13 +218,13 @@ export const Planos: React.FC = () => {
                 <div className="flex items-baseline gap-1">
                   <span className="text-xs font-semibold text-slate-500">R$</span>
                   <span className="text-4xl font-black text-slate-900 dark:text-white font-mono">
-                    {preco.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    {preco.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                   <span className="text-xs text-slate-500">/mês</span>
                 </div>
                 {anual && (
                   <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
-                    Faturado anualmente (R$ {(preco * 12).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}/ano)
+                    Faturado anualmente (R$ {(preco * 12).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/ano)
                   </p>
                 )}
                 {!anual && (
@@ -324,12 +324,12 @@ export const Planos: React.FC = () => {
               </tr>
               <tr>
                 <td className="py-3.5 px-6 font-medium">Usuários Profissionais e Cuidadores</td>
-                <td className="py-3.5 px-4 text-center font-bold text-emerald-600">Ilimitados (R$ 0)</td>
+                <td className="py-3.5 px-4 text-center font-bold text-emerald-600">Ilimitados (R$ 0,00)</td>
                 <td className="py-3.5 px-4 text-center font-bold text-emerald-600 bg-emerald-500/5 dark:bg-emerald-950/20">
-                  Ilimitados (R$ 0)
+                  Ilimitados (R$ 0,00)
                 </td>
-                <td className="py-3.5 px-4 text-center font-bold text-emerald-600">Ilimitados (R$ 0)</td>
-                <td className="py-3.5 px-4 text-center font-bold text-emerald-600">Ilimitados (R$ 0)</td>
+                <td className="py-3.5 px-4 text-center font-bold text-emerald-600">Ilimitados (R$ 0,00)</td>
+                <td className="py-3.5 px-4 text-center font-bold text-emerald-600">Ilimitados (R$ 0,00)</td>
               </tr>
               <tr>
                 <td className="py-3.5 px-6 font-medium">Prontuário Multiprofissional & Sinais Vitais</td>
