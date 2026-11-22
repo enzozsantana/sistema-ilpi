@@ -42,6 +42,7 @@ import { podeSolicitarTeleconsulta } from '../lib/permissions'
 import { calcularSplit, processarPagamentoSplit, gerarPixCopiaECola } from '../lib/mercadopagoService'
 import { formatarMoeda } from '../lib/currency'
 import { mascaraCartao, mascaraValidadeCartao, mascaraCvv } from '../lib/masks'
+import { gerarQrCodeDataUrl } from '../lib/qrcodeUtils'
 import {
   AlertCircle,
   ArrowRightLeft,
@@ -480,14 +481,35 @@ export default function Teleconsulta() {
     toast.success('Pagamento confirmado e consulta agendada com Split no Mercado Pago!')
   }
 
-  function copiarChavePix() {
+  const [pixTelemedQrCodeDataUrl, setPixTelemedQrCodeDataUrl] = useState('')
+
+  const pixTeleconsultaCopiaECola = useMemo(() => {
+    if (!profSelecionado) return ''
     const res = residentes.find((r) => r.id === residenteId)
-    const chave = gerarPixCopiaECola(
-      `mp_${Date.now()}`,
-      profSelecionado?.preco || 200,
+    return gerarPixCopiaECola(
+      `telemed_${profSelecionado.id}`,
+      profSelecionado.preco || 200,
       `ILPI ${res?.nome || 'SENECURARE'}`
     )
-    navigator.clipboard.writeText(chave)
+  }, [profSelecionado, residenteId, residentes])
+
+  useEffect(() => {
+    if (!pixTeleconsultaCopiaECola) {
+      setPixTelemedQrCodeDataUrl('')
+      return
+    }
+    let ativo = true
+    gerarQrCodeDataUrl(pixTeleconsultaCopiaECola, 240).then((url) => {
+      if (ativo) setPixTelemedQrCodeDataUrl(url)
+    })
+    return () => {
+      ativo = false
+    }
+  }, [pixTeleconsultaCopiaECola])
+
+  function copiarChavePix() {
+    if (!pixTeleconsultaCopiaECola) return
+    navigator.clipboard.writeText(pixTeleconsultaCopiaECola)
     toast.success('Código PIX Copia e Cola do Mercado Pago copiado!')
   }
 
@@ -1122,7 +1144,15 @@ export default function Teleconsulta() {
                   {metodoPagamento === 'pix' && (
                     <div className="p-4 rounded-xl border border-border/70 bg-card space-y-3 text-center">
                       <div className="size-36 mx-auto bg-white p-2 rounded-xl border border-border/60 shadow-xs flex items-center justify-center">
-                        <QrCode className="size-32 text-slate-800" />
+                        {pixTelemedQrCodeDataUrl ? (
+                          <img
+                            src={pixTelemedQrCodeDataUrl}
+                            alt="QR Code PIX Escaneável"
+                            className="size-32 object-contain rounded"
+                          />
+                        ) : (
+                          <span className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        )}
                       </div>
                       <div className="space-y-1">
                         <span className="text-xs font-semibold text-foreground block">

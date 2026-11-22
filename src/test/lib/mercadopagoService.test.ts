@@ -9,6 +9,10 @@ import {
   gerarPixCopiaECola,
   processarPagamentoSplit,
   listarTransacoesSplit,
+  normalizarChavePix,
+  formatarChavePixParaExibicao,
+  obterChavePixConfigurada,
+  salvarChavePixConfigurada,
   MP_CONFIG,
 } from '../../lib/mercadopagoService'
 
@@ -72,11 +76,26 @@ describe('mercadopagoService - Marketplace & Split de Pagamentos', () => {
     expect(contaDesconectada).toBeNull()
   })
 
-  it('gera payload válido de PIX Copia e Cola', () => {
-    const pix = gerarPixCopiaECola('tx_12345', 250.0, 'ILPI SANTA RITA')
+  it('gera payload válido de PIX Copia e Cola com CNPJ e normalização Bacen', () => {
+    // Normalização da chave informada pelo usuário
+    const cnpjComMascara = '63.283.783/0001-88'
+    const cnpjNormalizado = normalizarChavePix(cnpjComMascara)
+    expect(cnpjNormalizado).toBe('63283783000188')
+    expect(formatarChavePixParaExibicao(cnpjNormalizado)).toBe('63.283.783/0001-88')
+
+    // Geração do código EMV PIX com CODAGEM
+    const pix = gerarPixCopiaECola('tx_12345', 250.0, 'CODAGEM', cnpjComMascara)
     expect(pix).toContain('br.gov.bcb.pix')
+    expect(pix).toContain('63283783000188')
     expect(pix).toContain('250.00')
-    expect(pix).toContain('ILPI SANTA RITA')
+    expect(pix).toContain('CODAGEM')
+    // Verifica tag 63 do CRC16
+    expect(pix).toMatch(/6304[A-F0-9]{4}$/)
+  })
+
+  it('salva e recupera a chave PIX configurada', () => {
+    salvarChavePixConfigurada('63.283.783/0001-88')
+    expect(obterChavePixConfigurada()).toBe('63283783000188')
   })
 
   it('processa pagamento com split registrando histórico e dados de repasse', async () => {

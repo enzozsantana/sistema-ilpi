@@ -7,7 +7,6 @@ import {
   definirPlanoAtivo,
   verificarLimiteResidentes,
   isPlanoVitalicio,
-  ativarPlanoVitalicio,
   desativarPlanoVitalicio,
   isEmailDemo,
   verificarEAtivarDemoVitalicio,

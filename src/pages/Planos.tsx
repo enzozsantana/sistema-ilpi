@@ -22,7 +22,12 @@ import {
   Video,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { gerarPixCopiaECola } from '../lib/mercadopagoService'
+import { gerarQrCodeDataUrl } from '../lib/qrcodeUtils'
+import {
+  gerarPixCopiaECola,
+  obterChavePixConfigurada,
+  formatarChavePixParaExibicao,
+} from '../lib/mercadopagoService'
 import {
   PLANOS,
   obterPlanoAtivo,
@@ -165,7 +170,7 @@ export const Planos: React.FC = () => {
   const [searchParams] = useSearchParams()
   const highlightParam = searchParams.get('highlight') as PlanoId | null
 
-  const [anual, setAnual] = useState(true)
+  const [anual, setAnual] = useState(false)
   const [planoAtual, setPlanoAtual] = useState<PlanoId>(() => obterPlanoAtivo())
   const [planoSelecionadoModal, setPlanoSelecionadoModal] = useState<PlanoConfig | null>(null)
   const [metodoPagamento, setMetodoPagamento] = useState<'pix' | 'cartao'>('pix')
@@ -177,7 +182,10 @@ export const Planos: React.FC = () => {
   const [nomeCartao, setNomeCartao] = useState('')
   const [validadeCartao, setValidadeCartao] = useState('')
   const [cvvCartao, setCvvCartao] = useState('')
-  const [parcelasCartao, setParcelasCartao] = useState('1')
+
+  // PIX Configuração & QR Code Escaneável
+  const chavePix = useMemo(() => obterChavePixConfigurada(), [])
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('')
 
   // Estados do Simulador / Configurador Interativo
   const [qtdResidentes, setQtdResidentes] = useState<number>(28)
@@ -262,7 +270,7 @@ export const Planos: React.FC = () => {
   const valorTotalCheckout = useMemo(() => {
     if (!planoSelecionadoModal) return 0
     return anual
-      ? planoSelecionadoModal.precoAnualMensal * 12
+      ? planoSelecionadoModal.precoAnualMensal
       : planoSelecionadoModal.precoMensal
   }, [planoSelecionadoModal, anual])
 
@@ -271,9 +279,24 @@ export const Planos: React.FC = () => {
     return gerarPixCopiaECola(
       `plano-${planoSelecionadoModal.id}`,
       valorTotalCheckout,
-      'SENECURARE SAAS'
+      'CODAGEM',
+      chavePix
     )
-  }, [planoSelecionadoModal, valorTotalCheckout])
+  }, [planoSelecionadoModal, valorTotalCheckout, chavePix])
+
+  useEffect(() => {
+    if (!pixCopiaECola) {
+      setQrCodeDataUrl('')
+      return
+    }
+    let ativo = true
+    gerarQrCodeDataUrl(pixCopiaECola, 280).then((url) => {
+      if (ativo) setQrCodeDataUrl(url)
+    })
+    return () => {
+      ativo = false
+    }
+  }, [pixCopiaECola])
 
   const handleCopiarPix = () => {
     if (navigator.clipboard) {
@@ -541,7 +564,7 @@ export const Planos: React.FC = () => {
                   onClick={() => setAnual(!anual)}
                   className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white/10 hover:bg-white/15 border border-white/10 text-amber-300 transition-colors"
                 >
-                  {anual ? 'Anual (-15% ON)' : 'Mensal (Mudar p/ -15%)'}
+                  {anual ? 'Compromisso Anual (-15%)' : 'Cobrança Mensal'}
                 </button>
               </div>
 
@@ -727,16 +750,11 @@ export const Planos: React.FC = () => {
                 </div>
                 {anual ? (
                   <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
-                    Faturado anualmente (R${' '}
-                    {(preco * 12).toLocaleString('pt-BR', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                    /ano)
+                    Cobrança mensal no compromisso anual (15% OFF)
                   </p>
                 ) : (
                   <p className="text-[11px] text-slate-400 mt-1">
-                    Cobrança mensal · Cancele quando quiser
+                    Cobrança mensal recorrente · Cancele quando quiser
                   </p>
                 )}
               </div>
@@ -972,7 +990,7 @@ export const Planos: React.FC = () => {
               Há fidelidade ou multa de cancelamento?
             </h4>
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              No plano mensal não existe qualquer fidelidade. No plano anual você garante 15% de desconto fixo com pagamento em 12x.
+              Todos os planos são cobrados mensalmente. No plano mensal padrão você tem total flexibilidade e pode cancelar quando quiser, sem multas ou taxas de adesão.
             </p>
           </div>
         </div>
@@ -1039,26 +1057,29 @@ export const Planos: React.FC = () => {
                   </div>
                   <div className="flex justify-between text-xs text-slate-600 dark:text-slate-300">
                     <span>Ciclo de faturamento</span>
-                    <span className="font-semibold text-slate-900 dark:text-white">
-                      {anual ? 'Anual (-15% de desconto)' : 'Mensal recorrente'}
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                      Cobrança Mensal Recorrente
                     </span>
                   </div>
+                  {anual && (
+                    <div className="flex justify-between text-xs text-slate-600 dark:text-slate-300">
+                      <span>Condição especial</span>
+                      <span className="font-semibold text-amber-600 dark:text-amber-400">
+                        15% de desconto no compromisso anual
+                      </span>
+                    </div>
+                  )}
                   <div className="pt-2 border-t border-slate-200 dark:border-slate-700 flex justify-between items-baseline">
                     <span className="text-sm font-bold text-slate-900 dark:text-white">
-                      Valor a Pagar
+                      Valor da Mensalidade
                     </span>
                     <div className="text-right">
                       <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
                         R${' '}
-                        {(anual
-                          ? planoSelecionadoModal.precoAnualMensal * 12
-                          : planoSelecionadoModal.precoMensal
-                        ).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        {valorTotalCheckout.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>
                       <span className="text-[10px] text-slate-400 block">
-                        {anual
-                          ? 'anuidade em até 12x'
-                          : 'mensalidade com renovação automática'}
+                        por mês · renovação automática a cada 30 dias
                       </span>
                     </div>
                   </div>
@@ -1098,25 +1119,50 @@ export const Planos: React.FC = () => {
                   {metodoPagamento === 'pix' && (
                     <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-3">
                       <div className="flex flex-col sm:flex-row items-center gap-4">
-                        <div className="p-2.5 bg-white rounded-xl shadow-xs border border-slate-200 shrink-0">
-                          <QrCode className="size-24 text-slate-900" />
+                        <div className="p-2.5 bg-white rounded-xl shadow-xs border border-slate-200 shrink-0 flex items-center justify-center">
+                          {qrCodeDataUrl ? (
+                            <img
+                              src={qrCodeDataUrl}
+                              alt="QR Code PIX Oficial Escaneável"
+                              className="size-28 sm:size-32 object-contain rounded-md"
+                            />
+                          ) : (
+                            <div className="size-28 sm:size-32 flex items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-md">
+                              <span className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                            </div>
+                          )}
                         </div>
                         <div className="text-left space-y-1.5 min-w-0 flex-1">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                             <Sparkles className="size-3" />
-                            Chave PIX Mercado Pago Oficial
+                            PIX Padrão Bacen (Escaneável)
                           </span>
                           <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                            Abra o app do seu banco, escolha <strong>Pix Copia e Cola</strong> ou aponte a câmera para o QR Code. A ativação no sistema ocorre na hora.
+                            Aponte a câmera do aplicativo do seu banco para o QR Code acima ou use o <strong>Pix Copia e Cola</strong>.
                           </p>
-                          <button
-                            type="button"
-                            onClick={handleCopiarPix}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-700 dark:text-emerald-300 font-semibold text-xs border border-emerald-500/30 transition-colors"
-                          >
-                            <Copy className="size-3.5" />
-                            <span>Copiar Código PIX</span>
-                          </button>
+
+                          <div className="pt-1 flex flex-wrap items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={handleCopiarPix}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-700 dark:text-emerald-300 font-semibold text-xs border border-emerald-500/30 transition-colors"
+                            >
+                              <Copy className="size-3.5" />
+                              <span>Copiar Código PIX</span>
+                            </button>
+                          </div>
+
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 pt-1 space-y-0.5">
+                            <p>
+                              Beneficiário: <strong className="text-slate-700 dark:text-slate-200">CODAGEM</strong>
+                            </p>
+                            <p>
+                              Chave Pix (CNPJ):{' '}
+                              <code className="text-slate-700 dark:text-slate-300 font-mono font-bold">
+                                {formatarChavePixParaExibicao(chavePix)}
+                              </code>
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1179,22 +1225,17 @@ export const Planos: React.FC = () => {
                       </div>
                       <div>
                         <label className="text-[11px] font-bold text-slate-600 dark:text-slate-300 block mb-1">
-                          Parcelas
+                          Faturamento da Assinatura
                         </label>
-                        <select
-                          value={parcelasCartao}
-                          onChange={(e) => setParcelasCartao(e.target.value)}
-                          className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        >
-                          <option value="1">1x de R$ {valorTotalCheckout.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} (à vista)</option>
-                          {anual && (
-                            <>
-                              <option value="3">3x de R$ {(valorTotalCheckout / 3).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} sem juros</option>
-                              <option value="6">6x de R$ {(valorTotalCheckout / 6).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} sem juros</option>
-                              <option value="12">12x de R$ {(valorTotalCheckout / 12).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} sem juros</option>
-                            </>
-                          )}
-                        </select>
+                        <div className="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                          <span>Cobrança Mensal Recorrente</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold font-mono">
+                            R$ {valorTotalCheckout.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}/mês
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-1">
+                          Débito automático mensal na fatura do seu cartão. Sem fidelidade e sem burocracia para cancelar.
+                        </p>
                       </div>
                     </div>
                   )}

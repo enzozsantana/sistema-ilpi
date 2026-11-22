@@ -245,16 +245,164 @@ export async function atualizarTaxaComissao(profissionalId: string, novaTaxa: nu
 }
 
 /**
- * Gera código oficial formatado padrão PIX EMV (Copia e Cola)
+ * Calcula o checksum CRC16-CCITT (padrão Bacen / EMV)
+ */
+export function calcularCRC16(payload: string): string {
+  let crc = 0xffff
+  const polynomial = 0x1021
+
+  for (let i = 0; i < payload.length; i++) {
+    crc ^= payload.charCodeAt(i) << 8
+    for (let bit = 0; bit < 8; bit++) {
+      if ((crc & 0x8000) !== 0) {
+        crc = ((crc << 1) ^ polynomial) & 0xffff
+      } else {
+        crc = (crc << 1) & 0xffff
+      }
+    }
+  }
+
+  return (crc & 0xffff).toString(16).toUpperCase().padStart(4, '0')
+}
+
+/**
+ * Formata um campo no padrão TLV (Tag-Length-Value) do padrão EMV PIX do Bacen
+ */
+export function formatarCampoPix(id: string, valor: string): string {
+  const tamanho = valor.length.toString().padStart(2, '0')
+  return `${id}${tamanho}${valor}`
+}
+
+/**
+ * Normaliza strings para o padrão ASCII exigido pelo Bacen (sem acentos)
+ */
+export function normalizarTextoPix(texto: string, maxLen: number): string {
+  return texto
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9\s]/g, '')
+    .trim()
+    .slice(0, maxLen)
+    .toUpperCase()
+}
+
+/**
+ * Normaliza a chave PIX de acordo com os padrões do Bacen (DICT):
+ * - CNPJ (14 dígitos) e CPF (11 dígitos): remove pontuação (. - /)
+ * - Telefone: garante formato internacional (+55...)
+ * - E-mail e chave aleatória: trim e caixa baixa
+ */
+export function normalizarChavePix(chave: string): string {
+  const limpa = (chave || '').trim()
+  if (!limpa) return '63283783000188'
+
+  // E-mail: mantém formatação padrão
+  if (limpa.includes('@')) {
+    return limpa.toLowerCase()
+  }
+
+  // Chave aleatória (UUID 36 chars)
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(limpa)
+  if (isUuid) {
+    return limpa.toLowerCase()
+  }
+
+  // CNPJ / CPF: extrai apenas dígitos
+  const apenasDigitos = limpa.replace(/\D/g, '')
+  if (apenasDigitos.length === 14 || apenasDigitos.length === 11) {
+    return apenasDigitos
+  }
+
+  // Telefone celular/fixo nacional (10 ou 11 dígitos com DDD)
+  if (limpa.startsWith('+')) {
+    return limpa.replace(/[^\d+]/g, '')
+  }
+  if (apenasDigitos.length === 10 || apenasDigitos.length === 11) {
+    return `+55${apenasDigitos}`
+  }
+
+  return limpa
+}
+
+export const CHAVE_PIX_PADRAO = '63283783000188'
+
+export function formatarChavePixParaExibicao(chave: string): string {
+  const limpa = (chave || '').trim()
+  const apenasDigitos = limpa.replace(/\D/g, '')
+  if (apenasDigitos.length === 14) {
+    return apenasDigitos.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5')
+  }
+  if (apenasDigitos.length === 11 && !limpa.includes('@')) {
+    return apenasDigitos.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4')
+  }
+  return limpa
+}
+
+export function obterChavePixConfigurada(): string {
+  if (typeof window !== 'undefined') {
+    const salva = localStorage.getItem('senecurare_chave_pix')
+    if (
+      salva &&
+      salva.trim() &&
+      salva.trim() !== 'financeiro@senecurare.com.br' &&
+      salva.trim() !== '65283783000188'
+    ) {
+      return normalizarChavePix(salva.trim())
+    }
+  }
+  const envKey = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_PIX_CHAVE)
+  if (envKey && String(envKey).trim()) return normalizarChavePix(String(envKey).trim())
+  return CHAVE_PIX_PADRAO
+}
+
+export function salvarChavePixConfigurada(chave: string): void {
+  if (typeof window !== 'undefined') {
+    const normalizada = normalizarChavePix(chave.trim())
+    localStorage.setItem('senecurare_chave_pix', normalizada)
+  }
+}
+
+/**
+ * Gera código oficial formatado padrão PIX EMV (Copia e Cola) com CRC16 válido
  */
 export function gerarPixCopiaECola(
   idTransacao: string,
   valor: number,
-  nomeRecebedor: string = 'SENECURARE ILPI'
+  nomeRecebedor: string = 'CODAGEM',
+  chavePixPersonalizada?: string,
+  cidade: string = 'SAO PAULO'
 ): string {
+  const chaveRaw = (chavePixPersonalizada && chavePixPersonalizada.trim()) || obterChavePixConfigurada()
+  const chave = normalizarChavePix(chaveRaw)
+  const nomeNorm = normalizarTextoPix(nomeRecebedor || 'SENECURARE ILPI', 25) || 'SENECURARE'
+  const cidadeNorm = normalizarTextoPix(cidade || 'SAO PAULO', 15) || 'SAO PAULO'
   const valorFormatado = valor.toFixed(2)
-  const chavePix = `telemedicina-split-${idTransacao}`
-  return `00020126580014br.gov.bcb.pix0136${chavePix}520400005303986540${valorFormatado.length}${valorFormatado}5802BR59${nomeRecebedor.length < 10 ? '0' + nomeRecebedor.length : nomeRecebedor.length}${nomeRecebedor}6009SAO PAULO62070503***6304`
+
+  // Subcampos do Merchant Account Information (Tag 26)
+  const gui = formatarCampoPix('00', 'br.gov.bcb.pix')
+  const key = formatarCampoPix('01', chave)
+  const tag26 = formatarCampoPix('26', `${gui}${key}`)
+
+  // Tag 62 (Additional Data Field Template - txid)
+  const txidLimpo = (idTransacao || '***').replace(/[^a-zA-Z0-9]/g, '').slice(0, 25) || '***'
+  const tag62 = formatarCampoPix('62', formatarCampoPix('05', txidLimpo))
+
+  // Montagem do payload EMV sem o CRC16
+  const payloadBase = [
+    formatarCampoPix('00', '01'),           // Payload Format Indicator
+    tag26,                                  // Merchant Account Info (GUI + Chave)
+    formatarCampoPix('52', '0000'),         // Merchant Category Code
+    formatarCampoPix('53', '986'),          // Currency Code BRL
+    formatarCampoPix('54', valorFormatado), // Transaction Amount
+    formatarCampoPix('58', 'BR'),           // Country Code
+    formatarCampoPix('59', nomeNorm),       // Merchant Name
+    formatarCampoPix('60', cidadeNorm),     // Merchant City
+    tag62,                                  // Additional Data Field
+    '6304',                                 // CRC16 Tag + Tamanho (4 dígitos)
+  ].join('')
+
+  const crc16 = calcularCRC16(payloadBase)
+  return `${payloadBase}${crc16}`
 }
 
 /**
