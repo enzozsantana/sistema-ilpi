@@ -6,6 +6,7 @@ import {
   Sparkles,
   ShieldCheck,
   ArrowRight,
+  ArrowUpRight,
   HelpCircle,
   QrCode,
   CreditCard,
@@ -31,6 +32,7 @@ import {
 } from '../lib/mercadopagoService'
 import {
   PLANOS,
+  PLANO_HIERARQUIA,
   obterPlanoAtivo,
   isPlanoVitalicio,
   obterAssinatura,
@@ -181,7 +183,7 @@ export const Planos: React.FC = () => {
   const [planoAtual, setPlanoAtual] = useState<PlanoId>(() => obterPlanoAtivo())
   const [assinatura, setAssinatura] = useState<AssinaturaILPI | null>(() => obterAssinatura())
   const [planoSelecionadoModal, setPlanoSelecionadoModal] = useState<PlanoConfig | null>(null)
-  const [metodoPagamento, setMetodoPagamento] = useState<'pix' | 'cartao'>('pix')
+  const [metodoPagamento, setMetodoPagamento] = useState<'pix' | 'cartao' | 'cartao_salvo'>('pix')
   const [processando, setProcessando] = useState(false)
   const [sucessoModal, setSucessoModal] = useState(false)
 
@@ -277,6 +279,11 @@ export const Planos: React.FC = () => {
     setPlanoSelecionadoModal(plano)
     setSucessoModal(false)
     setProcessando(false)
+    if (assinatura?.metodo === 'cartao' && assinatura.cartao?.ultimosDigitos) {
+      setMetodoPagamento('cartao_salvo')
+    } else {
+      setMetodoPagamento('pix')
+    }
   }
 
   const valorTotalCheckout = useMemo(() => {
@@ -285,6 +292,16 @@ export const Planos: React.FC = () => {
       ? planoSelecionadoModal.precoAnualMensal
       : planoSelecionadoModal.precoMensal
   }, [planoSelecionadoModal, anual])
+
+  const isModalUpgrade = useMemo(() => {
+    if (!planoSelecionadoModal) return false
+    return (PLANO_HIERARQUIA[planoSelecionadoModal.id] ?? 1) > (PLANO_HIERARQUIA[planoAtual] ?? 1)
+  }, [planoSelecionadoModal, planoAtual])
+
+  const isModalDowngrade = useMemo(() => {
+    if (!planoSelecionadoModal) return false
+    return (PLANO_HIERARQUIA[planoSelecionadoModal.id] ?? 1) < (PLANO_HIERARQUIA[planoAtual] ?? 1)
+  }, [planoSelecionadoModal, planoAtual])
 
   const pixCopiaECola = useMemo(() => {
     if (!planoSelecionadoModal) return ''
@@ -321,22 +338,39 @@ export const Planos: React.FC = () => {
     if (!planoSelecionadoModal) return
     setProcessando(true)
     setTimeout(() => {
+      const isCartaoSalvo = metodoPagamento === 'cartao_salvo'
+      const dadosCartao = isCartaoSalvo
+        ? {
+            ultimosDigitos: assinatura?.cartao?.ultimosDigitos,
+            titular: assinatura?.cartao?.titular,
+            validade: assinatura?.cartao?.validade,
+          }
+        : {
+            numero: numeroCartao,
+            titular: nomeCartao,
+            validade: validadeCartao,
+          }
+
+      const metodoFinal = metodoPagamento === 'pix' ? 'pix' : 'cartao'
       const nova = criarOuRenovarAssinatura(
         planoSelecionadoModal.id,
-        metodoPagamento,
+        metodoFinal,
         anual ? 'anual' : 'mensal',
-        {
-          numero: numeroCartao,
-          titular: nomeCartao,
-          validade: validadeCartao,
-        }
+        dadosCartao
       )
       setAssinatura(nova)
       setPlanoAtual(planoSelecionadoModal.id)
       setProcessando(false)
       setSucessoModal(true)
+
+      const hierarquiaAtual = PLANO_HIERARQUIA[planoAtual] ?? 1
+      const hierarquiaNovo = PLANO_HIERARQUIA[planoSelecionadoModal.id] ?? 1
+      const isUpgrade = hierarquiaNovo > hierarquiaAtual
+
       toast.success(
-        `Assinatura do ${planoSelecionadoModal.nome} ativada! Cobrança mensal recorrente configurada.`
+        isUpgrade
+          ? `Upgrade para o ${planoSelecionadoModal.nome} realizado com sucesso!`
+          : `Assinatura do ${planoSelecionadoModal.nome} ativada! Cobrança recorrente configurada.`
       )
     }, 900)
   }
@@ -784,6 +818,9 @@ export const Planos: React.FC = () => {
                 <span>
                   {planoAtual === planoRecomendado.id
                     ? 'Plano Já Ativo na Clínica'
+                    : (PLANO_HIERARQUIA[planoRecomendado.id] ?? 1) >
+                      (PLANO_HIERARQUIA[planoAtual] ?? 1)
+                    ? `Fazer Upgrade para ${planoRecomendado.nome}`
                     : `Contratar ${planoRecomendado.nome} Agora`}
                 </span>
                 <ArrowRight className="w-4 h-4" />
@@ -842,9 +879,22 @@ export const Planos: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
         {planosLista.map((plano) => {
           const isAtual = planoAtual === plano.id
+          const hierarquiaAtual = PLANO_HIERARQUIA[planoAtual] ?? 1
+          const hierarquiaPlano = PLANO_HIERARQUIA[plano.id] ?? 1
+          const isUpgrade = hierarquiaPlano > hierarquiaAtual
+          const isDowngrade = hierarquiaPlano < hierarquiaAtual
           const isHighlight = highlightParam === plano.id
           const isRecomendadoSimulador = planoRecomendadoId === plano.id
           const preco = anual ? plano.precoAnualMensal : plano.precoMensal
+
+          let botaoTexto = plano.botaoTexto
+          if (isAtual) {
+            botaoTexto = 'Plano Ativo na Clínica'
+          } else if (isUpgrade) {
+            botaoTexto = `Fazer Upgrade (${plano.nome})`
+          } else if (isDowngrade) {
+            botaoTexto = `Migrar para ${plano.nome}`
+          }
 
           return (
             <div
@@ -878,11 +928,15 @@ export const Planos: React.FC = () => {
                   <h3 className="text-xl font-bold text-slate-900 dark:text-white font-heading">
                     {plano.nome}
                   </h3>
-                  {isAtual && (
+                  {isAtual ? (
                     <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
                       Plano Atual
                     </span>
-                  )}
+                  ) : isUpgrade ? (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 inline-flex items-center gap-1">
+                      <ArrowUpRight className="w-3 h-3" /> Upgrade
+                    </span>
+                  ) : null}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 min-h-[32px]">
                   {plano.subtitulo}
@@ -950,13 +1004,18 @@ export const Planos: React.FC = () => {
                 className={`w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${
                   isAtual
                     ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 cursor-default border border-slate-200 dark:border-slate-700'
-                    : plano.destaque || isRecomendadoSimulador
+                    : isUpgrade || plano.destaque || isRecomendadoSimulador
                     ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg shadow-emerald-600/25 hover:scale-[1.02]'
                     : 'bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900'
                 }`}
               >
-                <span>{isAtual ? 'Plano Ativo na Clínica' : plano.botaoTexto}</span>
-                {!isAtual && <ArrowRight className="w-3.5 h-3.5" />}
+                <span>{botaoTexto}</span>
+                {!isAtual &&
+                  (isUpgrade ? (
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                  ) : (
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  ))}
               </button>
             </div>
           )
@@ -1192,15 +1251,53 @@ export const Planos: React.FC = () => {
             {!sucessoModal ? (
               <>
                 <div>
-                  <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
-                    Contratação Direta
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {isModalUpgrade ? (
+                      <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 inline-flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-amber-500" /> Upgrade Imediato de Plano
+                      </span>
+                    ) : isModalDowngrade ? (
+                      <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-slate-500/20 text-slate-700 dark:text-slate-400 border border-slate-500/30 inline-flex items-center gap-1">
+                        Migração de Plano
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">
+                        Contratação Direta
+                      </span>
+                    )}
+                  </div>
                   <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white mt-2">
-                    {planoSelecionadoModal.nome}
+                    {isModalUpgrade
+                      ? `Upgrade para ${planoSelecionadoModal.nome}`
+                      : planoSelecionadoModal.nome}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     {planoSelecionadoModal.subtitulo} · {planoSelecionadoModal.porte}
                   </p>
+                </div>
+
+                {isModalUpgrade && (
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-teal-500/10 border border-amber-500/30 flex items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-slate-600 dark:text-slate-300">
+                        {PLANOS[planoAtual]?.nome || 'Plano Atual'}
+                      </span>
+                      <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span className="font-extrabold text-emerald-700 dark:text-emerald-300">
+                        {planoSelecionadoModal.nome}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-md border border-emerald-500/30 whitespace-nowrap">
+                      Liberação Imediata
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 bg-slate-100/70 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>
+                    Todos os residentes cadastrados, prontuários e históricos são 100% preservados na migração.
+                  </span>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-2">
@@ -1244,7 +1341,27 @@ export const Planos: React.FC = () => {
                   <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
                     Forma de Pagamento (Mercado Pago Gateway)
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div
+                    className={`grid gap-3 ${
+                      assinatura?.metodo === 'cartao' && assinatura.cartao?.ultimosDigitos
+                        ? 'grid-cols-1 sm:grid-cols-3'
+                        : 'grid-cols-2'
+                    }`}
+                  >
+                    {assinatura?.metodo === 'cartao' && assinatura.cartao?.ultimosDigitos && (
+                      <button
+                        type="button"
+                        onClick={() => setMetodoPagamento('cartao_salvo')}
+                        className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-semibold transition-all ${
+                          metodoPagamento === 'cartao_salvo'
+                            ? 'border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500/20'
+                            : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        <CreditCard className="w-4 h-4 text-emerald-500 shrink-0" />
+                        <span className="truncate">Cartão Salvo (•••• {assinatura.cartao.ultimosDigitos})</span>
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => setMetodoPagamento('pix')}
@@ -1254,7 +1371,7 @@ export const Planos: React.FC = () => {
                           : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
                       }`}
                     >
-                      <QrCode className="w-4 h-4 text-emerald-500" />
+                      <QrCode className="w-4 h-4 text-emerald-500 shrink-0" />
                       <span>PIX Instantâneo</span>
                     </button>
                     <button
@@ -1266,10 +1383,34 @@ export const Planos: React.FC = () => {
                           : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
                       }`}
                     >
-                      <CreditCard className="w-4 h-4 text-emerald-500" />
-                      <span>Cartão de Crédito</span>
+                      <CreditCard className="w-4 h-4 text-emerald-500 shrink-0" />
+                      <span>
+                        {assinatura?.metodo === 'cartao' && assinatura.cartao?.ultimosDigitos
+                          ? 'Outro Cartão'
+                          : 'Cartão de Crédito'}
+                      </span>
                     </button>
                   </div>
+
+                  {metodoPagamento === 'cartao_salvo' && assinatura?.cartao && (
+                    <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-2 text-left">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                          <CreditCard className="w-4 h-4 text-emerald-600" />
+                          Cartão Final •••• {assinatura.cartao.ultimosDigitos}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded">
+                          Upgrade 1-Clique
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-300">
+                        Titular: <strong>{assinatura.cartao.titular}</strong> · Validade: {assinatura.cartao.validade}
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        A nova mensalidade recorrente será debitada diretamente neste cartão cadastrado, sem necessidade de reinserir dados.
+                      </p>
+                    </div>
+                  )}
 
                   {metodoPagamento === 'pix' && (
                     <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 space-y-3">
@@ -1406,11 +1547,15 @@ export const Planos: React.FC = () => {
                     {processando ? (
                       <span className="flex items-center gap-2">
                         <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Processando Assinatura...</span>
+                        <span>{isModalUpgrade ? 'Processando Upgrade...' : 'Processando Assinatura...'}</span>
                       </span>
                     ) : (
                       <>
-                        <span>Confirmar & Ativar {planoSelecionadoModal.nome}</span>
+                        <span>
+                          {isModalUpgrade
+                            ? `Confirmar Upgrade para ${planoSelecionadoModal.nome}`
+                            : `Confirmar & Ativar ${planoSelecionadoModal.nome}`}
+                        </span>
                         <ArrowRight className="w-4 h-4" />
                       </>
                     )}
@@ -1427,11 +1572,11 @@ export const Planos: React.FC = () => {
                   <CheckCircle2 className="w-10 h-10" />
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-                  Plano Ativado com Sucesso!
+                  {isModalUpgrade ? 'Upgrade Concluído com Sucesso!' : 'Plano Ativado com Sucesso!'}
                 </h3>
                 <p className="text-xs text-slate-600 dark:text-slate-300 max-w-sm mx-auto">
                   Sua ILPI agora está operando no{' '}
-                  <strong>{planoSelecionadoModal.nome}</strong>. Todos os recursos correspondentes já foram desbloqueados neste sistema.
+                  <strong>{planoSelecionadoModal.nome}</strong>. Todos os novos recursos correspondentes já foram desbloqueados neste sistema, com histórico e prontuários 100% preservados.
                 </p>
                 <div className="pt-4">
                   <button

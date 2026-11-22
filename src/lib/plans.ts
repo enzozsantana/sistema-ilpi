@@ -349,7 +349,12 @@ export function criarOuRenovarAssinatura(
   planoId: PlanoId,
   metodo: 'pix' | 'cartao',
   ciclo: 'mensal' | 'anual' = 'mensal',
-  dadosCartao?: { numero?: string; titular?: string; validade?: string }
+  dadosCartao?: {
+    numero?: string
+    titular?: string
+    validade?: string
+    ultimosDigitos?: string
+  }
 ): AssinaturaILPI {
   const agora = new Date()
   const plano = PLANOS[planoId]
@@ -385,7 +390,10 @@ export function criarOuRenovarAssinatura(
     cartao:
       metodo === 'cartao' && dadosCartao
         ? {
-            ultimosDigitos: (dadosCartao.numero || '').replace(/\D/g, '').slice(-4) || '4242',
+            ultimosDigitos:
+              dadosCartao.ultimosDigitos ||
+              (dadosCartao.numero || '').replace(/\D/g, '').slice(-4) ||
+              '4242',
             titular: dadosCartao.titular || 'CLIENTE ILPI',
             validade: dadosCartao.validade || '12/28',
           }
