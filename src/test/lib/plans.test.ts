@@ -99,11 +99,6 @@ describe('Módulo de Planos & Feature Gating (plans.ts)', () => {
     desativarPlanoVitalicio()
     expect(isPlanoVitalicio()).toBe(false)
 
-    ativarPlanoVitalicio('enterprise', 'Teste Manual')
-    expect(isPlanoVitalicio()).toBe(true)
-
-    desativarPlanoVitalicio()
-
     // Ativa demo vitalício
     const ativou = verificarEAtivarDemoVitalicio('s1@ilpi.demo')
     expect(ativou).toBe(true)

@@ -197,7 +197,7 @@
     @apply bg-background text-foreground;
   }
   html {
-    @apply font-sans;
+    @apply font-sans scroll-smooth;
   }
 
   /* Custom Scrollbar Global — Padrão Senecurare */
@@ -232,6 +232,27 @@
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* Animação de Carrossel Infinito (Marquee) */
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee-infinite {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 32s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-infinite:hover {
+  animation-play-state: paused;
 }
 
 /* ==============================================================================

@@ -9,7 +9,7 @@ import { Skeleton } from './components/ui/skeleton'
 import { SenecurareLogo } from './components/SenecurareLogo'
 import { ThemeToggle } from './components/ThemeToggle'
 import { Button } from './components/ui/button'
-
+import { Toaster } from './components/ui/sonner'
 // Code-Splitting com React.lazy para redução drástica do bundle inicial
 const LandingPage = lazy(() => import('./pages/LandingPage'))
 const Login = lazy(() => import('./pages/Login'))
@@ -166,8 +166,6 @@ function AuthedRoutes() {
       </Routes>
     )
   }
-
-import { Toaster } from './components/ui/sonner'
 
 function HomeRoute() {
   const { session, loading, profissional } = useAuth()

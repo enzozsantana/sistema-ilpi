@@ -17,7 +17,7 @@ describe('LandingPage Component (Página Institucional & Planos)', () => {
 
     // Badges de autoridade
     expect(screen.getByText(/Software Especialista para ILPIs & Residências Geriátricas/i)).toBeInTheDocument()
-    expect(screen.getByText(/Conformidade RDC 502\/611 ANVISA/i)).toBeInTheDocument()
+    expect(screen.getByText(/Conformidade ANVISA RDC 502 & COFEN/i)).toBeInTheDocument()
 
     // Botões de ação
     expect(screen.getAllByText(/Ver Planos & Preços/i).length).toBeGreaterThan(0)

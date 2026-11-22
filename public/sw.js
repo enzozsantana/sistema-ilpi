@@ -1,5 +1,5 @@
 // Senecurare PWA Service Worker
-const CACHE_NAME = 'senecurare-pwa-v1'
+const CACHE_NAME = 'senecurare-pwa-v2'
 
 const PRECACHE_ASSETS = [
   '/',
@@ -16,7 +16,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(PRECACHE_ASSETS).catch(() => {
-        // Ignora falha de precache pontual em ambiente de desenvolvimento
+        // Ignora falha de precache pontual
       })
     })
   )
@@ -39,10 +39,15 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url)
 
-  // Ignora chamadas externas de APIs (Supabase, APIs de pagamento, websockets, extensões)
+  // Ignora chamadas externas, APIs e ambiente de desenvolvimento Vite/HMR
   if (
     event.request.method !== 'GET' ||
     url.origin !== self.location.origin ||
+    url.pathname.startsWith('/@') ||
+    url.pathname.startsWith('/node_modules/') ||
+    url.pathname.startsWith('/src/') ||
+    url.searchParams.has('v') ||
+    url.searchParams.has('t') ||
     url.pathname.startsWith('/rest/') ||
     url.pathname.startsWith('/auth/') ||
     url.pathname.startsWith('/realtime/')
@@ -56,16 +61,19 @@ self.addEventListener('fetch', (event) => {
       fetch(event.request).catch(async () => {
         const indexCache = await caches.match('/')
         if (indexCache) return indexCache
-        return caches.match(event.request)
+        return (await caches.match(event.request)) || new Response('Offline', { status: 503 })
       })
     )
     return
   }
 
-  // Recursos estáticos locais: tenta rede primeiro, salva em cache ou recupera cache se offline
+  // Recursos estáticos locais
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request)
+      if (cachedResponse) {
+        return cachedResponse
+      }
+      return fetch(event.request)
         .then((networkResponse) => {
           if (
             networkResponse &&
@@ -79,9 +87,9 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse
         })
-        .catch(() => cachedResponse)
-
-      return cachedResponse || fetchPromise
+        .catch(() => {
+          return new Response('', { status: 408, statusText: 'Request timed out' })
+        })
     })
   )
 })

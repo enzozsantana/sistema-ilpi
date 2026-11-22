@@ -19,13 +19,13 @@ describe('Página de Vendas de Planos (Planos.tsx)', () => {
     )
 
     // Título principal
-    expect(screen.getByText(/Planos Transparentes para Cada Fase da sua ILPI/i)).toBeInTheDocument()
+    expect(screen.getByText(/Monte e Compare o Plano Ideal para sua ILPI/i)).toBeInTheDocument()
 
     // 4 Planos
-    expect(screen.getByText('Plano Compacto')).toBeInTheDocument()
+    expect(screen.getAllByText('Plano Compacto').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Clínico & Compliance').length).toBeGreaterThan(0)
-    expect(screen.getByText('Plano Avançado')).toBeInTheDocument()
-    expect(screen.getByText('Redes & Enterprise')).toBeInTheDocument()
+    expect(screen.getAllByText('Plano Avançado').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Redes & Enterprise').length).toBeGreaterThan(0)
 
     // Badge de Plano Atual (Clinico)
     expect(screen.getByText('Plano Ativo na Clínica')).toBeInTheDocument()
@@ -42,17 +42,17 @@ describe('Página de Vendas de Planos (Planos.tsx)', () => {
       </MemoryRouter>
     )
 
-    // Mensal: Compacto é 450,00, Clínico é 890,00
-    expect(screen.getByText('450,00')).toBeInTheDocument()
-    expect(screen.getByText('890,00')).toBeInTheDocument()
+    // Inicial (Anual com desconto ativo por padrão): Compacto é 382,50, Clínico é 756,50
+    expect(screen.getAllByText('382,50').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('756,50').length).toBeGreaterThan(0)
 
-    // Clica no switch de Anual
+    // Clica no switch para alternar para Mensal
     const toggle = screen.getByRole('switch')
     fireEvent.click(toggle)
 
-    // Anual com desconto: Compacto é 382,50, Clínico é 756,50
-    expect(screen.getByText('382,50')).toBeInTheDocument()
-    expect(screen.getByText('756,50')).toBeInTheDocument()
+    // Mensal: Compacto é 450,00, Clínico é 890,00
+    expect(screen.getAllByText('450,00').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('890,00').length).toBeGreaterThan(0)
   })
 
   it('deve abrir o modal de checkout ao clicar para assinar um plano', () => {
