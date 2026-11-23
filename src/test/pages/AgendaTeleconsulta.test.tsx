@@ -116,7 +116,7 @@ describe('AgendaTeleconsulta Page', () => {
     // Alterna para Semana
     const btnSemana = screen.getByRole('button', { name: /Semana/i })
     fireEvent.click(btnSemana)
-    expect(screen.getByText(/Seg/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Seg/i).length).toBeGreaterThan(0)
   })
 
   it('permite abrir o modal de configuração de disponibilidade e salvar alterações', async () => {

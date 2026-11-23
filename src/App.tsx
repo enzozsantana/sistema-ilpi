@@ -257,6 +257,7 @@ export default function App() {
             <Route path="/landing" element={<LandingPage />} />
             <Route path="/planos" element={<PlanosRoute />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/cadastro-especialista" element={<Login />} />
             <Route path="/agendar-familiar/:residenteId?" element={<AgendarFamiliar />} />
             <Route path="/pagar-teleconsulta/:consultaId" element={<AgendarFamiliar />} />
             <Route

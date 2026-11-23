@@ -356,6 +356,12 @@ export default function LandingPage() {
           <div className="flex items-center gap-3 shrink-0">
             <ThemeToggle />
             <Link
+              to="/cadastro-especialista"
+              className="hidden md:inline-flex items-center justify-center px-3.5 py-1.5 rounded-lg text-xs font-semibold text-[#75daa8] border border-[#75daa8]/30 hover:bg-[#75daa8]/10 transition-all"
+            >
+              Sou Especialista
+            </Link>
+            <Link
               to="/login"
               className="hidden sm:inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium text-[#c0c8cb] hover:bg-[#202c30] hover:text-[#d8e5ea] transition-all"
             >

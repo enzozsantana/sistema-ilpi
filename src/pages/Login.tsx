@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Navigate, Link } from 'react-router-dom'
+import { Navigate, Link, useLocation, useSearchParams } from 'react-router-dom'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { useAuth } from '../contexts/AuthContext'
 import { verificarEAtivarDemoVitalicio } from '../lib/plans'
@@ -32,7 +32,11 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [erro, setErro] = useState('')
   const [busy, setBusy] = useState(false)
-  const [modalCadastroOpen, setModalCadastroOpen] = useState(false)
+  const [searchParams] = useSearchParams()
+  const location = useLocation()
+  const [modalCadastroOpen, setModalCadastroOpen] = useState(
+    () => searchParams.get('cadastro') === 'especialista' || location.pathname === '/cadastro-especialista'
+  )
 
   if (!loading && session) {
     if (profissional?.cat === 'tele_especialista') {

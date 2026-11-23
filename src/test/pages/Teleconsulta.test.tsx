@@ -239,4 +239,31 @@ describe('Teleconsulta Page', () => {
     // O banner de consultório virtual independente deve estar presente
     expect(screen.getByText(/Consultório Virtual de Dra. Juliana Mendes/i)).toBeInTheDocument()
   })
+
+  it('permite que qualquer especialista visualize a rede e se cadastre mesmo em plano compacto, bloqueando apenas a solicitação de consulta pela clínica com modal de upgrade', () => {
+    definirPlanoAtivo('compacto')
+
+    render(
+      <MemoryRouter>
+        <Teleconsulta />
+      </MemoryRouter>
+    )
+
+    // A vitrine deve estar aberta mesmo em plano compacto
+    expect(screen.getByText('Dra. Juliana Mendes')).toBeInTheDocument()
+    expect(screen.getByText(/Solicitação de Teleconsultas pela ILPI: Recurso do Plano Avançado/i)).toBeInTheDocument()
+
+    // O botão de cadastro de especialista deve estar presente e visível
+    const btnCadastro = screen.getByRole('button', { name: /Cadastrar como Especialista/i })
+    expect(btnCadastro).toBeInTheDocument()
+
+    // O botão no card de cada especialista deve convidar para Upgrade em vez de permitir agendar direto
+    const btnUpgrade = screen.getAllByRole('button', { name: /Upgrade para Agendar/i })[0]
+    expect(btnUpgrade).toBeInTheDocument()
+
+    // Ao clicar no botão de upgrade, abre o modal explicativo
+    fireEvent.click(btnUpgrade)
+    expect(screen.getByText(/Solicitação Restrita ao Plano Avançado/i)).toBeInTheDocument()
+    expect(screen.getByText(/Cadastro 100% gratuito de médicos e especialistas independentes na rede/i)).toBeInTheDocument()
+  })
 })

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useIlpiData } from '../contexts/IlpiDataContext'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -37,7 +37,7 @@ import {
 import { ModalMemedPrescricao } from '../components/ModalMemedPrescricao'
 import { ModalConectarMercadoPago } from '../components/ModalConectarMercadoPago'
 import { ModalCadastroEspecialista } from '../components/ModalCadastroEspecialista'
-import { PlanGate } from '../components/PlanGate'
+import { isFeatureDisponivel, obterPlanoAtivo, PLANOS, type PlanoId } from '../lib/plans'
 import { salvarRascunho, obterRascunho, limparRascunho, temRascunho } from '../lib/draftStorage'
 import { podeSolicitarTeleconsulta } from '../lib/permissions'
 import { calcularSplit, processarPagamentoSplit, gerarPixCopiaECola } from '../lib/mercadopagoService'
@@ -92,6 +92,23 @@ const ROTULOS_ESPECIALIDADE: Record<EspecialidadeVirtual | 'todas', string> = {
 export default function Teleconsulta() {
   const { residentes, refresh } = useIlpiData()
   const { profissional } = useAuth()
+
+  const navigate = useNavigate()
+  const [planoAtual, setPlanoAtual] = useState<PlanoId>(() => obterPlanoAtivo())
+  const [modalUpgradePlanoOpen, setModalUpgradePlanoOpen] = useState(false)
+  const temPlanoTeleconsulta = useMemo(() => isFeatureDisponivel('teleconsulta'), [planoAtual])
+
+  useEffect(() => {
+    const handlePlanoChange = () => {
+      setPlanoAtual(obterPlanoAtivo())
+    }
+    window.addEventListener('senecurare_plano_alterado', handlePlanoChange)
+    window.addEventListener('storage', handlePlanoChange)
+    return () => {
+      window.removeEventListener('senecurare_plano_alterado', handlePlanoChange)
+      window.removeEventListener('storage', handlePlanoChange)
+    }
+  }, [])
 
   // Especialistas Virtuais disponíveis (semente + independentes cadastrados)
   const [profissionais, setProfissionais] = useState<ProfissionalVirtual[]>(() =>
@@ -399,6 +416,10 @@ export default function Teleconsulta() {
   }, [residentes, salaAberta, residenteId])
 
   function abrirAgendamento(prof: ProfissionalVirtual) {
+    if (!temPlanoTeleconsulta) {
+      setModalUpgradePlanoOpen(true)
+      return
+    }
     if (!podeSolicitar) {
       toast.error('Apenas o Responsável Financeiro da clínica tem autorização para solicitar teleconsultas.')
       return
@@ -582,8 +603,6 @@ export default function Teleconsulta() {
     await refresh()
   }
 
-  const isEspecialista = profissional?.cat === 'tele_especialista'
-
   const content = (
     <div className="space-y-6">
       {/* Cabeçalho da Página */}
@@ -729,8 +748,33 @@ export default function Teleconsulta() {
       {/* ABA 1: VITRINE DE PROFISSIONAIS E AGENDAMENTO */}
       {abaAtiva === 'especialistas' && (
         <div className="space-y-4">
+          {/* Banner de Plano: Solicitação de Teleconsultas pela Clínica requer Plano Avançado */}
+          {!temPlanoTeleconsulta && (
+            <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+              <div className="flex items-start gap-3">
+                <Sparkles className="size-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <div className="text-xs space-y-0.5">
+                  <p className="font-bold text-amber-900 dark:text-amber-200">
+                    Solicitação de Teleconsultas pela ILPI: Recurso do Plano Avançado & Enterprise
+                  </p>
+                  <p className="text-amber-800/90 dark:text-amber-300 leading-relaxed">
+                    Sua instituição está no <strong>{PLANOS[planoAtual]?.nome || planoAtual}</strong>. A contratação institucional de teleconsultas médicas e especializadas faz parte do Plano Avançado. <strong>A vitrine permanece 100% aberta para consulta, especialistas podem se cadastrar livremente</strong> e familiares podem solicitar atendimentos particulares via Portal do Familiar.
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => navigate('/planos?highlight=avancado')}
+                className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shrink-0 gap-1.5 shadow-xs"
+              >
+                <Sparkles className="size-3.5" />
+                <span>Ver Planos & Upgrade</span>
+              </Button>
+            </div>
+          )}
+
           {/* Alerta de Perfil Assistencial: Não é permitido cuidadores solicitarem consultas para evitar custos indevidos */}
-          {!podeSolicitar && !ehEspecialistaExterno && (
+          {temPlanoTeleconsulta && !podeSolicitar && !ehEspecialistaExterno && (
             <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3 shadow-2xs">
               <AlertCircle className="size-4.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
               <div className="text-xs space-y-0.5">
@@ -865,7 +909,16 @@ export default function Teleconsulta() {
                     </span>
                   </div>
 
-                  {podeSolicitar ? (
+                  {!temPlanoTeleconsulta ? (
+                    <Button
+                      onClick={() => setModalUpgradePlanoOpen(true)}
+                      className="gap-2 text-xs rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold shadow-xs"
+                      title="A solicitação de teleconsultas pela clínica requer o Plano Avançado."
+                    >
+                      <Sparkles className="size-3.5" />
+                      <span>Upgrade para Agendar</span>
+                    </Button>
+                  ) : podeSolicitar ? (
                     <Button
                       onClick={() => abrirAgendamento(prof)}
                       className="gap-2 text-xs rounded-xl bg-[#123F4A] hover:bg-[#123F4A]/90 text-white font-semibold shadow-xs"
@@ -887,6 +940,28 @@ export default function Teleconsulta() {
                 </div>
               </Card>
             ))}
+
+            {/* Card Convite para Cadastro de Novos Especialistas */}
+            {!ehEspecialistaExterno && (
+              <Card className="border-2 border-dashed border-teal-500/40 bg-teal-500/5 hover:bg-teal-500/10 transition-colors rounded-2xl p-6 flex flex-col justify-between items-center text-center space-y-4">
+                <div className="size-14 rounded-2xl bg-teal-500/15 text-teal-700 dark:text-teal-400 flex items-center justify-center shadow-2xs">
+                  <Stethoscope className="size-7 text-teal-600" />
+                </div>
+                <div className="space-y-1.5">
+                  <h4 className="font-bold text-sm text-foreground">É Especialista em Saúde?</h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Cadastre-se gratuitamente na rede SeneCurare. Defina sua especialidade, horários e honorários para atender idosos e ILPIs parceiras.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => setModalCadastroOpen(true)}
+                  className="rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white gap-2 shadow-xs w-full"
+                >
+                  <Stethoscope className="size-3.5" />
+                  <span>Cadastrar Gratuitamente</span>
+                </Button>
+              </Card>
+            )}
           </div>
         </div>
       )}
@@ -2127,12 +2202,50 @@ export default function Teleconsulta() {
           }
         }}
       />
+
+      {/* MODAL DE UPGRADE DE PLANO PARA SOLICITAÇÃO DE TELECONSULTA */}
+      <Dialog open={modalUpgradePlanoOpen} onOpenChange={setModalUpgradePlanoOpen}>
+        <DialogContent className="max-w-md rounded-2xl p-6 text-center space-y-4">
+          <div className="size-14 rounded-full bg-amber-500/15 text-amber-600 flex items-center justify-center mx-auto shadow-2xs">
+            <Sparkles className="size-7 text-amber-600" />
+          </div>
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold font-heading text-foreground">
+              Solicitação Restrita ao Plano Avançado
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+              A contratação e solicitação de teleconsultas médicas integradas ao prontuário pela ILPI faz parte do <strong>Plano Avançado</strong> ou <strong>Enterprise</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-3.5 rounded-xl bg-muted/40 border border-border/60 text-xs text-left space-y-1.5 text-muted-foreground">
+            <p className="font-semibold text-foreground">Recursos abertos e disponíveis agora:</p>
+            <p>✓ Cadastro 100% gratuito de médicos e especialistas independentes na rede.</p>
+            <p>✓ Agendamento particular direto pelos familiares dos residentes via Portal do Familiar.</p>
+            <p>✓ Sala virtual para consultas e avaliações já agendadas.</p>
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setModalUpgradePlanoOpen(false)}
+              className="rounded-xl text-xs w-full sm:w-auto"
+            >
+              Fechar
+            </Button>
+            <Button
+              onClick={() => {
+                setModalUpgradePlanoOpen(false)
+                navigate('/planos?highlight=avancado')
+              }}
+              className="rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white w-full sm:w-auto gap-1.5 shadow-xs"
+            >
+              <Sparkles className="size-3.5" />
+              <span>Ver Planos & Fazer Upgrade</span>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 
-  if (isEspecialista) {
-    return content
-  }
-
-  return <PlanGate feature="teleconsulta">{content}</PlanGate>
+  return content
 }
