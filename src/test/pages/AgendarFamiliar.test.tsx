@@ -118,7 +118,7 @@ describe('AgendarFamiliar Page (Portal do Responsável Financeiro)', () => {
       residenteNome: 'Sebastião Arruda',
       data: '2026-11-25',
       horario: '10:00',
-      valor: 240,
+      valor: 120,
       metodoPagamento: 'pix',
       pago: false,
       linkSala: 'https://p2p.mirotalk.com/join/sala-pend',
@@ -138,7 +138,7 @@ describe('AgendarFamiliar Page (Portal do Responsável Financeiro)', () => {
 
     // Abre direto no resumo e pagamento
     expect(screen.getByText(/Resumo da Contratação/i)).toBeInTheDocument()
-    expect(screen.getByText(/R\$ 240,00/i)).toBeInTheDocument()
+    expect(screen.getByText(/R\$ 120,00/i)).toBeInTheDocument()
 
     const btnPagar = screen.getByRole('button', { name: /Confirmar Pagamento & Agendar/i })
     fireEvent.click(btnPagar)

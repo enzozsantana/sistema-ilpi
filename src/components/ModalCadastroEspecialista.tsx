@@ -64,7 +64,7 @@ export function ModalCadastroEspecialista({
   const [titulos, setTitulos] = useState<string[]>(['Especialista em Telemedicina'])
   const [novoTitulo, setNovoTitulo] = useState('')
   const [consultorio, setConsultorio] = useState('')
-  const [preco, setPreco] = useState('200')
+  const [preco, setPreco] = useState('100')
   const [bio, setBio] = useState('')
   const [plataformaPrescricao, setPlataformaPrescricao] = useState<TipoPlataformaPrescricao>('cfm')
 
@@ -142,7 +142,8 @@ export function ModalCadastroEspecialista({
         titulos: titulos.length > 0 ? titulos : ['Especialista em Telemedicina'],
         registro: registro.trim(),
         consultorio: consultorio.trim() || 'Consultório Virtual',
-        preco: parseMoeda(preco) || 180,
+        preco: parseMoeda(preco) || 90,
+        duracaoMin: 20,
         bio: bio.trim(),
       })
 

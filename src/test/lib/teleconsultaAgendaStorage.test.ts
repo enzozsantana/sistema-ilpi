@@ -27,7 +27,7 @@ describe('teleconsultaStorage - Módulo de Agenda e Disponibilidade', () => {
 
     const config = gerarConfiguracaoAgendaPadrao(draJuliana)
     expect(config.profissionalId).toBe('prof_dra_juliana')
-    expect(config.duracaoSlotMin).toBe(45)
+    expect(config.duracaoSlotMin).toBe(20)
     expect(config.diasSemana.length).toBe(7)
 
     // Dra. Juliana atende seg, qua, sex (1, 3, 5)

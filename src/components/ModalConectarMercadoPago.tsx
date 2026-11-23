@@ -107,7 +107,7 @@ export function ModalConectarMercadoPago({
     toast.success('Taxa de comissão da plataforma atualizada!')
   }
 
-  const precoConsulta = profSelecionado?.preco || 200
+  const precoConsulta = profSelecionado?.preco || 100
   const splitExemplo = calcularSplit(precoConsulta, taxaEditada)
 
   return (

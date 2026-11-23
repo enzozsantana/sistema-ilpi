@@ -18,8 +18,8 @@ export const PROFISSIONAIS_VIRTUAIS: ProfissionalVirtual[] = [
     registro: 'CRM-SP 184.290 · RQE 92.104',
     clinica: 'Clínica Longevidade Ativa & Cuidados Integrados',
     foto: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=300',
-    preco: VALORES_PADRAO_CONSULTA.medica.valor, // R$ 240,00
-    duracaoMin: VALORES_PADRAO_CONSULTA.medica.duracaoMin,
+    preco: VALORES_PADRAO_CONSULTA.medica.valor, // R$ 120,00
+    duracaoMin: VALORES_PADRAO_CONSULTA.medica.duracaoMin, // 20 min
     bio: 'Especialista em geriatria clínica pela SBGG e USP. Foco em polifarmácia, desprescrição, declínio cognitivo e acolhimento clínico de residentes em ILPIs.',
     diasAtendimento: [1, 3, 5], // Seg, Qua, Sex
     horariosPadrao: ['08:30', '10:00', '11:15', '14:00', '15:30', '17:00'],
@@ -33,8 +33,8 @@ export const PROFISSIONAIS_VIRTUAIS: ProfissionalVirtual[] = [
     registro: 'COREN-SP 245.890 · Esp. Estomaterapia',
     clinica: 'Centro Avançado de Pele, Lesões e Estomas',
     foto: 'https://images.unsplash.com/photo-1594824813572-c0cb490ad01f?auto=format&fit=crop&q=80&w=300',
-    preco: VALORES_PADRAO_CONSULTA.estomaterapia.valor, // R$ 180,00
-    duracaoMin: VALORES_PADRAO_CONSULTA.estomaterapia.duracaoMin,
+    preco: VALORES_PADRAO_CONSULTA.estomaterapia.valor, // R$ 90,00
+    duracaoMin: VALORES_PADRAO_CONSULTA.estomaterapia.duracaoMin, // 20 min
     bio: 'Membro titular da Associação Brasileira de Estomaterapia (SOBEST). Avaliação remota e prescrição de coberturas especiais para LPP (escaras), dermatites e estomas.',
     diasAtendimento: [2, 4, 6], // Ter, Qui, Sab
     horariosPadrao: ['09:00', '10:30', '13:30', '15:00', '16:30'],
@@ -48,8 +48,8 @@ export const PROFISSIONAIS_VIRTUAIS: ProfissionalVirtual[] = [
     registro: 'CRN-3 48.910',
     clinica: 'Instituto NutriSênior de Terapia Nutricional',
     foto: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300',
-    preco: VALORES_PADRAO_CONSULTA.nutricao.valor, // R$ 160,00
-    duracaoMin: VALORES_PADRAO_CONSULTA.nutricao.duracaoMin,
+    preco: VALORES_PADRAO_CONSULTA.nutricao.valor, // R$ 80,00
+    duracaoMin: VALORES_PADRAO_CONSULTA.nutricao.duracaoMin, // 20 min
     bio: 'Pós-graduada em Nutrição no Envelhecimento. Ajuste de consistência para disfagia, plano para recuperação de peso, sarcopenia e prescrição de suplementos proteicos.',
     diasAtendimento: [1, 2, 4], // Seg, Ter, Qui
     horariosPadrao: ['08:00', '09:30', '11:00', '14:00', '16:00'],
@@ -63,8 +63,8 @@ export const PROFISSIONAIS_VIRTUAIS: ProfissionalVirtual[] = [
     registro: 'CRP 06/132.450',
     clinica: 'Espaço Viver Bem — Neurogerontologia',
     foto: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300',
-    preco: VALORES_PADRAO_CONSULTA.psicologia.valor, // R$ 140,00
-    duracaoMin: VALORES_PADRAO_CONSULTA.psicologia.duracaoMin,
+    preco: VALORES_PADRAO_CONSULTA.psicologia.valor, // R$ 70,00
+    duracaoMin: VALORES_PADRAO_CONSULTA.psicologia.duracaoMin, // 25 min
     bio: 'Mestre em Neurociências e Comportamento. Apoio psicológico para residentes em adaptação institucional, manejo de sintomas comportamentais na demência e acolhimento familiar.',
     diasAtendimento: [2, 3, 5], // Ter, Qua, Sex
     horariosPadrao: ['09:00', '10:30', '14:00', '15:30', '17:00'],
@@ -78,8 +78,8 @@ export const PROFISSIONAIS_VIRTUAIS: ProfissionalVirtual[] = [
     registro: 'CREFITO-3 92.140-F',
     clinica: 'ReabSenior Reabilitação & Mobilidade Funcional',
     foto: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=300',
-    preco: VALORES_PADRAO_CONSULTA.fisioterapia.valor, // R$ 130,00
-    duracaoMin: VALORES_PADRAO_CONSULTA.fisioterapia.duracaoMin,
+    preco: VALORES_PADRAO_CONSULTA.fisioterapia.valor, // R$ 65,00
+    duracaoMin: VALORES_PADRAO_CONSULTA.fisioterapia.duracaoMin, // 20 min
     bio: 'Especialista em fisioterapia motora e funcional geriátrica. Prevenção de quedas, plano de marcha assistida, treino respiratório e ergonomia para cuidadores.',
     diasAtendimento: [1, 3, 4], // Seg, Qua, Qui
     horariosPadrao: ['08:00', '09:30', '11:00', '14:30', '16:00'],
@@ -97,12 +97,25 @@ export function obterProfissionaisVirtuais(): ProfissionalVirtual[] {
       return PROFISSIONAIS_VIRTUAIS
     }
     const lista = JSON.parse(raw) as ProfissionalVirtual[]
-    // Garante que os profissionais demo estejam presentes
-    const ids = new Set(lista.map((p) => p.id))
-    PROFISSIONAIS_VIRTUAIS.forEach((p) => {
-      if (!ids.has(p.id)) lista.push(p)
+    // Atualiza os valores e duração dos profissionais semente caso tenham sido atualizados
+    const listaAtualizada = lista.map((p) => {
+      const semente = PROFISSIONAIS_VIRTUAIS.find((s) => s.id === p.id)
+      if (semente) {
+        return {
+          ...p,
+          preco: semente.preco,
+          duracaoMin: semente.duracaoMin,
+          especialidadeLabel: semente.especialidadeLabel,
+        }
+      }
+      return p
     })
-    return lista
+    // Garante que os profissionais demo estejam presentes
+    const ids = new Set(listaAtualizada.map((p) => p.id))
+    PROFISSIONAIS_VIRTUAIS.forEach((p) => {
+      if (!ids.has(p.id)) listaAtualizada.push(p)
+    })
+    return listaAtualizada
   } catch {
     return PROFISSIONAIS_VIRTUAIS
   }
@@ -302,8 +315,8 @@ export function gerarConfiguracaoAgendaPadrao(prof: ProfissionalVirtual): Config
 
   return {
     profissionalId: prof.id,
-    duracaoSlotMin: prof.duracaoMin || 45,
-    intervaloEntreSlotsMin: 15,
+    duracaoSlotMin: prof.duracaoMin || 20,
+    intervaloEntreSlotsMin: 10,
     diasSemana,
     bloqueios: [],
     limiteDiario: 10,

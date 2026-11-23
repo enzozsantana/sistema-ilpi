@@ -118,7 +118,7 @@ export default function AgendarFamiliar() {
   }, [profSelecionado, dataSelecionada])
 
   // Geração do PIX Copia-e-Cola
-  const valorTotal = consultaExistente?.valor || profSelecionado?.preco || 200
+  const valorTotal = consultaExistente?.valor || profSelecionado?.preco || 100
   const pixCopiaECola = useMemo(() => {
     return gerarPixCopiaECola(
       `telemed_${profSelecionado?.id || 'prof'}`,
@@ -398,7 +398,7 @@ export default function AgendarFamiliar() {
                 <Label className="text-xs font-semibold flex items-center justify-between">
                   <span>Horários Livres com {profSelecionado?.nome}</span>
                   <span className="text-[11px] text-muted-foreground font-normal">
-                    Duração: {profSelecionado?.duracaoMin || 45} min
+                    Duração: {profSelecionado?.duracaoMin || 20} min
                   </span>
                 </Label>
 

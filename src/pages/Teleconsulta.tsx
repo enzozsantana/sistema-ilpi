@@ -510,7 +510,7 @@ export default function Teleconsulta() {
     const res = residentes.find((r) => r.id === residenteId)
     return gerarPixCopiaECola(
       `telemed_${profSelecionado.id}`,
-      profSelecionado.preco || 200,
+      profSelecionado.preco || 100,
       `ILPI ${res?.nome || 'SENECURARE'}`
     )
   }, [profSelecionado, residenteId, residentes])
@@ -859,7 +859,7 @@ export default function Teleconsulta() {
                           )}
                         </div>
                         <Badge variant="outline" className="text-[10px] bg-muted/40 border-border/60">
-                          <Clock className="size-2.5 mr-1 text-muted-foreground" /> {prof.duracaoMin || 45} min
+                          <Clock className="size-2.5 mr-1 text-muted-foreground" /> {prof.duracaoMin || 20} min
                         </Badge>
                       </div>
 

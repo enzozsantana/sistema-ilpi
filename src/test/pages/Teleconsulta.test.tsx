@@ -64,9 +64,9 @@ describe('Teleconsulta Page', () => {
     expect(screen.getByText('Nutr. Camila Bittencourt')).toBeInTheDocument()
     expect(screen.getByText('Psic. Felipe Vasconcelos')).toBeInTheDocument()
 
-    // Verifica valores das consultas
-    expect(screen.getByText('R$ 240,00')).toBeInTheDocument()
-    expect(screen.getByText('R$ 160,00')).toBeInTheDocument()
+    // Verifica valores das consultas (reduzidos pela metade: 240->120, 160->80)
+    expect(screen.getByText('R$ 120,00')).toBeInTheDocument()
+    expect(screen.getByText('R$ 80,00')).toBeInTheDocument()
   })
 
   it('permite filtrar especialistas por especialidade', () => {

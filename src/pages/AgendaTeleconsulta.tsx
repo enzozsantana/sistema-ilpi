@@ -1148,10 +1148,11 @@ export default function AgendaTeleconsulta() {
                   }
                   className="w-full h-9 rounded-xl border border-input bg-background px-3 text-xs"
                 >
+                  <option value={15}>15 minutos</option>
+                  <option value={20}>20 minutos (Padrão)</option>
+                  <option value={25}>25 minutos</option>
                   <option value={30}>30 minutos</option>
-                  <option value={40}>40 minutos</option>
-                  <option value={45}>45 minutos (Padrão)</option>
-                  <option value={50}>50 minutos</option>
+                  <option value={45}>45 minutos</option>
                   <option value={60}>60 minutos (1 hora)</option>
                 </select>
               </div>
@@ -1414,7 +1415,7 @@ export default function AgendaTeleconsulta() {
               </div>
               <div className="text-right">
                 <p className="text-base font-bold text-primary">
-                  {formatarMoeda(profAtivo?.preco || 180)}
+                  {formatarMoeda(profAtivo?.preco || 90)}
                 </p>
                 <p className="text-[10px] text-muted-foreground">Split Mercado Pago 80/20</p>
               </div>
